@@ -16,16 +16,6 @@
 - **홈 화면 앱 · 오프라인**: 휴대폰 홈 화면에 추가하면 인터넷 없이도 열림
 - 백업한 지 7일이 지나면 알림
 
-## GitHub Pages로 올리기
-
-1. GitHub 저장소에 아래 파일을 모두 올립니다.
-   - `index.html`, `README.md`
-   - `manifest.webmanifest`, `sw.js` (홈 화면 앱 · 오프라인용)
-   - `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` (앱 아이콘)
-2. 저장소의 **Settings → Pages**로 이동합니다.
-3. **Source**를 `Deploy from a branch`, 브랜치를 `main`, 폴더를 `/ (root)`로 두고 저장합니다.
-4. 1~2분 뒤 `https://<아이디>.github.io/<저장소이름>/` 주소로 열립니다.
-
 ## 휴대폰 홈 화면에 추가 (오프라인 사용)
 
 - **iPhone**: Safari로 주소를 열고 → 아래쪽 공유 버튼 → **홈 화면에 추가**.
