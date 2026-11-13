@@ -376,7 +376,7 @@ function fmtHome(v) {
 function addDays(dateStr, n) {
   if (!dateStr) return null;
   const d = new Date(dateStr + 'T00:00:00');
-  if (isNaN(d)) return null;
+  if (isNaN(d) || d.getFullYear() < 1900) return null;
   d.setDate(d.getDate() + n);
   return d;
 }
@@ -458,6 +458,15 @@ function field(obj, key, opts = {}) {
     e.addEventListener('change', () => { obj[key] = e.checked; commit(true); });
   } else {
     e.value = obj[key] ?? '';
+    if (type === 'date') {
+      // 날짜는 연도를 다 입력하기 전(예: 0002)에는 반영하지 않고, 칸을 벗어날 때 다시 그림
+      e.addEventListener('input', () => {
+        const y = parseInt((e.value || '').slice(0, 4), 10);
+        if (e.value === '' || y >= 1900) { obj[key] = e.value; commit(false); }
+      });
+      e.addEventListener('blur', () => commit(true));
+      return e;
+    }
     e.addEventListener('input', () => {
       obj[key] = type === 'number' ? (e.value === '' ? '' : parseFloat(e.value)) : e.value;
       commit(false);
