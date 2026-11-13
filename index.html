@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Trip Planner</title>
+<meta name="theme-color" content="#f7f5fa">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="여행 플래너">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <script>
 /* 첫 화면이 깜빡이지 않도록 저장된 테마를 그리기 전에 적용 */
 try { document.documentElement.dataset.theme = localStorage.getItem('tripPlanner_theme') || 'lavender'; } catch (e) { document.documentElement.dataset.theme = 'lavender'; }
@@ -305,7 +313,28 @@ dialog.sheet::backdrop{background:rgba(20,16,30,.45)}
 .big-btn b{display:block;font-size:1rem}
 .big-btn small{color:var(--muted);font-size:.85rem}
 
-.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.9rem;font-weight:600;opacity:0;pointer-events:none;transition:all .2s;z-index:100}
+/* ===== 새 요소: 백업 알림, 통화 입력, 계획 대비 ===== */
+.banner{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--rose-tint);border:1px solid var(--rose);border-radius:16px;padding:12px 14px;margin:4px 0 12px}
+.banner b{color:var(--rose-text)}
+.banner-btns{display:flex;gap:6px}
+.offline{font-size:.75rem;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--gray-bg);color:var(--gray-text);white-space:nowrap}
+.cur-sel{width:auto;min-width:84px;border:0;background:transparent;font-weight:800;font-size:1.05rem;color:var(--accent-strong);padding:8px 2px;box-shadow:none!important;cursor:pointer}
+.amt-preview{font-size:.875rem;color:var(--muted);margin:6px 4px 0;min-height:1.4em}
+.warn-text{color:var(--rose-text);font-weight:600}
+.link{color:var(--accent-strong);font-weight:700;text-decoration:underline;padding:0}
+.pace{margin-top:8px;font-size:.9rem}
+.pace-box{background:var(--accent-soft);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.pace-box .lbl{font-size:.8rem;color:var(--muted);font-weight:600}
+.cmp-row{padding:10px 0;border-bottom:1px solid var(--line)}
+.cmp-row:last-of-type{border-bottom:0}
+.cmp-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.cmp-val{display:flex;align-items:center;gap:2px;flex-wrap:wrap}
+.cmp-bar{position:relative;height:8px;border-radius:99px;background:var(--gray-bg)}
+.cmp-bar i{display:block;height:100%;border-radius:inherit;background:var(--peri)}
+.cmp-bar b{position:absolute;top:-4px;width:2px;height:16px;margin-left:-1px;background:var(--text);border-radius:1px}
+.steps{padding-left:20px;font-size:.92rem;display:flex;flex-direction:column;gap:4px}
+
+.toast{position:fixed;width:max-content;max-width:calc(100vw - 32px);text-align:center;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.9rem;font-weight:600;opacity:0;pointer-events:none;transition:all .2s;z-index:100}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 @media (min-width:880px){.toast{bottom:32px}}
 
@@ -397,7 +426,8 @@ function blankTrip() {
       title: '새 여행', subtitle: '', startDate: '',
       baseCur: 'USD', homeCur: 'KRW', fx: 1380, fxUpdated: '',
       minNights: 3, maxNightsNoTrek: 5, maxDayBus: 8, maxNightBus: 10,
-      tierLow: 45, tierHigh: 65
+      tierLow: 45, tierHigh: 65,
+      rates: {}, ratesUpdated: ''        // 현지 통화 환율 (1 예산 통화 기준)
     },
     cities: [],
     routes: [],
@@ -613,7 +643,11 @@ function getTheme() {
   try { t = localStorage.getItem(THEME_KEY) || t; } catch (e) {}
   return THEMES.some(x => x.id === t) ? t : 'lavender';
 }
-function applyTheme(t) { document.documentElement.dataset.theme = t; }
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  const tc = document.querySelector('meta[name="theme-color"]');   // 휴대폰 상단 표시줄 색
+  if (tc) tc.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#f7f5fa';
+}
 function setTheme(t) {
   try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
   applyTheme(t);
@@ -907,15 +941,185 @@ function editCountry(c) {
     onDelete: () => trip.countries.splice(trip.countries.indexOf(obj), 1) });
 }
 function editEntry(l) {
+  const base = baseCode();
   if (l.city === '-') l.city = '';   // 예전 기록의 빈 도시 표시
+  if (!l.cur) { l.cur = base; l.orig = num(l.amount); l.rate = 1; }   // 통화 기능 이전 기록
+  const origCur = l.cur, curs = currencies();
+  if (!curs.includes(l.cur)) curs.unshift(l.cur);
   editForm({ title: '지출 편집', obj: l, list: trip.ledger, order: false,
     fields: [
-      { key: 'amount', label: '금액 (' + trip.meta.baseCur + ')', type: 'number' }, { key: 'date', label: '날짜', type: 'date' },
+      { key: 'orig', label: '금액', type: 'number' }, { key: 'date', label: '날짜', type: 'date' },
+      { key: 'cur', label: '통화', type: 'chips', full: true, options: curs },
+      { key: 'rate', label: '환율 (1 ' + base + ' = ? 이 통화)', type: 'number', hint: '통화를 바꾸면 저장된 환율로 다시 계산' },
+      { key: 'fx', label: '1 ' + base + ' = ? ' + trip.meta.homeCur, type: 'number' },
       { key: 'cat', label: '분류', type: 'chips', full: true, options: CATS.map(x => ({ v: x, l: CAT_ICON[x] + ' ' + x })) },
-      { key: 'desc', label: '내용', full: true }, { key: 'city', label: '도시', list: trip.cities.map(c => c.name) },
-      { key: 'fx', label: '환율 (1 ' + trip.meta.baseCur + ')', type: 'number' }
+      { key: 'desc', label: '내용', full: true }, { key: 'city', label: '도시', list: trip.cities.map(c => c.name), full: true }
     ],
+    after: o => {
+      if (o.cur === base) o.rate = 1;
+      else if (o.cur !== origCur || !num(o.rate)) o.rate = rateOf(o.cur) || num(o.rate);
+      if (num(o.rate)) o.amount = Math.round(num(o.orig) / num(o.rate) * 100) / 100;
+    },
     onDelete: () => trip.ledger.splice(trip.ledger.indexOf(l), 1) });
+}
+
+/* ============ 통화 (가계부를 현지 통화로) ============ */
+// meta.rates = { MXN: 18.4, PEN: 3.7, ... }  → 예산 통화 1단위가 그 통화로 얼마인지 (환율 API 값 그대로)
+const baseCode = () => String(trip.meta.baseCur || '').toUpperCase().trim();
+const homeCode = () => String(trip.meta.homeCur || '').toUpperCase().trim();
+const curCode = s => { const x = String(s || '').toUpperCase().match(/\b[A-Z]{3}\b/); return x ? x[0] : ''; };   // "CRC / USD" → CRC
+const cityOf = name => trip.cities.find(c => sameCity(c.name, name));
+const countryOfCity = name => { const c = cityOf(name); return c ? (c.country || '').trim() : ''; };
+function currencyOfCity(name) {
+  const k = countryOfCity(name), info = trip.countries.find(x => (x.name || '').trim() === k);
+  return info ? curCode(info.currency) : '';
+}
+function currencies() {
+  const list = [], add = c => { c = String(c || '').toUpperCase().trim(); if (c && !list.includes(c)) list.push(c); };
+  trip.countries.forEach(k => add(curCode(k.currency)));
+  trip.ledger.forEach(l => add(l.cur));
+  add(baseCode()); add(homeCode());
+  return list;
+}
+function rateOf(cur) {
+  cur = String(cur || '').toUpperCase();
+  if (!cur || cur === baseCode()) return 1;
+  if (cur === homeCode()) return num(trip.meta.fx);
+  return num((trip.meta.rates || {})[cur]);
+}
+// 가계부용: 센트까지 (예: $13.43)
+function fmtExact(v) {
+  const c = trip.meta.baseCur || '', s = Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  return c === 'USD' ? '$' + s : s + ' ' + c;
+}
+function fmtCur(v, cur) {
+  cur = String(cur || '').toUpperCase();
+  if (!cur || cur === baseCode()) return fmtExact(v);
+  if (cur === homeCode()) return fmtHome(v);
+  return cur + ' ' + Number(v).toLocaleString('en-US', { maximumFractionDigits: Math.abs(v) >= 1000 ? 0 : 2 });
+}
+
+/* ============ 계획 대비 실제 ============ */
+// 오늘까지 계획한 돈: 지난 밤 수 × 그 도시 하루 예산 + 이미 지난 이동의 비용 (고정비 제외)
+function pace() {
+  const m = trip.meta, start = addDays(m.startDate, 0);
+  if (!start || !trip.cities.length) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  if (today < start) return { before: true };
+  const sch = schedule(), { between } = linkRoutes(), D = 864e5;
+  let plan = 0;
+  sch.forEach((s, i) => {
+    const done = Math.max(0, Math.min(s.n, Math.floor((today - s.arr) / D) + 1));
+    plan += done * num(s.c.daily);
+    if (between[i] && today >= s.dep) plan += num(between[i].cost);
+  });
+  const end = sch[sch.length - 1].dep, t = todayStr();
+  const actual = trip.ledger.filter(l => !l.date || l.date <= t).reduce((a, l) => a + num(l.amount), 0);
+  return { day: Math.floor((today - start) / D) + 1, plan, actual, ended: today >= end };
+}
+function diffChip(actual, plan) {
+  if (!plan || !actual) return null;
+  const p = Math.round((actual - plan) / plan * 100);
+  return h('span', { class: 'chip ' + (p > 5 ? 'high' : p < -5 ? 'low' : ''), title: p > 0 ? '계획보다 많이 씀' : '계획보다 적게 씀' }, (p > 0 ? '+' : '') + p + '%');
+}
+function planByCountry() {
+  const by = {};
+  trip.cities.forEach(c => { const k = (c.country || '').trim() || '국가 미입력'; by[k] = (by[k] || 0) + num(c.nights) * num(c.daily); });
+  trip.routes.forEach(r => { const k = countryOfCity(r.from); if (k) by[k] = (by[k] || 0) + num(r.cost); });
+  return by;
+}
+// 오늘까지 계획한 금액 (나라별). 아직 도착 전인 나라는 0
+function planToDateByCountry() {
+  const by = {}, start = addDays(trip.meta.startDate, 0);
+  if (!start) return by;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const sch = schedule(), { between } = linkRoutes(), D = 864e5;
+  sch.forEach((s, i) => {
+    const k = (s.c.country || '').trim() || '국가 미입력';
+    const done = Math.max(0, Math.min(s.n, Math.floor((today - s.arr) / D) + 1));
+    by[k] = (by[k] || 0) + done * num(s.c.daily) + (between[i] && today >= s.dep ? num(between[i].cost) : 0);
+  });
+  return by;
+}
+function actualByCountry() {
+  const by = {};
+  trip.ledger.forEach(l => { const k = countryOfCity(l.city) || '도시 미지정'; by[k] = (by[k] || 0) + num(l.amount); });
+  return by;
+}
+function compareSection(v) {
+  const plan = planByCountry(), act = actualByCountry(), toDate = planToDateByCountry(), p = pace();
+  const keys = [...new Set([...Object.keys(plan), ...Object.keys(act)])];
+  const max = Math.max(1, ...keys.map(k => Math.max(plan[k] || 0, act[k] || 0)));
+  v.append(h('div', { class: 'page-title' }, h('h2', {}, '계획 대비 실제'), h('span', { class: 'muted small' }, '가계부 기준')),
+    h('div', { class: 'card' },
+      p && !p.before ? h('div', { class: 'pace-box' }, h('div', { class: 'lbl' }, p.ended ? '여행 전체' : '여행 ' + p.day + '일째까지'),
+        h('div', {}, '계획 ', h('b', {}, fmtBase(p.plan)), ' · 실제 ', h('b', {}, fmtBase(p.actual)), ' ', diffChip(p.actual, p.plan))) : null,
+      keys.map(k => {
+        const a = act[k] || 0, pl = plan[k] || 0, over = pl && a > pl;
+        return h('div', { class: 'cmp-row' },
+          h('div', { class: 'cmp-top' }, h('span', { class: 'row-t' }, k),
+            h('span', { class: 'cmp-val' }, a ? h('b', {}, fmtBase(a)) : h('span', { class: 'muted' }, '기록 없음'), h('span', { class: 'muted small' }, ' / ' + fmtBase(pl)), ' ',
+              diffChip(a, toDate[k] || 0))),   // 퍼센트는 "오늘까지 계획" 대비 (도착 전 나라는 표시 안 함)
+          h('div', { class: 'cmp-bar' }, h('i', { style: 'width:' + (a / max * 100) + '%' + (over ? ';background:var(--rose)' : '') }),
+            pl ? h('b', { style: 'left:' + (pl / max * 100) + '%', title: '계획' }) : null));
+      }),
+      h('p', { class: 'hint', style: 'margin:10px 0 0' }, '막대 = 실제 지출, 세로선 = 그 나라 전체 계획, 퍼센트 = 오늘까지 계획 대비. 계획은 체류비와 그 나라에서 출발하는 이동비, 실제는 가계부에서 그 나라 도시로 적은 지출입니다. 국제선·보험 같은 고정비는 계획에서 빠져 있어요.')));
+}
+
+/* ============ 백업 알림 ============ */
+const BACKUP_KEY = 'tripPlanner_lastBackup', SNOOZE_KEY = 'tripPlanner_backupSnooze', FIRST_KEY = 'tripPlanner_firstSeen';
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, val) => { try { localStorage.setItem(k, val); } catch (e) {} };
+function backupState() {
+  const last = lsGet(BACKUP_KEY), since = last || lsGet(FIRST_KEY);
+  const days = since ? Math.floor((Date.now() - new Date(since)) / 864e5) : 0;
+  const changed = !!store.savedAt && (!last || store.savedAt > last);
+  const snoozed = (lsGet(SNOOZE_KEY) || '') > new Date().toISOString();
+  return { last, days, need: changed && days >= 7 && !snoozed };
+}
+function backupBanner() {
+  const b = backupState();
+  if (!b.need) return null;
+  return h('div', { class: 'banner' },
+    h('div', { class: 'grow' }, h('b', {}, b.last ? '마지막 백업 ' + b.days + '일 전' : '아직 백업한 적이 없어요'),
+      h('div', { class: 'small muted' }, '여행 데이터는 이 기기에만 있어요. 바뀐 내용이 있으니 백업 파일을 만들어 두세요.')),
+    h('div', { class: 'banner-btns' }, btn('지금 백업', exportAll, 'sm primary'),
+      btn('나중에', () => { lsSet(SNOOZE_KEY, new Date(Date.now() + 3 * 864e5).toISOString()); render(); }, 'sm ghost')));
+}
+
+/* ============ 홈 화면 앱 (오프라인) ============ */
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (view === 'settings') render(); });
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const canOffline = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+function installCard() {
+  const c = h('div', { class: 'card' }, h('h3', {}, '홈 화면 앱 · 오프라인'));
+  if (isStandalone()) c.append(h('p', { class: 'hint', style: 'margin:0' }, '✓ 홈 화면 앱으로 실행 중입니다. 인터넷이 없어도 열립니다.'));
+  else if (!canOffline()) c.append(h('p', { class: 'hint', style: 'margin:0' }, '파일로 열었을 때는 설치할 수 없어요. GitHub Pages 주소로 열어 주세요.'));
+  else {
+    c.append(h('p', { class: 'hint' }, '홈 화면에 추가하면 앱처럼 열리고, 인터넷이 없어도(산, 비행기) 일정과 체크리스트를 볼 수 있어요.'));
+    if (installEvt) c.append(btn('홈 화면에 설치', async () => { installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(); }, 'primary'));
+    else if (isIOS) c.append(h('ol', { class: 'steps' }, h('li', {}, 'Safari 아래쪽 ', h('b', {}, '공유 버튼'), '(네모에 위쪽 화살표)을 누르기'), h('li', {}, h('b', {}, '홈 화면에 추가'), '를 고르고 추가')));
+    else c.append(h('p', { class: 'hint', style: 'margin:0' }, '브라우저 메뉴에서 "앱 설치" 또는 "홈 화면에 추가"를 고르세요.'));
+  }
+  if (isIOS && !isStandalone() && canOffline()) c.append(h('div', { class: 'warn', style: 'margin-top:12px' },
+    'iPhone은 홈 화면 앱과 Safari가 데이터를 따로 저장해요. 설치 전에 여기서 "모든 여행 백업"을 하고, 앱을 연 뒤 "백업 파일 가져오기"로 옮기세요.'));
+  return c;
+}
+
+/* 휴대폰에서는 공유 시트(파일에 저장, AirDrop 등), 컴퓨터에서는 다운로드 */
+const isTouch = matchMedia('(pointer:coarse)').matches;
+async function deliver(text, type, filename) {
+  try {
+    const file = new File([text], filename, { type });
+    if (isTouch && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: filename });
+      return true;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return false; }
+  downloadBlob(text, type, filename);
+  return true;
 }
 
 /* ============ 화면 ============ */
@@ -943,14 +1147,16 @@ function renderNav() {
 }
 function renderTop() {
   const top = $('#top'); top.innerHTML = '';
-  top.append(
+  top.append(...[
     h('button', { type: 'button', class: 'trip-switch', onclick: openTrips, title: '여행 바꾸기 · 새 여행' }, h('span', { class: 't' }, trip.meta.title || '(제목 없음)'), icon('down')),
+    navigator.onLine === false ? h('span', { class: 'offline', title: '인터넷 연결 없음. 입력한 내용은 이 기기에 저장됩니다' }, '오프라인') : null,
     h('button', { type: 'button', class: 'btn sm ghost top-export', onclick: openExport, 'aria-label': '내보내기 · 공유' }, icon('share'), h('span', { class: 'lbl' }, '내보내기')),
-    h('button', { type: 'button', class: 'icon-btn only-mobile', onclick: () => go('settings'), 'aria-label': '설정' }, icon('settings')));
+    h('button', { type: 'button', class: 'icon-btn only-mobile', onclick: () => go('settings'), 'aria-label': '설정' }, icon('settings'))].filter(Boolean));
   document.title = (trip.meta.title || 'Trip') + ' · Planner';
 }
 function renderView() {
   const v = $('#view'); v.innerHTML = '';
+  const b = backupBanner(); if (b) v.append(b);
   ({ plan: viewPlan, budget: viewBudget, ledger: viewLedger, prep: viewPrep, info: viewInfo, settings: viewSettings })[view](v);
   if (focusAfter) { const el = document.querySelector('[data-focus="' + focusAfter + '"]'); if (el) el.focus({ preventScroll: true }); focusAfter = null; }
 }
@@ -1046,6 +1252,8 @@ function viewBudget(v) {
       h('div', { class: 'lg-l' }, h('span', { class: 'sw', style: 'background:var(--' + p[2] + ')' }), p[0]),
       h('div', { class: 'lg-v' }, fmtBase(p[1])), h('div', { class: 'lg-p' }, pct(p[1]) + '%'))))));
 
+  if (trip.ledger.length) compareSection(v);
+
   // 국가별 체류비
   const byC = {};
   trip.cities.forEach(c => {
@@ -1078,43 +1286,83 @@ function viewBudget(v) {
 /* --- 가계부 --- */
 let draft = null;
 function viewLedger(v) {
-  const m = trip.meta, t = totals(), fx = num(m.fx);
+  const m = trip.meta, t = totals(), fx = num(m.fx), base = baseCode();
   const nowCity = (schedule().find(s => s.now) || {}).c;
-  const lastCity = trip.ledger.length ? trip.ledger[trip.ledger.length - 1].city : '';
-  if (!draft || draft.tripId !== trip.id) draft = { tripId: trip.id, date: todayStr(), city: nowCity ? nowCity.name : (lastCity && lastCity !== '-' ? lastCity : ''), cat: '식비', fx: '' };
+  const last = trip.ledger[trip.ledger.length - 1];
+  if (!draft || draft.tripId !== trip.id) {
+    const city = nowCity ? nowCity.name : (last && last.city && last.city !== '-' ? last.city : '');
+    draft = { tripId: trip.id, date: todayStr(), city, cat: '식비', cur: currencyOfCity(city) || (last && last.cur) || base, curAuto: true };
+  }
   const pct = t.grand ? Math.min(100, t.spent / t.grand * 100) : 0;
+  const p = pace();
   v.append(h('section', { class: 'hero' },
     h('div', { class: 'lbl' }, '지금까지 쓴 돈'),
     h('div', { class: 'big' }, fmtBase(t.spent)),
     h('div', { class: 'muted' }, fmtHome(t.spentHome) + ' · 예산 ' + fmtBase(t.grand) + '의 ' + Math.round(pct) + '%'),
     h('div', { class: 'progress', style: 'margin:14px 0 10px;height:10px' }, h('i', { style: 'width:' + pct + '%' })),
-    h('div', { class: 'small' }, '남은 예산 ', h('b', {}, fmtBase(t.grand - t.spent)), h('span', { class: 'muted' }, ' · ' + fmtHome(t.grand * fx - t.spentHome)))));
+    h('div', { class: 'small' }, '남은 예산 ', h('b', {}, fmtBase(t.grand - t.spent)), h('span', { class: 'muted' }, ' · ' + fmtHome(t.grand * fx - t.spentHome))),
+    p && !p.before ? h('div', { class: 'pace' }, (p.ended ? '여행 끝 · ' : '여행 ' + p.day + '일째 · ') + '계획 ', h('b', {}, fmtBase(p.plan)), ' / 실제 ', h('b', {}, fmtBase(p.actual)), ' ', diffChip(p.actual, p.plan)) : null));
 
   // 빠른 입력
   const amt = h('input', { type: 'text', inputmode: 'decimal', placeholder: '0', 'aria-label': '금액', 'data-focus': 'amount' });
+  const curSel = h('select', { class: 'cur-sel', 'aria-label': '통화' });
+  const curs = currencies(); if (!curs.includes(draft.cur)) curs.unshift(draft.cur);
+  curs.forEach(c => curSel.append(h('option', { value: c }, c)));
+  curSel.value = draft.cur;
+  const preview = h('div', { class: 'amt-preview' });
   const desc = h('input', { type: 'text', placeholder: '내용 (예: 점심, 호스텔 2박)', 'aria-label': '내용' });
   const city = h('input', { type: 'text', placeholder: '도시', list: 'ledger-cities', value: draft.city, 'aria-label': '도시' });
   const date = h('input', { type: 'date', value: draft.date, 'aria-label': '날짜' });
-  const rate = h('input', { type: 'text', inputmode: 'decimal', value: draft.fx || fx, 'aria-label': '환율' });
-  city.addEventListener('input', () => draft.city = city.value);
+  const rateIn = h('input', { type: 'text', inputmode: 'decimal', 'aria-label': '현지 통화 환율' });
+  const rateLbl = h('span', {});
+  const rateRow = h('label', { class: 'fld' }, rateLbl, rateIn);
+  const fxIn = h('input', { type: 'text', inputmode: 'decimal', value: fx, 'aria-label': '원화 환율' });
+  const rateBox = h('details', { style: 'margin-bottom:10px' }, h('summary', { class: 'muted small', style: 'cursor:pointer' }, '환율 보기 · 고치기'),
+    h('div', { class: 'form', style: 'margin-top:8px' }, rateRow, h('label', { class: 'fld' }, h('span', {}, '1 ' + base + ' = ? ' + m.homeCur), fxIn)));
+  const upd = () => {
+    const cur = draft.cur, r = rateOf(cur), a = parseFloat(amt.value);
+    rateRow.style.display = cur === base ? 'none' : '';
+    rateLbl.textContent = '1 ' + base + ' = ? ' + cur;
+    if (document.activeElement !== rateIn) rateIn.value = r || '';
+    preview.innerHTML = '';
+    if (cur !== base && !r) preview.append(h('span', { class: 'warn-text' }, cur + ' 환율이 없어요. '),
+      h('button', { type: 'button', class: 'link', onclick: e => fetchFX(e.currentTarget) }, '최신 환율 불러오기'), ' 또는 환율 칸에 직접 입력');
+    else if (a > 0) preview.append('≈ ' + (cur !== base ? fmtExact(a / r) + ' · ' : '') + fmtHome(a / r * (parseFloat(fxIn.value) || fx)));
+    else preview.append(cur !== base ? '1 ' + base + ' = ' + Number(r).toLocaleString() + ' ' + cur + (m.fxUpdated ? ' (' + m.fxUpdated + ')' : '') : ' ');
+  };
+  amt.addEventListener('input', upd);
+  fxIn.addEventListener('input', upd);
+  curSel.addEventListener('change', () => { draft.cur = curSel.value; draft.curAuto = false; upd(); });
+  city.addEventListener('input', () => {
+    draft.city = city.value;
+    const c = currencyOfCity(city.value);
+    if (draft.curAuto && c && c !== draft.cur) {
+      if (![...curSel.options].some(o => o.value === c)) curSel.append(h('option', { value: c }, c));
+      draft.cur = c; curSel.value = c; upd();
+    }
+  });
   date.addEventListener('input', () => draft.date = date.value);
-  rate.addEventListener('input', () => draft.fx = rate.value);
+  rateIn.addEventListener('input', () => { const r = parseFloat(rateIn.value); if (r > 0) { m.rates = m.rates || {}; m.rates[draft.cur] = r; save(); } upd(); });
   const cats = h('div', { class: 'cat-pick', role: 'radiogroup', 'aria-label': '분류' });
   const drawCats = () => { cats.innerHTML = ''; CATS.forEach(c => cats.append(h('button', { type: 'button', class: 'pick' + (draft.cat === c ? ' on' : ''), 'aria-pressed': draft.cat === c ? 'true' : 'false', onclick: () => { draft.cat = c; drawCats(); } }, CAT_ICON[c] + ' ' + c))); };
   drawCats();
   const add = () => {
     const a = parseFloat(amt.value);
     if (!(a > 0)) { amt.focus(); toast('금액을 입력하세요'); return; }
-    trip.ledger.push({ id: uid(), date: date.value || todayStr(), city: city.value.trim(), cat: draft.cat, desc: desc.value.trim() || draft.cat, amount: a, fx: parseFloat(rate.value) || fx });
-    save(); focusAfter = 'amount'; render(); toast(fmtBase(a) + ' 기록했습니다');
+    const r = rateOf(draft.cur);
+    if (!r) { rateBox.open = true; rateIn.focus(); toast(draft.cur + ' 환율을 먼저 넣어 주세요'); return; }
+    trip.ledger.push({ id: uid(), date: date.value || todayStr(), city: city.value.trim(), cat: draft.cat, desc: desc.value.trim() || draft.cat,
+      amount: Math.round(a / r * 100) / 100, orig: a, cur: draft.cur, rate: r, fx: parseFloat(fxIn.value) || fx });
+    save(); focusAfter = 'amount'; render(); toast(fmtCur(a, draft.cur) + ' 기록했습니다');
   };
   [amt, desc].forEach(x => x.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); add(); } }));
+  upd();
   v.append(h('div', { class: 'card' }, h('h3', {}, '지출 기록하기'),
-    h('div', { class: 'amount-in' }, h('span', {}, m.baseCur === 'USD' ? '$' : m.baseCur), amt),
+    h('div', { class: 'amount-in' }, curSel, amt), preview,
     cats, h('div', { class: 'form-row' }, h('div', { style: 'grid-column:1/-1' }, desc)),
     h('div', { class: 'form-row' }, city, date),
     h('datalist', { id: 'ledger-cities' }, trip.cities.map(c => h('option', { value: c.name }))),
-    h('details', { style: 'margin-bottom:10px' }, h('summary', { class: 'muted small', style: 'cursor:pointer' }, '환율 (1 ' + m.baseCur + ' = ' + num(draft.fx || fx).toLocaleString() + ' ' + m.homeCur + ')'), h('div', { style: 'margin-top:8px' }, rate)),
+    rateBox,
     h('button', { type: 'button', class: 'btn primary block', onclick: add }, '기록하기')));
 
   // 분류별 합계
@@ -1125,7 +1373,7 @@ function viewLedger(v) {
 
   // 날짜별 목록
   v.append(h('div', { class: 'page-title' }, h('h2', {}, '기록'), h('span', { class: 'muted small' }, trip.ledger.length + '건')));
-  if (!trip.ledger.length) { v.append(h('div', { class: 'card' }, emptyState('아직 기록이 없어요', '위에서 금액을 넣고 기록하기를 누르세요.'))); return; }
+  if (!trip.ledger.length) { v.append(h('div', { class: 'card' }, emptyState('아직 기록이 없어요', '위에서 금액을 넣고 기록하기를 누르세요. 현지 통화로 넣으면 자동으로 환산됩니다.'))); return; }
   const days = {};
   trip.ledger.map((l, i) => ({ l, i })).sort((a, b) => (b.l.date || '').localeCompare(a.l.date || '') || b.i - a.i)
     .forEach(({ l }) => (days[l.date || '날짜 없음'] = days[l.date || '날짜 없음'] || []).push(l));
@@ -1133,10 +1381,14 @@ function viewLedger(v) {
   Object.entries(days).forEach(([d, list]) => {
     const dt = addDays(d, 0);
     card.append(h('div', { class: 'day-head' }, h('span', {}, dt ? ymd(dt) + ' ' + WD[dt.getDay()] + '요일' : d), h('span', {}, fmtBase(list.reduce((a, l) => a + num(l.amount), 0)))));
-    card.append(h('div', { class: 'rows' }, list.map(l => h('button', { type: 'button', class: 'row', onclick: () => editEntry(l) },
-      h('span', { class: 'cat-ic' }, CAT_ICON[l.cat] || '🧾'),
-      h('div', { class: 'grow' }, h('div', { class: 'row-t' }, l.desc || l.cat), h('div', { class: 'muted small' }, [l.cat, l.city && l.city !== '-' ? l.city : ''].filter(Boolean).join(' · '))),
-      h('div', { class: 'amt' }, fmtBase(num(l.amount)), h('small', {}, fmtHome(num(l.amount) * (num(l.fx) || fx))))))));
+    card.append(h('div', { class: 'rows' }, list.map(l => {
+      const local = l.cur && l.cur !== base;
+      return h('button', { type: 'button', class: 'row', onclick: () => editEntry(l) },
+        h('span', { class: 'cat-ic' }, CAT_ICON[l.cat] || '🧾'),
+        h('div', { class: 'grow' }, h('div', { class: 'row-t' }, l.desc || l.cat), h('div', { class: 'muted small' }, [l.cat, l.city && l.city !== '-' ? l.city : ''].filter(Boolean).join(' · '))),
+        h('div', { class: 'amt' }, local ? fmtCur(num(l.orig), l.cur) : fmtExact(num(l.amount)),
+          h('small', {}, (local ? fmtExact(num(l.amount)) + ' · ' : '') + fmtHome(num(l.amount) * (num(l.fx) || fx)))));
+    })));
   });
   v.append(card);
 }
@@ -1256,17 +1508,21 @@ function bound(obj, key, { type = 'text', ph = '' } = {}) {
 }
 const F = (label, el, hint, full) => h('label', { class: 'fld' + (full ? ' full' : '') }, h('span', {}, label), el, hint ? h('small', {}, hint) : null);
 async function fetchFX(b) {
-  const m = trip.meta;
+  const m = trip.meta, label = b.textContent;
   b.textContent = '불러오는 중…'; b.disabled = true;
   try {
     const r = await fetch('https://open.er-api.com/v6/latest/' + encodeURIComponent(m.baseCur));
     const d = await r.json();
-    const rate = d && d.rates && d.rates[m.homeCur];
-    if (!rate) throw new Error();
-    m.fx = rate >= 100 ? Math.round(rate) : Math.round(rate * 10000) / 10000;
+    if (!d || !d.rates) throw new Error();
+    // 모든 통화의 환율을 저장해 두면 오프라인에서도 현지 통화 입력 가능
+    m.rates = Object.fromEntries(Object.entries(d.rates).map(([k, x]) => [k, +Number(x).toPrecision(6)]));
+    if (d.rates[homeCode()]) { const rate = d.rates[homeCode()]; m.fx = rate >= 100 ? Math.round(rate) : Math.round(rate * 10000) / 10000; }
     m.fxUpdated = new Date().toLocaleDateString('ko-KR') + ' 기준';
     save(); render(); toast('환율을 업데이트했습니다');
-  } catch (e) { b.textContent = '실패 · 직접 입력하세요'; b.disabled = false; }
+  } catch (e) {
+    b.textContent = navigator.onLine === false ? '오프라인 · 직접 입력하세요' : '실패 · 직접 입력하세요'; b.disabled = false;
+    setTimeout(() => { if (b.isConnected) b.textContent = label; }, 3000);
+  }
 }
 function viewSettings(v) {
   const m = trip.meta;
@@ -1275,12 +1531,20 @@ function viewSettings(v) {
     F('여행 이름', bound(m, 'title'), null, true),
     F('경로 요약', bound(m, 'subtitle', { ph: '예: 리스본 → 포르투 → 마드리드' }), null, true),
     F('출발일', bound(m, 'startDate', { type: 'date' }), '도시별 날짜가 자동 계산됩니다', true))));
-  const fxBtn = h('button', { type: 'button', class: 'btn sm', onclick: e => fetchFX(e.currentTarget) }, '최신 환율 불러오기');
+  const fxBtn = h('button', { type: 'button', class: 'btn sm', onclick: e => fetchFX(e.currentTarget) }, '최신 환율 모두 불러오기');
+  m.rates = m.rates || {};
+  const base = baseCode(), locals = currencies().filter(c => c !== base && c !== homeCode());
+  const whoUses = c => trip.countries.filter(k => curCode(k.currency) === c).map(k => k.name).join(', ');
   v.append(h('div', { class: 'card' }, h('h3', {}, '통화 · 환율'), h('div', { class: 'form' },
     F('예산 통화', bound(m, 'baseCur', { ph: 'USD' }), '예산을 적는 통화'),
     F('내 통화', bound(m, 'homeCur', { ph: 'KRW' })),
-    F('1 ' + m.baseCur + ' = ? ' + m.homeCur, bound(m, 'fx', { type: 'number' }), m.fxUpdated || '직접 입력한 값'),
-    h('div', { class: 'fld', style: 'justify-content:flex-end' }, fxBtn))));
+    F('1 ' + m.baseCur + ' = ? ' + m.homeCur, bound(m, 'fx', { type: 'number' }), null, true),
+    h('div', { class: 'full' }, h('div', { class: 'fld', style: 'margin-bottom:8px' }, h('span', {}, '현지 통화 (1 ' + m.baseCur + ' = ?)'),
+      h('small', {}, '가계부에 현지 통화로 적으면 이 환율로 바꿔 계산합니다. 나라별 정보의 "통화" 칸(예: MXN)에서 목록을 만듭니다.')),
+      locals.length ? h('div', { class: 'form' }, locals.map(c => F(c + (whoUses(c) ? ' · ' + whoUses(c) : ''), bound(m.rates, c, { type: 'number', ph: '환율' }))))
+        : h('p', { class: 'hint', style: 'margin:0' }, '아직 현지 통화가 없어요. 정보 화면에서 나라별 통화를 적어 주세요.')),
+    h('div', { class: 'full', style: 'display:flex;gap:10px;align-items:center;flex-wrap:wrap' }, fxBtn,
+      h('span', { class: 'muted small' }, m.fxUpdated ? m.fxUpdated + '으로 저장됨 (오프라인에서도 사용)' : '아직 불러오지 않음 · 직접 입력해도 돼요')))));
   v.append(h('div', { class: 'card' }, h('h3', {}, '일정 경고 기준'), h('p', { class: 'hint' }, '0으로 두면 그 경고를 끕니다.'), h('div', { class: 'form' },
     F('도시당 최소 박 수', bound(m, 'minNights', { type: 'number' })),
     F('트레킹 없는 도시 최대 박 수', bound(m, 'maxNightsNoTrek', { type: 'number' })),
@@ -1288,12 +1552,16 @@ function viewSettings(v) {
     F('야간버스 최대 (시간)', bound(m, 'maxNightBus', { type: 'number' })),
     F('저비용: 하루 이 금액 미만', bound(m, 'tierLow', { type: 'number' })),
     F('고비용: 하루 이 금액 이상', bound(m, 'tierHigh', { type: 'number' })))));
+  v.append(installCard());
   v.append(h('div', { class: 'card' }, h('h3', {}, '화면 테마'), h('p', { class: 'hint' }, '이 기기에서만 적용됩니다.'), themePicker()));
   const dev = h('input', { type: 'text', value: deviceName() });
   dev.addEventListener('change', () => { try { localStorage.setItem(DEVICE_KEY, dev.value.trim() || guessDevice()); } catch (e) {} renderNav(); });
   v.append(h('div', { class: 'card' }, h('h3', {}, '데이터 · 백업'),
-    h('p', { class: 'hint' }, '여행 데이터는 이 기기의 브라우저에만 저장됩니다. 다른 기기로 옮기거나 백업하려면 내보내기에서 백업 파일을 만들고, 다른 기기에서 가져오기를 누르세요. 마지막 저장: ' + savedText()),
-    h('div', { class: 'btn-grid', style: 'margin-bottom:14px' }, btn('내보내기 · 공유', openExport, 'primary'), btn('가져오기', () => $('#import-file').click())),
+    h('p', { class: 'hint' }, '여행 데이터는 이 기기의 브라우저에만 저장됩니다. 다른 기기로 옮기거나 백업하려면 백업 파일을 만들고, 다른 기기에서 가져오기를 누르세요.'),
+    h('div', { class: 'info-line' }, h('span', { class: 'k' }, '마지막 저장'), h('span', {}, savedText())),
+    h('div', { class: 'info-line', style: 'margin-bottom:10px' }, h('span', { class: 'k' }, '마지막 백업'), h('span', {}, lsGet(BACKUP_KEY) ? new Date(lsGet(BACKUP_KEY)).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' (' + backupState().days + '일 전)' : h('span', { class: 'warn-text' }, '아직 없음'))),
+    h('div', { class: 'btn-grid', style: 'margin-bottom:14px' }, btn('모든 여행 백업', exportAll, 'primary'), btn('백업 파일 가져오기', () => $('#import-file').click())),
+    h('button', { type: 'button', class: 'btn ghost block', style: 'margin-bottom:14px', onclick: openExport }, '문서(PDF · HTML)로 내보내기'),
     h('div', { class: 'form' }, F('이 기기 이름', dev, '백업 파일에 함께 기록됩니다', true))));
   v.append(h('div', { class: 'card' }, h('h3', {}, '기타'), h('div', { class: 'btn-grid' },
     btn('샘플 여행 추가', () => { const s = sampleTrip(); store.trips[s.id] = s; store.current = s.id; trip = s; save(); go('plan'); toast('샘플 여행을 추가했습니다'); }),
@@ -1370,27 +1638,32 @@ function downloadBlob(text, type, filename) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 function download(obj, filename) { downloadBlob(JSON.stringify(obj, null, 2), 'application/json', filename); }
-function exportTrip() {
-  download({ type: 'trip', version: 1, exportedAt: new Date().toISOString(), device: deviceName(), trip }, safeName(trip.meta.title) + '_백업_' + stamp() + '.json');
-  toast('백업 파일을 저장했습니다');
+async function exportTrip() {
+  const ok = await deliver(JSON.stringify({ type: 'trip', version: 1, exportedAt: new Date().toISOString(), device: deviceName(), trip }, null, 2),
+    'application/json', safeName(trip.meta.title) + '_백업_' + stamp() + '.json');
+  if (!ok) return;
+  if (Object.keys(store.trips).length === 1) lsSet(BACKUP_KEY, new Date().toISOString());   // 여행이 하나뿐이면 전체 백업과 같음
+  closeSheet(); render(); toast('백업 파일을 저장했습니다');
 }
-function exportAll() {
-  download({ type: 'backup', version: 1, exportedAt: new Date().toISOString(), device: deviceName(), trips: Object.values(store.trips) }, 'TripPlanner_전체백업_' + stamp() + '.json');
-  toast('전체 백업 파일을 저장했습니다');
+async function exportAll() {
+  const ok = await deliver(JSON.stringify({ type: 'backup', version: 1, exportedAt: new Date().toISOString(), device: deviceName(), trips: Object.values(store.trips) }, null, 2),
+    'application/json', 'TripPlanner_전체백업_' + stamp() + '.json');
+  if (!ok) return;
+  lsSet(BACKUP_KEY, new Date().toISOString());
+  closeSheet(); render(); toast('전체 백업 파일을 저장했습니다');
 }
 function exportPDF() {
   closeSheet();
   buildReport();
   setTimeout(() => window.print(), 150);
 }
-function exportHTML() {
+async function exportHTML() {
   const node = reportNode(reportOpts);
   const doc = '<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>' + escapeHTML(trip.meta.title || '여행') + ' · 일정표</title>\n<style>\nbody{margin:0;background:#f4f3f7}\n'
     + $('#report-css').textContent
     + '\n.report{margin:24px auto;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.06)}\n@media print{body{background:#fff}.report{margin:0;box-shadow:none;padding:0}@page{margin:14mm}}\n@media (max-width:640px){.report{margin:0;border-radius:0}}\n</style>\n</head>\n<body>\n'
     + node.outerHTML + '\n</body>\n</html>\n';
-  downloadBlob(doc, 'text/html', safeName(trip.meta.title) + '_일정표.html');
-  closeSheet(); toast('HTML 파일을 저장했습니다');
+  deliver(doc, 'text/html', safeName(trip.meta.title) + '_일정표.html').then(ok => { if (ok) { closeSheet(); toast('HTML 파일을 저장했습니다'); } });
 }
 function escapeHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function buildReport() { const r = $('#report'); r.innerHTML = ''; r.append(reportNode(reportOpts)); }
@@ -1450,9 +1723,10 @@ function reportNode(o) {
   if (o.info && trip.countries.length) r.append(h('h2', {}, '나라별 정보'), tbl([['나라'], ['긴급번호'], ['통화'], ['결제'], ['치안 · 여행경보']],
     trip.countries.map(c => h('tr', {}, h('td', {}, h('b', {}, c.name)), h('td', {}, c.emergency), h('td', {}, c.currency), h('td', {}, c.payment), h('td', { class: c.advisory ? 'r-warn' : '' }, c.advisory)))));
   if (o.notes && (trip.notes || '').trim()) r.append(h('h2', {}, '메모'), h('div', { class: 'r-notes' }, trip.notes));
-  if (o.ledger && trip.ledger.length) r.append(h('h2', {}, '가계부'), tbl([['날짜'], ['도시'], ['분류'], ['내용'], ['금액', 'n'], [m.homeCur, 'n']],
-    trip.ledger.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(l => h('tr', {}, h('td', { class: 'nw' }, l.date), h('td', {}, l.city), h('td', {}, l.cat), h('td', {}, l.desc), h('td', { class: 'n' }, fmtBase(num(l.amount))), h('td', { class: 'n' }, fmtHome(num(l.amount) * (num(l.fx) || fx))))),
-    h('tr', {}, h('td', { colspan: 4 }, '합계'), h('td', { class: 'n' }, fmtBase(t.spent)), h('td', { class: 'n' }, fmtHome(t.spentHome)))));
+  if (o.ledger && trip.ledger.length) r.append(h('h2', {}, '가계부'), tbl([['날짜'], ['도시'], ['분류'], ['내용'], ['현지 금액', 'n'], [m.baseCur, 'n'], [m.homeCur, 'n']],
+    trip.ledger.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(l => h('tr', {}, h('td', { class: 'nw' }, l.date), h('td', {}, l.city === '-' ? '' : l.city), h('td', {}, l.cat), h('td', {}, l.desc),
+      h('td', { class: 'n' }, l.cur && l.cur !== baseCode() ? fmtCur(num(l.orig), l.cur) : ''), h('td', { class: 'n' }, fmtBase(num(l.amount))), h('td', { class: 'n' }, fmtHome(num(l.amount) * (num(l.fx) || fx))))),
+    h('tr', {}, h('td', { colspan: 5 }, '합계'), h('td', { class: 'n' }, fmtBase(t.spent)), h('td', { class: 'n' }, fmtHome(t.spentHome)))));
   r.append(h('p', { class: 'r-foot' }, new Date().toLocaleDateString('ko-KR') + ' 기준 · Trip Planner'));
   return r;
 }
@@ -1499,11 +1773,23 @@ async function importFiles(input) {
 document.getElementById('import-file').addEventListener('change', e => importFiles(e.target));
 
 applyTheme(getTheme());
+const firstRun = !lsGet(STORE_KEY);
 store = loadStore();
+// 새로 생긴 설정값(예: 현지 통화 환율)을 예전 데이터에도 채워 넣기
+Object.values(store.trips).forEach(t => { t.meta = Object.assign(blankTrip().meta, t.meta); if (!t.meta.rates) t.meta.rates = {}; });
 trip = store.trips[store.current] || Object.values(store.trips)[0];
 store.current = trip.id;
-save();
+if (firstRun) save();
+if (!lsGet(FIRST_KEY)) lsSet(FIRST_KEY, new Date().toISOString());
 render();
+
+// 오프라인 지원: GitHub Pages(https)나 localhost에서만
+if (canOffline()) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});   // 브라우저가 데이터를 함부로 지우지 않게 요청
+}
+window.addEventListener('online', renderTop);
+window.addEventListener('offline', renderTop);
 </script>
 </body>
 </html>
