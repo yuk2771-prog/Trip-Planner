@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Trip Planner</title>
-<meta name="theme-color" content="#f7f5fa">
+<meta name="theme-color" content="#fbf3ec">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="여행 플래너">
@@ -12,79 +12,95 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Song+Myung&family=Gaegu:wght@400;700&display=swap">
 <script>
-/* 첫 화면이 깜빡이지 않도록 저장된 테마를 그리기 전에 적용 */
-try { document.documentElement.dataset.theme = localStorage.getItem('tripPlanner_theme') || 'lavender'; } catch (e) { document.documentElement.dataset.theme = 'lavender'; }
+/* 첫 화면이 깜빡이지 않도록: 지금 여행의 테마(skin), 밝기, 언어를 그리기 전에 적용 */
+(function () {
+  var d = document.documentElement, ls = null;
+  try { ls = window.localStorage; } catch (e) {}
+  var get = function (k) { try { return ls ? ls.getItem(k) : null; } catch (e) { return null; } };
+  var skin = 'today';
+  try { var s = JSON.parse(get('tripPlanner_v1') || 'null'); var t = s && s.trips && s.trips[s.current]; if (t && t.meta && t.meta.skin) skin = t.meta.skin; } catch (e) {}
+  d.dataset.skin = skin;
+  var ap = get('tripPlanner_theme') || 'light';
+  if (ap !== 'dark' && ap !== 'auto') ap = 'light';
+  d.dataset.mode = ap === 'auto' ? (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : ap;
+  var lang = get('tripPlanner_lang') || ((navigator.language || '').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en');
+  d.lang = lang === 'en' ? 'en' : 'ko';
+})();
 </script>
 <style>
-/* ===== 테마 변수 =====
-   선택자를 html에 한정하지 않아서 설정 화면의 테마 견본(data-theme)도 같은 변수를 씀.
-   --accent: 장식(점, 막대) / --accent-strong: 글자·주요 버튼 배경 (대비 확보) */
-:root,[data-theme="lavender"],[data-theme="auto"]{
-  --bg:#f7f5fa;--surface:#fff;--line:#e8e3ef;--text:#2f2a3b;--muted:#6b6580;
-  --accent:#8e7cc3;--accent-strong:#5f4f99;--accent-soft:#eeeaf8;--on-accent:#fff;
-  --rose:#e7c8d3;--rose-tint:#f8edf1;--rose-text:#944d69;
-  --mauve:#d8cbe9;--mauve-tint:#f3eef9;--mauve-text:#654e8a;
-  --peri:#c9d4ef;--peri-tint:#eef2fb;--peri-text:#46578f;
-  --input-bg:#fff;--gray-bg:#f1eff5;--gray-text:#57526a;--empty:#a9a3b6;
-  --shadow:0 1px 2px rgba(45,35,70,.05),0 6px 20px rgba(45,35,70,.06);
+/* ===== 테마(skin) 4종 · 여행마다 따로 =====
+   today = 오늘의 여행, torn = 찢어진 종이, doodle = 두들 다이어리, album = 사진첩
+   --accent: 장식 / --accent-strong: 글자·주요 버튼 (대비 확보) */
+:root,[data-skin="today"]{
+  --bg:#fbf3ec;--surface:#fff;--line:#efdccd;--text:#2a1d16;--muted:#76604f;
+  --accent:#e08a5a;--accent-strong:#a8461c;--accent-soft:#f8e3d4;--on-accent:#fff;
+  --rose:#f0b9b0;--rose-tint:#fcebe8;--rose-text:#9b3a2c;
+  --mauve:#f2d3a8;--mauve-tint:#fbf0e1;--mauve-text:#7d5418;
+  --peri:#bcd9c4;--peri-tint:#ecf6ef;--peri-text:#2f6b43;
+  --input-bg:#fff;--gray-bg:#f6ebe2;--gray-text:#5e4a3e;--empty:#b9a597;
+  --shadow:0 1px 2px rgba(80,40,20,.05),0 6px 20px rgba(80,40,20,.07);
+  --display:"Jua",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;--display-weight:400;
+  --card-radius:22px;--card-border:1px solid var(--line);
+  --nav-bg:#1c1c1c;--nav-fg:#d9cfc8;--nav-on-bg:#fff;--nav-on-fg:#1c1c1c;--nav-border:0;--nav-radius:999px;--nav-shadow:0 10px 30px rgba(0,0,0,.25);
 }
-[data-theme="sage"]{
-  --bg:#f4f7f3;--surface:#fff;--line:#e1e8de;--text:#2c3630;--muted:#606c62;
-  --accent:#6f957a;--accent-strong:#466a52;--accent-soft:#e7f0e9;--on-accent:#fff;
-  --rose:#ecc9c3;--rose-tint:#faeeec;--rose-text:#8d4f45;
-  --mauve:#d5e3c9;--mauve-tint:#f1f6ec;--mauve-text:#50663d;
-  --peri:#c6dfdc;--peri-tint:#ecf5f4;--peri-text:#38635e;
-  --input-bg:#fff;--gray-bg:#eef2ed;--gray-text:#515c54;--empty:#a7b2a9;
+[data-skin="torn"]{
+  --bg:#fff;--surface:#fff;--line:#dedede;--text:#111;--muted:#555;
+  --accent:#111;--accent-strong:#111;--accent-soft:#f0f0f0;--on-accent:#fff;
+  --rose:#ffb48a;--rose-tint:#ffe7d9;--rose-text:#8a3a10;
+  --mauve:#b6a6e0;--mauve-tint:#ece6fa;--mauve-text:#4d3a8a;
+  --peri:#8fd0ea;--peri-tint:#e1f3fa;--peri-text:#1d5d78;
+  --input-bg:#fff;--gray-bg:#f3f3f3;--gray-text:#333;--empty:#999;
+  --shadow:none;
+  --display:"Song Myung","Nanum Myeongjo",serif;--display-weight:400;
+  --card-radius:18px;--card-border:1.5px solid #111;
+  --nav-bg:#fff;--nav-fg:#111;--nav-on-bg:#111;--nav-on-fg:#fff;--nav-border:2px solid #111;--nav-radius:999px;--nav-shadow:none;
 }
-[data-theme="peach"]{
-  --bg:#fbf6f2;--surface:#fff;--line:#f0e2d8;--text:#3d312b;--muted:#76665b;
-  --accent:#c47e60;--accent-strong:#94533a;--accent-soft:#fbeae1;--on-accent:#fff;
-  --rose:#efc4c4;--rose-tint:#fbeeee;--rose-text:#94464c;
-  --mauve:#f2dcc6;--mauve-tint:#fbf2e9;--mauve-text:#7b522f;
-  --peri:#cfe0d6;--peri-tint:#eef6f1;--peri-text:#426855;
-  --input-bg:#fff;--gray-bg:#f6efea;--gray-text:#62554d;--empty:#bdaea4;
+[data-skin="doodle"]{
+  --bg:#e3e2e6;--surface:#f1f0f6;--line:#cfcce6;--text:#1a0dc4;--muted:#4a42a8;
+  --accent:#1a0dc4;--accent-strong:#1a0dc4;--accent-soft:#d9d6f0;--on-accent:#fff;
+  --rose:#f3a6c0;--rose-tint:#fbe6ee;--rose-text:#9b2a58;
+  --mauve:#b9b2ec;--mauve-tint:#e6e3f8;--mauve-text:#3d35a0;
+  --peri:#a9d8b0;--peri-tint:#e3f3e5;--peri-text:#2f6b37;
+  --input-bg:#fbfaff;--gray-bg:#d9d7e6;--gray-text:#3d35a0;--empty:#8d88c4;
+  --shadow:inset 0 1px 0 rgba(255,255,255,.85),0 8px 18px rgba(40,30,120,.08);
+  --display:"Gaegu",-apple-system,sans-serif;--display-weight:700;
+  --card-radius:22px;--card-border:1px solid rgba(255,255,255,.85);
+  --nav-bg:rgba(190,186,232,.78);--nav-fg:#1a0dc4;--nav-on-bg:#1a0dc4;--nav-on-fg:#fff;--nav-border:1px solid rgba(255,255,255,.85);--nav-radius:22px;--nav-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 8px 20px rgba(40,30,120,.18);
 }
-[data-theme="sky"]{
-  --bg:#f3f7fb;--surface:#fff;--line:#dfe8f1;--text:#2a3542;--muted:#5f6b7a;
-  --accent:#6592c4;--accent-strong:#3f6894;--accent-soft:#e6eff9;--on-accent:#fff;
-  --rose:#ecc8cf;--rose-tint:#faedf0;--rose-text:#8f4a5a;
-  --mauve:#cfdcef;--mauve-tint:#eef3fa;--mauve-text:#455b7c;
-  --peri:#c7e3e0;--peri-tint:#ecf6f5;--peri-text:#376560;
-  --input-bg:#fff;--gray-bg:#edf2f7;--gray-text:#505b68;--empty:#a6b2be;
+[data-skin="album"]{
+  --bg:#f2f2f7;--surface:#fff;--line:#e5e5ea;--text:#111;--muted:#6e6e73;
+  --accent:#0a84ff;--accent-strong:#0a63d6;--accent-soft:#e5f0ff;--on-accent:#fff;
+  --rose:#ffc9c4;--rose-tint:#ffeceb;--rose-text:#c4271c;
+  --mauve:#d7d0f5;--mauve-tint:#f0edfb;--mauve-text:#5a45b8;
+  --peri:#c7e3fa;--peri-tint:#eaf4fd;--peri-text:#1c5e9c;
+  --input-bg:#fff;--gray-bg:#ececf1;--gray-text:#3a3a3c;--empty:#aeaeb2;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.05);
+  --display:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;--display-weight:800;
+  --card-radius:20px;--card-border:0;
+  --nav-bg:rgba(246,246,248,.88);--nav-fg:#111;--nav-on-bg:rgba(120,120,128,.16);--nav-on-fg:#0a63d6;--nav-border:1px solid rgba(255,255,255,.95);--nav-radius:999px;--nav-shadow:0 8px 26px rgba(0,0,0,.14);
 }
-[data-theme="beige"]{
-  --bg:#f8f5ef;--surface:#fff;--line:#e9e2d6;--text:#38322a;--muted:#6c6557;
-  --accent:#9e8762;--accent-strong:#6e5b3c;--accent-soft:#f1ebdf;--on-accent:#fff;
-  --rose:#e8c9bd;--rose-tint:#f9eee9;--rose-text:#8b4f3f;
-  --mauve:#e3d7c2;--mauve-tint:#f5f0e6;--mauve-text:#695839;
-  --peri:#cdd9cc;--peri-tint:#eef3ed;--peri-text:#475f48;
-  --input-bg:#fff;--gray-bg:#f1ede5;--gray-text:#5a5347;--empty:#b6ad9e;
-}
-/* 다크 모드. 인쇄할 때는 밝은 기본 테마로 돌아가도록 screen에서만 적용 */
+/* 어둡게. 인쇄할 때는 밝게 나오도록 screen에서만 */
 @media screen{
-  [data-theme="dark"]{
+  [data-mode="dark"]{
     color-scheme:dark;
-    --bg:#15131b;--surface:#1f1c27;--line:#36313f;--text:#ece8f3;--muted:#a59eb6;
-    --accent:#a593e6;--accent-strong:#c9befa;--accent-soft:#2d2740;--on-accent:#16131d;
+    --bg:#121214;--surface:#1c1c1f;--line:#333338;--text:#ececf0;--muted:#a6a6b0;
     --rose:#8a5268;--rose-tint:#3a2430;--rose-text:#f3b6ca;
     --mauve:#54476c;--mauve-tint:#29233a;--mauve-text:#d2bff0;
-    --peri:#4a5a8a;--peri-tint:#1f2840;--peri-text:#aec0f3;
-    --input-bg:#18151f;--gray-bg:#2a2733;--gray-text:#c2bcd0;--empty:#6a637a;
-    --shadow:0 1px 2px rgba(0,0,0,.35);
+    --peri:#3f5f7a;--peri-tint:#1f2a36;--peri-text:#aecdf3;
+    --input-bg:#161618;--gray-bg:#26262b;--gray-text:#c8c8d0;--empty:#6b6b73;
+    --shadow:0 1px 2px rgba(0,0,0,.4);--card-border:1px solid var(--line);
   }
-}
-@media screen and (prefers-color-scheme:dark){
-  [data-theme="auto"]{
-    color-scheme:dark;
-    --bg:#15131b;--surface:#1f1c27;--line:#36313f;--text:#ece8f3;--muted:#a59eb6;
-    --accent:#a593e6;--accent-strong:#c9befa;--accent-soft:#2d2740;--on-accent:#16131d;
-    --rose:#8a5268;--rose-tint:#3a2430;--rose-text:#f3b6ca;
-    --mauve:#54476c;--mauve-tint:#29233a;--mauve-text:#d2bff0;
-    --peri:#4a5a8a;--peri-tint:#1f2840;--peri-text:#aec0f3;
-    --input-bg:#18151f;--gray-bg:#2a2733;--gray-text:#c2bcd0;--empty:#6a637a;
-    --shadow:0 1px 2px rgba(0,0,0,.35);
-  }
+  [data-mode="dark"][data-skin="today"]{--bg:#17110d;--surface:#221a15;--line:#3a2c23;--accent:#f09a6a;--accent-strong:#ffb48a;--accent-soft:#3a2418;--on-accent:#1a100a;--nav-border:1px solid rgba(255,255,255,.14)}
+  [data-mode="dark"][data-skin="torn"]{--accent:#eee;--accent-strong:#fff;--accent-soft:#2a2a2a;--on-accent:#111;--card-border:1.5px solid #e6e6e6;
+    --nav-bg:#1c1c1f;--nav-fg:#eee;--nav-on-bg:#eee;--nav-on-fg:#111;--nav-border:2px solid #e6e6e6}
+  [data-mode="dark"][data-skin="doodle"]{--bg:#12102a;--surface:#1c1940;--line:#34307a;--text:#dcdaff;--muted:#aaa4f0;--accent:#a9a2ff;--accent-strong:#c3bdff;--accent-soft:#26234a;--on-accent:#120e3a;
+    --nav-bg:rgba(40,36,90,.82);--nav-fg:#c3bdff;--nav-on-bg:#c3bdff;--nav-on-fg:#120e3a;--nav-border:1px solid rgba(255,255,255,.18)}
+  [data-mode="dark"][data-skin="album"]{--bg:#000;--surface:#1c1c1e;--line:#2c2c2e;--accent:#0a84ff;--accent-strong:#4da3ff;--accent-soft:#10263f;--on-accent:#fff;
+    --nav-bg:rgba(40,40,44,.86);--nav-fg:#eee;--nav-on-bg:rgba(255,255,255,.14);--nav-on-fg:#4da3ff;--nav-border:1px solid rgba(255,255,255,.12)}
 }
 
 /* ===== 기본 ===== */
@@ -105,16 +121,19 @@ textarea{resize:vertical;line-height:1.6}
 .small{font-size:.875rem}
 .grow{flex:1;min-width:0}
 .empty{color:var(--empty)}
+.disp{font-family:var(--display);font-weight:var(--display-weight)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* ===== 레이아웃: 휴대폰은 아래 탭, 넓은 화면은 왼쪽 메뉴 ===== */
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 7px;font-size:.75rem;font-weight:600;color:var(--muted);text-align:center}
-.nav-item .icon{width:24px;height:24px}
-.nav-item.on{color:var(--accent-strong)}
+/* ===== 레이아웃: 휴대폰은 떠 있는 아래 메뉴, 넓은 화면은 왼쪽 메뉴 ===== */
+.nav{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:30;display:flex;align-items:center;gap:2px;padding:5px;
+  background:var(--nav-bg);border:var(--nav-border);border-radius:var(--nav-radius);box-shadow:var(--nav-shadow);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 6px;font-size:.72rem;font-weight:700;color:var(--nav-fg);text-align:center;border-radius:calc(var(--nav-radius) - 4px)}
+.nav-item .icon{width:23px;height:23px}
+.nav-item.on{background:var(--nav-on-bg);color:var(--nav-on-fg)}
 .nav-brand,.nav-foot,.nav-item.desk{display:none}
-.main{padding:0 16px calc(96px + env(safe-area-inset-bottom))}
+.main{padding:0 16px calc(110px + env(safe-area-inset-bottom))}
 .wrap{max-width:860px;margin:0 auto}
-.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:6px;padding:10px 0;background:var(--bg)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:6px;padding:10px 16px;margin:0 -16px;background:var(--bg)}
 .trip-switch{display:flex;align-items:center;gap:6px;min-width:0;flex:1;font-weight:800;font-size:1.15rem;padding:6px 8px;margin-left:-8px;border-radius:10px;letter-spacing:-.01em}
 .trip-switch:hover{background:var(--accent-soft)}
 .trip-switch .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -124,23 +143,23 @@ textarea{resize:vertical;line-height:1.6}
 .top-export .lbl{display:none}
 @media (min-width:880px){
   .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
-  .nav{position:sticky;top:0;height:100vh;flex-direction:column;border-top:0;border-right:1px solid var(--line);padding:22px 14px;gap:2px}
+  .nav{position:sticky;top:0;left:auto;right:auto;bottom:auto;height:100vh;flex-direction:column;align-items:stretch;border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;padding:22px 14px;gap:2px;background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none}
   .nav-brand{display:block;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:0 12px 14px}
-  .nav-item,.nav-item.desk{display:flex;flex:none;flex-direction:row;gap:12px;padding:11px 12px;border-radius:12px;font-size:.98rem}
+  .nav-item,.nav-item.desk{display:flex;flex:none;flex-direction:row;gap:12px;padding:11px 12px;border-radius:12px;font-size:.98rem;color:var(--muted)}
   .nav-item:hover{background:var(--gray-bg)}
-  .nav-item.on{background:var(--accent-soft)}
+  .nav-item.on{background:var(--accent-soft);color:var(--accent-strong)}
   .nav-item .icon{width:22px;height:22px}
   .nav-foot{display:block;margin-top:auto;padding:12px;font-size:.8rem;color:var(--muted);line-height:1.5}
   .main{padding:0 36px 56px}
-  .topbar{padding:16px 0 12px}
+  .topbar{padding:16px 0 12px;margin:0}
   .topbar .only-mobile{display:none}
   .top-export .lbl{display:inline}
 }
 
 /* ===== 공통 요소 ===== */
-.page-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 10px}
-.page-title h2{font-size:1.1rem;font-weight:800;letter-spacing:-.01em}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.page-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:22px 0 10px}
+.page-title h2{font-family:var(--display);font-weight:var(--display-weight);font-size:1.25rem;letter-spacing:-.01em}
+.card{background:var(--surface);border:var(--card-border);border-radius:var(--card-radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .card>h3{font-size:1rem;font-weight:700;margin-bottom:10px}
 .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 .card-head h3{font-size:1rem;font-weight:700}
@@ -167,7 +186,7 @@ textarea{resize:vertical;line-height:1.6}
 .progress i{display:block;height:100%;background:var(--accent);border-radius:inherit}
 .seg{display:flex;background:var(--gray-bg);border-radius:14px;padding:4px;gap:4px;margin:14px 0}
 .seg button{flex:1;min-height:40px;border-radius:10px;font-weight:700;font-size:.92rem;color:var(--muted);text-align:center}
-.seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .seg small{font-weight:600;opacity:.8;margin-left:3px}
 .rows{display:flex;flex-direction:column}
 .row{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line);width:100%}
@@ -182,11 +201,11 @@ button.row:hover,.row.click:hover{background:var(--gray-bg);border-radius:10px}
 .empty-state b{display:block;color:var(--text);font-size:1.02rem;margin-bottom:4px}
 
 /* ===== 요약 (상단) ===== */
-.hero{border-radius:22px;padding:18px;background:linear-gradient(135deg,var(--mauve-tint),var(--peri-tint));border:1px solid var(--line);margin:4px 0 14px}
+.hero{border-radius:var(--card-radius);padding:18px;background:var(--surface);border:var(--card-border);box-shadow:var(--shadow);margin:4px 0 14px}
 .hero-route{font-size:.9rem;color:var(--muted);margin-bottom:4px}
 .hero-dates{font-size:1.15rem;font-weight:800;letter-spacing:-.01em}
 .hero .lbl{font-size:.85rem;color:var(--muted);font-weight:600}
-.hero .big{font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.hero .big{font-family:var(--display);font-weight:var(--display-weight);font-size:2.4rem;letter-spacing:-.01em;line-height:1.15}
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 16px;margin-top:14px}
 @media (min-width:640px){.kpis{grid-template-columns:repeat(4,1fr)}}
 .kpi .l{font-size:.8rem;color:var(--muted);font-weight:600}
@@ -198,19 +217,20 @@ button.row:hover,.row.click:hover{background:var(--gray-bg);border-radius:10px}
 .jump button:hover{border-color:var(--accent)}
 
 /* ===== 일정 타임라인 ===== */
-.country-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:22px 0 10px;scroll-margin-top:72px}
-.country-head h3{font-size:1.05rem;font-weight:800}
+.ctry{margin:22px 0 4px;scroll-margin-top:72px}
+.country-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 10px}
+.country-head h3{font-family:var(--display);font-weight:var(--display-weight);font-size:1.35rem;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
 .stop{display:grid;grid-template-columns:34px 1fr;gap:10px}
 .rail{display:flex;flex-direction:column;align-items:center}
 .rail::after{content:"";flex:1;width:2px;background:var(--line);margin-top:4px}
-.stop:last-child .rail::after{display:none}
+.stop.last .rail::after{display:none}
 .dot{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:.8rem;font-weight:800;background:var(--surface);border:2px solid var(--mauve);color:var(--mauve-text);flex:none}
 .stop.low .dot{border-color:var(--peri);color:var(--peri-text)}
 .stop.high .dot{border-color:var(--rose);color:var(--rose-text)}
 .stop.now .dot{background:var(--accent-strong);border-color:var(--accent-strong);color:var(--on-accent)}
-.stop-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;margin-bottom:2px;transition:border-color .15s}
+.stop-card{background:var(--surface);border:var(--card-border);border-radius:16px;padding:12px 14px;cursor:pointer;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;margin-bottom:2px;transition:border-color .15s}
 .stop-card:hover{border-color:var(--accent)}
-.stop.now .stop-card{border-color:var(--accent-strong);box-shadow:0 0 0 2px var(--accent-soft)}
+.stop.now .stop-card{outline:2px solid var(--accent-strong);outline-offset:1px}
 .stop-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .stop-top h4{font-size:1.08rem;font-weight:800;letter-spacing:-.01em}
 .stop-when{font-size:.875rem;color:var(--muted);font-weight:600;white-space:nowrap}
@@ -261,7 +281,7 @@ button.row:hover,.row.click:hover{background:var(--gray-bg);border-radius:10px}
 .check.done .t{text-decoration:line-through;color:var(--muted)}
 .check-edit{display:flex;gap:8px;align-items:center;padding:6px 0}
 .group-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.group-head h3{flex:1;font-size:1rem;font-weight:700}
+.group-head h3{flex:1;font-family:var(--display);font-weight:var(--display-weight);font-size:1.15rem}
 .group-head .cnt{font-size:.85rem;color:var(--muted);font-weight:700}
 .group .progress{margin-bottom:6px;height:6px}
 .add-line{display:flex;gap:8px;margin-top:10px}
@@ -275,7 +295,7 @@ button.row:hover,.row.click:hover{background:var(--gray-bg);border-radius:10px}
 .country-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
 .country-grid .card{margin:0}
 .info-line{display:flex;gap:10px;padding:5px 0;font-size:.92rem}
-.info-line .k{width:68px;flex:none;color:var(--muted);font-weight:600}
+.info-line .k{width:76px;flex:none;color:var(--muted);font-weight:600}
 .info-line a{font-weight:700}
 .notes{min-height:280px}
 .save-state{font-size:.8rem;color:var(--muted)}
@@ -286,12 +306,6 @@ button.row:hover,.row.click:hover{background:var(--gray-bg);border-radius:10px}
 .fld{display:flex;flex-direction:column;gap:6px;font-size:.875rem;font-weight:600;color:var(--muted)}
 .fld small{font-weight:500}
 .fld-check{display:flex;align-items:center;gap:10px;font-size:.95rem;font-weight:600;color:var(--text);cursor:pointer;padding:4px 0}
-.theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
-.theme-opt{display:flex;flex-direction:column;gap:6px;align-items:flex-start;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:.9rem;font-weight:700}
-.theme-opt.on{border-color:var(--accent-strong);box-shadow:0 0 0 2px var(--accent-strong)}
-.theme-opt .dots{display:flex;gap:4px}
-.theme-opt .dots i{width:14px;height:14px;border-radius:50%;display:block}
-.theme-opt small{font-weight:500;color:var(--muted);font-size:.75rem}
 
 /* ===== 시트 (편집 창) ===== */
 dialog.sheet{border:0;padding:0;background:var(--surface);color:var(--text);width:calc(100% - 32px);max-width:560px;max-height:min(88vh,780px);border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.25);margin:auto;overflow:hidden}
@@ -313,7 +327,7 @@ dialog.sheet::backdrop{background:rgba(20,16,30,.45)}
 .big-btn b{display:block;font-size:1rem}
 .big-btn small{color:var(--muted);font-size:.85rem}
 
-/* ===== 새 요소: 백업 알림, 통화 입력, 계획 대비 ===== */
+/* ===== 백업 알림, 통화 입력, 계획 대비 ===== */
 .banner{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--rose-tint);border:1px solid var(--rose);border-radius:16px;padding:12px 14px;margin:4px 0 12px}
 .banner b{color:var(--rose-text)}
 .banner-btns{display:flex;gap:6px}
@@ -333,17 +347,137 @@ dialog.sheet::backdrop{background:rgba(20,16,30,.45)}
 .cmp-bar i{display:block;height:100%;border-radius:inherit;background:var(--peri)}
 .cmp-bar b{position:absolute;top:-4px;width:2px;height:16px;margin-left:-1px;background:var(--text);border-radius:1px}
 .steps{padding-left:20px;font-size:.92rem;display:flex;flex-direction:column;gap:4px}
-
-.toast{position:fixed;width:max-content;max-width:calc(100vw - 32px);text-align:center;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.9rem;font-weight:600;opacity:0;pointer-events:none;transition:all .2s;z-index:100}
+.toast{position:fixed;width:max-content;max-width:calc(100vw - 32px);text-align:center;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.9rem;font-weight:600;opacity:0;pointer-events:none;transition:all .2s;z-index:100}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 @media (min-width:880px){.toast{bottom:32px}}
+
+/* ===== 언어 · 밝기 · 테마 선택 ===== */
+.pill-seg{display:inline-flex;padding:3px;border-radius:999px;background:var(--gray-bg);gap:2px}
+.pill-seg button{min-height:34px;padding:0 14px;white-space:nowrap;border-radius:999px;font-size:.88rem;font-weight:700;color:var(--muted)}
+.pill-seg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.skin-chips{display:flex;flex-wrap:wrap;gap:6px}
+.skin-chip{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.85rem;font-weight:700}
+.skin-chip.on{background:var(--accent-strong);border-color:var(--accent-strong);color:var(--on-accent)}
+.trip-row{display:flex;align-items:center;gap:12px;padding:10px;border-radius:16px;width:100%;border:1px solid var(--line);margin-bottom:8px;background:var(--surface)}
+.trip-row.on{border-color:var(--accent-strong);box-shadow:0 0 0 1px var(--accent-strong)}
+.trip-row .mini-wrap{width:62px;height:75px;flex:none;border-radius:10px;overflow:hidden;position:relative}
+.trip-row .mini-wrap .mini{display:block;transform:scale(.356);transform-origin:0 0;position:absolute;left:0;top:0}
+
+/* 첫 화면: 테마 고르기 */
+.picker{position:fixed;inset:0;z-index:60;overflow-y:auto;background:#f5f5f7;color:#111;padding:16px 16px calc(100px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif}
+[data-mode="dark"] .picker{background:#111;color:#eee}
+.picker-in{max-width:760px;margin:0 auto}
+.picker-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.picker h1{font-size:1.75rem;font-weight:800;line-height:1.25;letter-spacing:-.02em;margin:14px 0 6px}
+.picker .sub{color:#6e6e73;font-size:.95rem;line-height:1.5}
+.picker .pill-seg{background:#e5e5ea}
+.picker .pill-seg button{color:#6e6e73}
+.picker .pill-seg button.on{background:#fff;color:#111}
+[data-mode="dark"] .picker .pill-seg{background:#2c2c2e}
+[data-mode="dark"] .picker .pill-seg button.on{background:#48484a;color:#fff}
+.picker-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px;margin-top:20px}
+@media (min-width:700px){.picker-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.pick-card{text-align:left;color:inherit}
+.pick-card .frame{position:relative;border-radius:20px;overflow:hidden;aspect-ratio:174/210;box-shadow:0 4px 14px rgba(0,0,0,.1);background:#ddd}
+.pick-card .frame .mini{position:absolute;left:0;top:0;transform-origin:0 0}
+.pick-card.on .frame{box-shadow:0 0 0 3px #0a84ff,0 6px 18px rgba(0,0,0,.14)}
+.pick-card .ck{position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:50%;background:#0a84ff;border:2px solid #fff;color:#fff;display:none;place-items:center;font-size:14px;font-weight:800}
+.pick-card.on .ck{display:grid}
+.pick-card b{display:block;font-size:1rem;margin-top:8px}
+.pick-card small{display:block;color:#6e6e73;font-size:.82rem}
+.picker-cta{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));max-width:728px;margin:0 auto;display:flex;gap:8px}
+.picker-cta button{flex:1;text-align:center;min-height:56px;border-radius:16px;font-size:1.05rem;font-weight:700;background:#0a84ff;color:#fff}
+.picker-cta button.sec{flex:none;padding:0 18px;background:#e5e5ea;color:#111}
+[data-mode="dark"] .picker-cta button.sec{background:#2c2c2e;color:#eee}
+/* 미리보기 그림 (174 × 210) */
+.mini{width:174px;height:210px;overflow:hidden;position:relative;font-family:-apple-system,sans-serif}
+
+/* ===== 테마별 대표 화면 ===== */
+/* 오늘의 여행: 지금 도시를 크게 */
+.today{position:relative;color:#fff;border-radius:26px;overflow:hidden;margin:4px 0 14px;padding:18px 18px 20px;text-align:center;background:var(--tc,#b9531f)}
+.today .where{font-family:var(--display);font-size:1.3rem;line-height:1.2}
+.today .where-sub{font-size:.8rem;opacity:.9;margin-top:2px}
+.today .orb{width:150px;height:150px;margin:14px auto 6px;border-radius:50%;display:grid;place-items:center;font-size:76px;line-height:1;background:radial-gradient(circle,rgba(255,238,210,.45) 0 42%,rgba(255,226,190,.2) 43% 62%,rgba(255,222,186,.1) 63% 100%)}
+.today .bubble{display:inline-block;background:rgba(0,0,0,.28);border-radius:999px;padding:8px 16px;font-size:.9rem;font-weight:700;margin-top:6px}
+.today .dd{font-family:var(--display);font-size:3.4rem;line-height:1.05;margin-top:10px}
+.today .dd-sub{font-size:.82rem;opacity:.92}
+.today .stats{display:flex;justify-content:space-around;gap:6px;border-top:1px solid rgba(255,255,255,.28);margin-top:14px;padding-top:10px;font-size:.92rem;font-weight:700}
+.today .nav-c{position:absolute;top:12px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.18);color:#fff;font-size:1.1rem;font-weight:800}
+.today .nav-c.prev{left:12px}.today .nav-c.next{right:12px}
+/* 찢어진 종이: 제목 + 해 그림 + 나라별 종이 띠 */
+.zine{display:flex;align-items:center;justify-content:center;gap:14px;margin:18px 0 6px;text-align:left}
+.zine .sun{width:84px;height:84px;flex:none}
+.zine .sun svg{width:100%;height:100%;display:block}
+.zine h2{font-family:"Song Myung",serif;font-weight:400;font-size:2.1rem;line-height:1.2;letter-spacing:-.01em}
+.zine .meta{font-size:.9rem;margin-top:4px;color:var(--muted)}
+[data-skin="torn"] .ctry{position:relative;background:var(--band,#8fd0ea);color:#111;margin:34px -16px 0;padding:10px 16px 30px}
+[data-skin="torn"] .ctry::before{content:"";position:absolute;left:0;right:0;top:-22px;height:24px;background:var(--band,#8fd0ea);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 24' preserveAspectRatio='none'%3E%3Cpath d='M0 12C40 2 70 20 110 10S170 0 210 12 280 24 320 8 370 4 390 14V24H0z'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 24' preserveAspectRatio='none'%3E%3Cpath d='M0 12C40 2 70 20 110 10S170 0 210 12 280 24 320 8 370 4 390 14V24H0z'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat}
+[data-skin="torn"] .ctry:nth-of-type(even)::before{transform:scaleX(-1)}
+[data-skin="torn"] .ctry .country-head h3{font-size:1.9rem}
+[data-skin="torn"] .ctry .muted,[data-skin="torn"] .ctry .stop-when,[data-skin="torn"] .ctry .stop-area{color:#333}
+[data-skin="torn"] .ctry .stop-card{border:0;background:rgba(255,255,255,.88);color:#111}
+[data-skin="torn"] .ctry .rail::after,[data-skin="torn"] .ctry .leg .line{background:rgba(0,0,0,.25)}
+[data-skin="torn"] .ctry .dot{background:#fff;border-color:#111;color:#111}
+[data-skin="torn"] .ctry .stop.now .dot{background:#111;color:#fff}
+[data-skin="torn"] .ctry .leg-btn,[data-skin="torn"] .ctry .leg-mode{color:#222}
+[data-skin="torn"] .ctry .chip{background:rgba(255,255,255,.7);color:#222}
+[data-skin="torn"] .ctry .chip.now{background:#111;color:#fff}
+[data-skin="torn"] .ctry .todos li::before{background:#111}
+[data-skin="torn"] .ctry .warn{background:rgba(255,255,255,.75)}
+[data-skin="torn"] .ctry + .after-tl{margin-top:16px}
+@media (min-width:880px){[data-skin="torn"] .ctry{margin-left:0;margin-right:0;border-radius:0 0 18px 18px}}
+/* 두들 다이어리: 하루 하나씩 낙서 정원 */
+.garden{text-align:center;margin:8px 0 14px}
+.garden h2{font-family:"Gaegu",sans-serif;font-weight:700;font-size:1.9rem;line-height:1.15}
+.garden .g-sub{font-size:.85rem;color:var(--muted);margin-top:2px}
+.garden-grid{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:3px;margin:14px auto 8px;max-width:420px}
+.garden-grid i{height:22px;display:grid;place-items:center;color:var(--accent-strong);font-style:normal}
+.garden-grid i svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.garden-grid i.f::after{content:"";width:3px;height:3px;border-radius:50%;background:currentColor}
+.garden-grid i.t{color:#3f8a22}
+.garden-legend{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 14px;font-size:.78rem;color:var(--muted)}
+.garden-legend .t{color:#3f8a22;font-weight:700}
+.today-card{display:flex;align-items:center;gap:14px;text-align:left;margin-top:14px;padding:14px 16px;border-radius:22px;background:var(--surface);border:var(--card-border);box-shadow:var(--shadow)}
+.today-card .tc-t{font-family:var(--display);font-weight:var(--display-weight);font-size:1.4rem;line-height:1.1}
+[data-skin="doodle"] .card,[data-skin="doodle"] .stop-card,[data-skin="doodle"] .hero,[data-skin="doodle"] .today-card{background:rgba(241,240,250,.72)}
+[data-mode="dark"][data-skin="doodle"] .card,[data-mode="dark"][data-skin="doodle"] .stop-card,[data-mode="dark"][data-skin="doodle"] .hero,[data-mode="dark"][data-skin="doodle"] .today-card{background:rgba(40,36,90,.6)}
+/* 사진첩: 도시마다 사진 칸 */
+.album-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:18px 0 8px}
+.album-head h3{font-size:1.25rem;font-weight:800}
+.album{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;margin:0 -16px}
+@media (min-width:640px){.album{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin:0;gap:4px}.album .tile{border-radius:6px}}
+.tile{position:relative;aspect-ratio:1;overflow:hidden;background:var(--gray-bg);color:#fff;display:block;width:100%}
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tile .ph{position:absolute;inset:0;display:grid;place-items:center;font-size:44px;background:linear-gradient(160deg,var(--t1,#e9a58c),var(--t2,#93b4dc))}
+.tile .shade{position:absolute;inset:0;background:linear-gradient(transparent 55%,rgba(0,0,0,.5))}
+.tile .cap{position:absolute;left:7px;right:7px;bottom:6px;display:flex;justify-content:space-between;align-items:flex-end;gap:4px;font-size:.75rem;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.45);text-align:left}
+.tile .cap span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.tile .cap span:last-child{flex:none;white-space:nowrap}
+.tile .done{position:absolute;right:6px;top:6px;width:22px;height:22px;border-radius:50%;background:#0a84ff;border:1.5px solid #fff;display:grid;place-items:center;font-size:12px;font-weight:800}
+.tile.now::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 3px #0a84ff;pointer-events:none}
+.tile .now-b{position:absolute;left:6px;top:6px;background:#0a84ff;border-radius:999px;padding:2px 8px;font-size:.7rem;font-weight:800}
+.tile.add .ph{color:#fff;font-size:.8rem;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding-bottom:14px;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tile.add .ph .lbl{background:rgba(255,255,255,.9);color:#1c1c1e;border-radius:999px;padding:2px 9px;text-shadow:none;font-size:.75rem}
+.tile.add .ph .cam{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.85);display:grid;place-items:center;font-size:18px;text-shadow:none;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+/* 사진 넣기 창 */
+.ph-stage{position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--gray-bg);touch-action:none;cursor:grab;user-select:none}
+.ph-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.ph-stage .grid3{position:absolute;inset:0;background:linear-gradient(90deg,transparent 33.2%,rgba(255,255,255,.55) 33.3%,transparent 33.5%,transparent 66.5%,rgba(255,255,255,.55) 66.6%,transparent 66.8%),linear-gradient(transparent 33.2%,rgba(255,255,255,.55) 33.3%,transparent 33.5%,transparent 66.5%,rgba(255,255,255,.55) 66.6%,transparent 66.8%);pointer-events:none}
+.ph-stage .ph-empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);font-weight:600;padding:20px}
+.ph-thumbs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px}
+.ph-thumb{width:72px;height:72px;flex:none;border-radius:12px;overflow:hidden;position:relative;background:var(--gray-bg)}
+.ph-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ph-thumb.on{box-shadow:inset 0 0 0 3px var(--accent-strong)}
+.ph-thumb .ck{position:absolute;right:4px;bottom:4px;width:20px;height:20px;border-radius:50%;background:var(--accent-strong);color:#fff;border:1.5px solid #fff;display:grid;place-items:center;font-size:11px;font-weight:800}
 
 /* ===== 인쇄 / PDF: 앱 화면 대신 보고서만 ===== */
 #report{display:none}
 @media print{
   @page{margin:14mm}
   body{background:#fff}
-  .app,dialog,.toast{display:none!important}
+  .app,dialog,.toast,.picker{display:none!important}
   #report{display:block}
   #report .report{padding:0;max-width:none}
 }
@@ -391,7 +525,7 @@ dialog.sheet::backdrop{background:rgba(20,16,30,.45)}
   .report .r-plan .c-c{grid-column:2/5;grid-row:1}
   .report .r-plan .c-d{grid-column:2;grid-row:2;color:#5f4f99;font-weight:700}
   .report .r-plan .c-k{grid-column:3;grid-row:2}
-  .report .r-plan .c-k::after{content:"박"}
+  .report .r-plan .c-k::after{content:attr(data-u)}
   .report .r-plan .c-p{grid-column:4;grid-row:2}
   .report .r-plan .c-t{grid-column:2/5;grid-row:3}
   .report .r-plan tr.leg,.report .r-plan tr.leg td{display:block}
@@ -415,6 +549,17 @@ dialog.sheet::backdrop{background:rgba(20,16,30,.45)}
 <input type="file" id="import-file" accept=".json,application/json" multiple hidden>
 
 <script>
+/* ============ 언어 (기기별) ============ */
+const LANG_KEY = 'tripPlanner_lang';
+let lang = document.documentElement.lang === 'en' ? 'en' : 'ko';
+const L = (ko, en) => lang === 'en' ? en : ko;          // 화면 문구: 한국어 / English
+const LOC = () => lang === 'en' ? 'en-US' : 'ko-KR';
+function setLang(x) {
+  lang = x === 'en' ? 'en' : 'ko';
+  try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+  document.documentElement.lang = lang;
+}
+
 /* ============ 기본 데이터 ============ */
 const STORE_KEY = 'tripPlanner_v1';
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -423,31 +568,32 @@ function blankTrip() {
   return {
     id: uid(),
     meta: {
-      title: '새 여행', subtitle: '', startDate: '',
-      baseCur: 'USD', homeCur: 'KRW', fx: 1380, fxUpdated: '',
+      title: L('새 여행', 'New trip'), subtitle: '', startDate: '',
+      baseCur: 'USD', homeCur: lang === 'en' ? 'USD' : 'KRW', fx: lang === 'en' ? 1 : 1380, fxUpdated: '',
       minNights: 3, maxNightsNoTrek: 5, maxDayBus: 8, maxNightBus: 10,
       tierLow: 45, tierHigh: 65,
-      rates: {}, ratesUpdated: ''        // 현지 통화 환율 (1 예산 통화 기준)
+      rates: {}, ratesUpdated: '',       // 현지 통화 환율 (1 예산 통화 기준)
+      skin: ''                           // 이 여행의 테마 (today / torn / doodle / album). 비어 있으면 처음에 고르게 함
     },
     cities: [],
     routes: [],
     costs: [
-      { id: uid(), label: '왕복 국제선', amount: 0 },
-      { id: uid(), label: '투어 / 액티비티', amount: 0 },
-      { id: uid(), label: '여행자 보험', amount: 0 }
+      { id: uid(), label: L('왕복 국제선', 'Round-trip flights'), amount: 0 },
+      { id: uid(), label: L('투어 / 액티비티', 'Tours / activities'), amount: 0 },
+      { id: uid(), label: L('여행자 보험', 'Travel insurance'), amount: 0 }
     ],
     bookings: [],
     checklists: [
-      { id: uid(), tab: 'prep', title: '출발 2~3개월 전', items: [
+      { id: uid(), tab: 'prep', title: L('출발 2~3개월 전', '2–3 months before'), items: [
         'Check passport validity (6+ months)', 'Buy flights', 'Buy travel insurance', 'Check visa / entry rules', 'Check vaccines'
       ].map(t => ({ id: uid(), text: t, done: false })) },
-      { id: uid(), tab: 'prep', title: '출발 1주 전', items: [
+      { id: uid(), tab: 'prep', title: L('출발 1주 전', '1 week before'), items: [
         'Download offline maps', 'Save copies of passport & insurance', 'Tell bank about travel', 'Get some cash in local currency'
       ].map(t => ({ id: uid(), text: t, done: false })) },
-      { id: uid(), tab: 'pack', title: '필수품', items: [
+      { id: uid(), tab: 'pack', title: L('필수품', 'Essentials'), items: [
         'Passport & cards', 'Phone, charger, power bank', 'Plug adapter', 'Medicine kit', 'Toiletries'
       ].map(t => ({ id: uid(), text: t, done: false })) },
-      { id: uid(), tab: 'pack', title: '옷', items: [
+      { id: uid(), tab: 'pack', title: L('옷', 'Clothes'), items: [
         'T-shirts', 'Pants', 'Underwear & socks', 'Jacket', 'Shoes / sandals'
       ].map(t => ({ id: uid(), text: t, done: false })) }
     ],
@@ -523,7 +669,7 @@ function sampleTrip() {
     R('Puno', 'La Paz', '버스', 'via Copacabana', 7, 30),
     R('La Paz', 'Sucre', '항공', 'BoA', 1, 110),
     R('Sucre', 'Uyuni', '야간버스', 'via Potosí', 9, 20),
-    R('Uyuni', 'San Pedro de Atacama', '투어', '3-day 4x4 tour (cost in 투어)', 0, 0),
+    R('Uyuni', 'San Pedro de Atacama', '투어', '3-day 4x4 tour (cost in tours)', 0, 0),
     R('San Pedro de Atacama', 'Valparaíso', '항공', 'CJC→SCL + bus 1.5h', 2, 120),
     R('Valparaíso', 'Santiago', '버스', 'Turbus / Pullman', 1.5, 6),
     R('Santiago', 'Pucón', '야간버스', 'Turbus / Pullman (cama)', 10, 40),
@@ -537,9 +683,9 @@ function sampleTrip() {
     R('Colonia', 'Montevideo', '버스', 'COT / Turil', 2.5, 15)
   ];
   t.costs = [
-    { id: uid(), label: '왕복 국제선 (서울 ↔ 멕시코시티 / 몬테비데오)', amount: 1200 },
-    { id: uid(), label: '트레킹 / 투어 (Salkantay, W-Trek, Uyuni 등)', amount: 1200 },
-    { id: uid(), label: '여행자 보험 (22주)', amount: 0 }
+    { id: uid(), label: L('왕복 국제선 (서울 ↔ 멕시코시티 / 몬테비데오)', 'Round-trip flights (Seoul ↔ Mexico City / Montevideo)'), amount: 1200 },
+    { id: uid(), label: L('트레킹 / 투어 (Salkantay, W-Trek, Uyuni 등)', 'Treks / tours (Salkantay, W-Trek, Uyuni…)'), amount: 1200 },
+    { id: uid(), label: L('여행자 보험 (22주)', 'Travel insurance (22 weeks)'), amount: 0 }
   ];
   const B = (item, country, when, memo) => ({ id: uid(), item, country, when, memo, done: false });
   t.bookings = [
@@ -550,23 +696,23 @@ function sampleTrip() {
     B('Uyuni 3-day tour', 'Bolivia', '2 days before', 'Book in Uyuni, confirm ends in Atacama')
   ];
   t.checklists = [
-    { id: uid(), tab: 'prep', title: '출발 6~4개월 전', items: [
+    { id: uid(), tab: 'prep', title: L('출발 6~4개월 전', '4–6 months before'), items: [
       'Check passport validity (6+ months)', 'Book Machu Picchu permits', 'Book Torres del Paine campsites',
       'Yellow fever vaccine & ICVP card', 'Buy long-haul flights'].map(x => ({ id: uid(), text: x, done: false })) },
-    { id: uid(), tab: 'prep', title: '출발 1개월 전', items: [
+    { id: uid(), tab: 'prep', title: L('출발 1개월 전', '1 month before'), items: [
       'Buy travel insurance (full 22 weeks)', 'Notify banks & card companies', 'Diamox & rehydration salts',
-      'Check 해외안전여행 alerts (Ecuador, Bolivia)'].map(x => ({ id: uid(), text: x, done: false })) },
-    { id: uid(), tab: 'prep', title: '출발 1주 전', items: [
+      L('Check 해외안전여행 alerts (Ecuador, Bolivia)', 'Check travel advisories (Ecuador, Bolivia)')].map(x => ({ id: uid(), text: x, done: false })) },
+    { id: uid(), tab: 'prep', title: L('출발 1주 전', '1 week before'), items: [
       'Offline Google Maps & Maps.me', 'PDF copies of passport & insurance', 'Clean USD bills ($5/$10/$20)',
       '45L + 38L compression test'].map(x => ({ id: uid(), text: x, done: false })) },
-    { id: uid(), tab: 'pack', title: '45L 메인 배낭 (트레킹 중 숙소 보관)', items: [
+    { id: uid(), tab: 'pack', title: L('45L 메인 배낭 (트레킹 중 숙소 보관)', '45L main pack (left at hostel on treks)'), items: [
       '2x casual tops', 'Light pants', 'Shorts or skirt', '5–6 quick-dry underwear', 'Swimsuit',
       'Town sneakers', 'Sandals', 'Toiletry kit (solid bars)', '2 compression cubes', '2 TSA padlocks'].map(x => ({ id: uid(), text: x, done: false })) },
-    { id: uid(), tab: 'pack', title: '38L 트레킹 배낭', items: [
+    { id: uid(), tab: 'pack', title: L('38L 트레킹 배낭', '38L trekking pack'), items: [
       'Trail runners / boots', 'GORE-TEX rain shell', 'Down jacket', 'Fleece', '2 merino tops', 'Thermal base layer',
       'Hiking pants', '3 merino socks', 'Trekking poles', 'Sleeping bag liner', 'Water filter bottle', 'Headlamp',
       'Microfiber towel', 'Altitude pills & salts'].map(x => ({ id: uid(), text: x, done: false })) },
-    { id: uid(), tab: 'pack', title: '15~20L 데이팩', items: [
+    { id: uid(), tab: 'pack', title: L('15~20L 데이팩', '15–20L daypack'), items: [
       'Passport, cards, emergency cash', '20,000 mAh power bank', 'Plug adapter', 'Sunglasses & SPF 50+', 'DEET repellent'
     ].map(x => ({ id: uid(), text: x, done: false })) }
   ];
@@ -575,7 +721,7 @@ function sampleTrip() {
     K('Mexico', '911', 'MXN', 'Card in cities, cash in Chiapas', 'Chiapas border areas: avoid'),
     K('Guatemala', '110 police / 122 ambulance', 'GTQ', 'Mostly cash', ''),
     K('Costa Rica', '911', 'CRC / USD', 'Cards widely accepted', ''),
-    K('Ecuador', '911', 'USD', 'Cash, small bills', '외교부 특별여행주의보. Skip Guayaquil & Cuenca'),
+    K('Ecuador', '911', 'USD', 'Cash, small bills', L('외교부 특별여행주의보. Skip Guayaquil & Cuenca', 'Travel advisory in place. Skip Guayaquil & Cuenca')),
     K('Peru', '105 police / 106 ambulance', 'PEN', 'Cash for markets, card in hostels', ''),
     K('Bolivia', '110', 'BOB', 'Mostly cash', 'Road blockades possible. Uyuni rainy season Nov–Mar'),
     K('Chile', '131 ambulance / 133 police', 'CLP', 'Cards almost everywhere', ''),
@@ -610,7 +756,7 @@ function save() {
   const s = document.getElementById('saved-at');
   if (s) s.textContent = savedText();
 }
-const savedText = () => store.savedAt ? new Date(store.savedAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+const savedText = () => store.savedAt ? new Date(store.savedAt).toLocaleString(LOC(), { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
 
 /* ============ 기기 ============ */
 const DEVICE_KEY = 'tripPlanner_device';
@@ -627,53 +773,75 @@ function deviceName() {
   try { return localStorage.getItem(DEVICE_KEY) || guessDevice(); } catch (e) { return guessDevice(); }
 }
 
-/* ============ 테마 (기기별) ============ */
-const THEME_KEY = 'tripPlanner_theme';
-const THEMES = [
-  { id: 'lavender', name: '라벤더' },
-  { id: 'sage', name: '세이지' },
-  { id: 'peach', name: '피치' },
-  { id: 'sky', name: '스카이' },
-  { id: 'beige', name: '베이지' },
-  { id: 'dark', name: '다크' },
-  { id: 'auto', name: '시스템 설정', note: '기기 설정에 따라 라벤더 / 다크' },
-];
-function getTheme() {
-  let t = 'lavender';
+/* ============ 밝기 (기기별): 밝게 / 어둡게 / 기기 설정 ============ */
+const THEME_KEY = 'tripPlanner_theme';     // 예전 색 테마(lavender 등)는 '밝게'로 봄
+const darkMQ = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+function getMode() {
+  let t = 'light';
   try { t = localStorage.getItem(THEME_KEY) || t; } catch (e) {}
-  return THEMES.some(x => x.id === t) ? t : 'lavender';
+  return t === 'dark' || t === 'auto' ? t : 'light';
 }
-function applyTheme(t) {
-  document.documentElement.dataset.theme = t;
+function applyMode() {
+  const m = getMode();
+  document.documentElement.dataset.mode = m === 'auto' ? (darkMQ && darkMQ.matches ? 'dark' : 'light') : m;
   const tc = document.querySelector('meta[name="theme-color"]');   // 휴대폰 상단 표시줄 색
-  if (tc) tc.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#f7f5fa';
+  if (tc) tc.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#fbf3ec';
 }
-function setTheme(t) {
-  try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
-  applyTheme(t);
-  document.querySelectorAll('.theme-opt').forEach(b => b.classList.toggle('on', b.dataset.theme === t));
+function setMode(m) { try { localStorage.setItem(THEME_KEY, m); } catch (e) {} applyMode(); }
+if (darkMQ && darkMQ.addEventListener) darkMQ.addEventListener('change', () => { if (getMode() === 'auto') applyMode(); });
+
+/* ============ 테마 (여행마다) ============ */
+const SKINS = [
+  { id: 'today', ko: ['오늘의 여행', '지금 있는 도시를 크게'], en: ['Today', 'Your current city, big'] },
+  { id: 'torn', ko: ['찢어진 종이', '잡지처럼 큰 글씨'], en: ['Torn Paper', 'Big type, zine style'] },
+  { id: 'doodle', ko: ['두들 다이어리', '하루 하나씩 낙서'], en: ['Doodle Diary', 'A doodle a day'] },
+  { id: 'album', ko: ['사진첩', '내 사진으로 채우기'], en: ['Photo Album', 'Fill it with your photos'] }
+];
+const skinOf = t => SKINS.some(s => s.id === (t && t.meta.skin)) ? t.meta.skin : 'today';
+const skinName = id => (SKINS.find(s => s.id === id) || SKINS[0])[lang][0];
+function applySkin() { document.documentElement.dataset.skin = skinOf(trip); applyMode(); }
+
+/* 나라 색 · 국기 (일정 순서대로 나라마다 다른 색) */
+const TODAY_COLORS = ['#b9531f', '#357a3e', '#2a62a6', '#7a45a3', '#b3322a', '#8a6416', '#1f7676', '#4f4fae', '#974063'];
+const BAND_COLORS = ['#8fd0ea', '#a6dd82', '#b6a6e0', '#ffb48a', '#ffe27a', '#f6b3c8', '#9fe0cf'];
+const TILE_COLORS = [['#d9805f', '#e8b06c'], ['#4f9bc8', '#7cc2a0'], ['#8e78d0', '#d58fb0'], ['#3fa595', '#8cc46e'], ['#d98d3a', '#e3b852'], ['#5f86c4', '#8fa8d8'], ['#a8764e', '#c99a74']];
+const ISO = {
+  mexico: 'MX', 멕시코: 'MX', guatemala: 'GT', 과테말라: 'GT', 'costa rica': 'CR', 코스타리카: 'CR', ecuador: 'EC', 에콰도르: 'EC',
+  peru: 'PE', 페루: 'PE', bolivia: 'BO', 볼리비아: 'BO', chile: 'CL', 칠레: 'CL', argentina: 'AR', 아르헨티나: 'AR', uruguay: 'UY', 우루과이: 'UY',
+  colombia: 'CO', 콜롬비아: 'CO', brazil: 'BR', 브라질: 'BR', cuba: 'CU', 쿠바: 'CU', panama: 'PA', 파나마: 'PA', belize: 'BZ', nicaragua: 'NI',
+  korea: 'KR', 'south korea': 'KR', 한국: 'KR', 대한민국: 'KR', japan: 'JP', 일본: 'JP', china: 'CN', 중국: 'CN', taiwan: 'TW', 대만: 'TW',
+  'hong kong': 'HK', 홍콩: 'HK', thailand: 'TH', 태국: 'TH', vietnam: 'VN', 베트남: 'VN', laos: 'LA', 라오스: 'LA', cambodia: 'KH', 캄보디아: 'KH',
+  philippines: 'PH', 필리핀: 'PH', indonesia: 'ID', 인도네시아: 'ID', malaysia: 'MY', 말레이시아: 'MY', singapore: 'SG', 싱가포르: 'SG',
+  india: 'IN', 인도: 'IN', nepal: 'NP', 네팔: 'NP', mongolia: 'MN', 몽골: 'MN', turkey: 'TR', türkiye: 'TR', 튀르키예: 'TR', 터키: 'TR',
+  usa: 'US', 'united states': 'US', 미국: 'US', canada: 'CA', 캐나다: 'CA', uk: 'GB', 'united kingdom': 'GB', 영국: 'GB', ireland: 'IE', 아일랜드: 'IE',
+  france: 'FR', 프랑스: 'FR', spain: 'ES', 스페인: 'ES', portugal: 'PT', 포르투갈: 'PT', italy: 'IT', 이탈리아: 'IT', germany: 'DE', 독일: 'DE',
+  netherlands: 'NL', 네덜란드: 'NL', belgium: 'BE', 벨기에: 'BE', switzerland: 'CH', 스위스: 'CH', austria: 'AT', 오스트리아: 'AT',
+  czechia: 'CZ', 'czech republic': 'CZ', 체코: 'CZ', hungary: 'HU', 헝가리: 'HU', poland: 'PL', 폴란드: 'PL', croatia: 'HR', 크로아티아: 'HR',
+  greece: 'GR', 그리스: 'GR', iceland: 'IS', 아이슬란드: 'IS', norway: 'NO', 노르웨이: 'NO', sweden: 'SE', 스웨덴: 'SE', finland: 'FI', 핀란드: 'FI',
+  denmark: 'DK', 덴마크: 'DK', morocco: 'MA', 모로코: 'MA', egypt: 'EG', 이집트: 'EG', australia: 'AU', 호주: 'AU', 'new zealand': 'NZ', 뉴질랜드: 'NZ'
+};
+function flagOf(country) {
+  const code = ISO[String(country || '').trim().toLowerCase()];
+  return code ? String.fromCodePoint(...[...code].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65)) : '📍';
 }
-function themePicker() {
-  const cur = getTheme();
-  return h('div', { class: 'theme-grid' }, ...THEMES.map(t =>
-    h('button', { class: 'theme-opt' + (t.id === cur ? ' on' : ''), 'data-theme': t.id, type: 'button', onclick: () => setTheme(t.id) },
-      h('span', { class: 'dots' },
-        ...['--accent', '--mauve', '--peri', '--rose'].map(v => h('i', { style: 'background:var(' + v + ')' }))),
-      t.name,
-      t.note ? h('small', {}, t.note) : null)));
+function countryOrder() {
+  const list = [];
+  trip.cities.forEach(c => { const k = (c.country || '').trim(); if (k && !list.includes(k)) list.push(k); });
+  return list;
 }
+const countryIndex = k => Math.max(0, countryOrder().indexOf((k || '').trim()));
 
 /* ============ 계산 ============ */
 const num = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
 function fmtBase(v) {
   const c = trip.meta.baseCur || '';
-  const s = Math.round(v).toLocaleString();
+  const s = Math.round(v).toLocaleString('en-US');
   return c === 'USD' ? '$' + s : s + ' ' + c;
 }
 function fmtHome(v) {
   const c = trip.meta.homeCur || '';
-  const s = Math.round(v).toLocaleString('ko-KR');
-  return c === 'KRW' ? '₩ ' + s : s + ' ' + c;
+  const s = Math.round(v).toLocaleString('en-US');
+  return c === 'KRW' ? '₩ ' + s : c === 'USD' ? '$' + s : s + ' ' + c;
 }
 function addDays(dateStr, n) {
   if (!dateStr) return null;
@@ -682,7 +850,6 @@ function addDays(dateStr, n) {
   d.setDate(d.getDate() + n);
   return d;
 }
-const fmtDate = d => d ? (d.getMonth() + 1) + '/' + d.getDate() : '';
 function totals() {
   const nights = trip.cities.reduce((a, c) => a + num(c.nights), 0);
   const ground = trip.cities.reduce((a, c) => a + num(c.nights) * num(c.daily), 0);
@@ -694,16 +861,18 @@ function totals() {
   const spentHome = trip.ledger.reduce((a, l) => a + num(l.amount) * (num(l.fx) || num(trip.meta.fx)), 0);
   return { nights, ground, transport, fixed, grand, countries, spent, spentHome };
 }
+const nightsL = n => L(n + '박', n + (n === 1 ? ' night' : ' nights'));
+const hoursL = n => L(n + '시간', n + 'h');
 function cityWarnings(c) {
   const m = trip.meta, w = [], n = num(c.nights);
-  if (num(m.minNights) && n < num(m.minNights)) w.push('최소 ' + m.minNights + '박보다 짧음');
-  if (!c.trek && num(m.maxNightsNoTrek) && n > num(m.maxNightsNoTrek)) w.push('트레킹 없는 도시인데 ' + m.maxNightsNoTrek + '박 초과');
+  if (num(m.minNights) && n < num(m.minNights)) w.push(L('최소 ' + m.minNights + '박보다 짧음', 'Shorter than ' + m.minNights + ' nights'));
+  if (!c.trek && num(m.maxNightsNoTrek) && n > num(m.maxNightsNoTrek)) w.push(L('트레킹 없는 도시인데 ' + m.maxNightsNoTrek + '박 초과', 'Over ' + m.maxNightsNoTrek + ' nights without a trek'));
   return w;
 }
 function routeWarning(r) {
-  const m = trip.meta, h = num(r.hours);
-  if ((r.mode === '버스' || r.mode === '셔틀') && num(m.maxDayBus) && h > num(m.maxDayBus)) return '낮 이동 ' + m.maxDayBus + '시간 초과 → 야간버스/항공 검토';
-  if (r.mode === '야간버스' && num(m.maxNightBus) && h > num(m.maxNightBus)) return '야간 ' + m.maxNightBus + '시간 초과 → 항공 검토';
+  const m = trip.meta, hr = num(r.hours);
+  if ((r.mode === '버스' || r.mode === '셔틀') && num(m.maxDayBus) && hr > num(m.maxDayBus)) return L('낮 이동 ' + m.maxDayBus + '시간 초과 → 야간버스/항공 검토', 'Over ' + m.maxDayBus + 'h by day → consider night bus / flight');
+  if (r.mode === '야간버스' && num(m.maxNightBus) && hr > num(m.maxNightBus)) return L('야간 ' + m.maxNightBus + '시간 초과 → 항공 검토', 'Over ' + m.maxNightBus + 'h overnight → consider a flight');
   return '';
 }
 
@@ -723,21 +892,30 @@ function h(tag, attrs, ...kids) {
   }
   return e;
 }
+// 미리 만들어 둔 SVG 문자열(코드에 고정된 그림)만 넣을 때 사용
+function svgEl(markup, cls) { const s = h('span', { class: cls || '', 'aria-hidden': 'true' }); s.innerHTML = markup; return s; }
 
 /* ============ 공통 ============ */
 const $ = s => document.querySelector(s);
-const WD = '일월화수목금토';
-const md = d => d ? (d.getMonth() + 1) + '/' + d.getDate() : '';
-const mdw = d => d ? md(d) + ' (' + WD[d.getDay()] + ')' : '';
-const ymd = d => d ? d.getFullYear() + '. ' + (d.getMonth() + 1) + '. ' + d.getDate() + '.' : '';
+const WD = () => L('일월화수목금토', 'SMTWTFS');
+const WDL = d => lang === 'en' ? d.toLocaleDateString('en-US', { weekday: 'short' }) : '일월화수목금토'[d.getDay()];
+const md = d => d ? (lang === 'en' ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : (d.getMonth() + 1) + '/' + d.getDate()) : '';
+const mdw = d => d ? md(d) + ' (' + WDL(d) + ')' : '';
+const ymd = d => d ? (lang === 'en' ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : d.getFullYear() + '. ' + (d.getMonth() + 1) + '. ' + d.getDate() + '.') : '';
 function todayStr() { const d = new Date(), z = x => String(x).padStart(2, '0'); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); }
 const lines = s => String(s || '').split('\n').map(x => x.trim()).filter(Boolean);
 const tierOf = d => d < num(trip.meta.tierLow) ? 'low' : d >= num(trip.meta.tierHigh) ? 'high' : 'mid';
 
+// 이동 수단·지출 분류는 데이터에 한국어 이름으로 저장 (예전 백업과 호환). 화면에만 번역
 const MODES = ['버스', '야간버스', '셔틀', '항공', '페리', '기차', '투어', '기타'];
 const MODE_ICON = { 버스: '🚌', 야간버스: '🌙', 셔틀: '🚐', 항공: '✈️', 페리: '⛴️', 기차: '🚆', 투어: '🧭', 기타: '➜' };
+const MODE_EN = { 버스: 'Bus', 야간버스: 'Night bus', 셔틀: 'Shuttle', 항공: 'Flight', 페리: 'Ferry', 기차: 'Train', 투어: 'Tour', 기타: 'Other' };
+const modeName = m => lang === 'en' ? (MODE_EN[m] || m) : m;
+const modeText = m => (MODE_ICON[m] || '➜') + ' ' + modeName(m);
 const CATS = ['숙소', '식비', '교통', '투어·트레킹', '쇼핑', '기타'];
 const CAT_ICON = { 숙소: '🛏️', 식비: '🍽️', 교통: '🚌', '투어·트레킹': '🥾', 쇼핑: '🛍️', 기타: '🧾' };
+const CAT_EN = { 숙소: 'Stay', 식비: 'Food', 교통: 'Transport', '투어·트레킹': 'Tours & treks', 쇼핑: 'Shopping', 기타: 'Other' };
+const catName = c => lang === 'en' ? (CAT_EN[c] || c) : c;
 
 const ICONS = {
   plan: '<rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>',
@@ -751,7 +929,9 @@ const ICONS = {
   close: '<path d="M6 6l12 12M18 6 6 18"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   edit: '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/>',
-  trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
+  trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  palette: '<path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.8 1.8-1.7 0-1.1-.9-1.5-.9-2.5 0-.9.8-1.6 1.7-1.6H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'
 };
 function icon(name) { const s = h('span', { class: 'icon', 'aria-hidden': 'true' }); s.innerHTML = '<svg viewBox="0 0 24 24">' + ICONS[name] + '</svg>'; return s; }
 function btn(label, onclick, cls = '') { return h('button', { type: 'button', class: 'btn ' + cls, onclick }, label); }
@@ -775,8 +955,9 @@ function schedule() {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   return trip.cities.map(c => {
     const n = num(c.nights), arr = addDays(trip.meta.startDate, acc), dep = addDays(trip.meta.startDate, acc + n);
+    const startN = acc;
     acc += n;
-    return { c, n, arr, dep, now: !!(arr && today >= arr && today < dep) };
+    return { c, n, arr, dep, startN, now: !!(arr && today >= arr && today < dep), past: !!(dep && today >= dep) };
   });
 }
 /* 이동을 도시 사이에 연결: 이름이 같거나 한쪽이 다른 쪽으로 시작하면 같은 도시로 봄 (예: "Uyuni" ↔ "Uyuni (3-day tour)") */
@@ -793,7 +974,7 @@ function linkRoutes() {
   return { between, loose: trip.routes.filter(r => !used.has(r)) };
 }
 function routeText(r) {
-  return [r.op, num(r.hours) ? num(r.hours) + '시간' : '', num(r.cost) ? fmtBase(num(r.cost)) : ''].filter(Boolean).join(' · ');
+  return [r.op, num(r.hours) ? hoursL(num(r.hours)) : '', num(r.cost) ? fmtBase(num(r.cost)) : ''].filter(Boolean).join(' · ');
 }
 
 /* ============ 시트 (편집 창) ============ */
@@ -801,7 +982,7 @@ const sheet = $('#sheet');
 function openSheet(title, body, foot) {
   sheet.innerHTML = '';
   sheet.append(...[
-    h('div', { class: 'sheet-head' }, h('h3', {}, title), h('button', { class: 'icon-btn', type: 'button', 'aria-label': '닫기', onclick: closeSheet }, icon('close'))),
+    h('div', { class: 'sheet-head' }, h('h3', {}, title), h('button', { class: 'icon-btn', type: 'button', 'aria-label': L('닫기', 'Close'), onclick: closeSheet }, icon('close'))),
     h('div', { class: 'sheet-body' }, body),
     foot ? h('div', { class: 'sheet-foot' }, foot) : null].filter(Boolean));
   if (!sheet.open) sheet.showModal();
@@ -844,7 +1025,7 @@ function control(f, d) {
   return { wrap: h('label', { class: 'fld' + full }, h('span', {}, f.label), input, dl, f.hint ? h('small', {}, f.hint) : null), input };
 }
 /* 항목 하나를 편집하는 창. 저장을 눌러야 반영되고, 취소하면 그대로 */
-function editForm({ title, obj, fields, list, isNew, order = true, onDelete, deleteMsg, after }) {
+function editForm({ title, obj, fields, list, isNew, order = true, onDelete, deleteMsg, after, extra }) {
   const d = JSON.parse(JSON.stringify(obj));
   const form = h('div', { class: 'form' });
   let first = null;
@@ -855,8 +1036,9 @@ function editForm({ title, obj, fields, list, isNew, order = true, onDelete, del
     pos = isNew ? max : list.indexOf(obj) + 1;
     const inp = h('input', { type: 'text', inputmode: 'numeric', value: pos });
     inp.addEventListener('input', () => { pos = parseInt(inp.value, 10); });
-    form.append(h('label', { class: 'fld' }, h('span', {}, '순서 (1~' + max + '번째)'), inp));
+    form.append(h('label', { class: 'fld' }, h('span', {}, L('순서 (1~' + max + '번째)', 'Order (1–' + max + ')')), inp));
   }
+  if (extra) form.append(extra);
   const doSave = () => {
     Object.assign(obj, d);
     if (list) {
@@ -866,19 +1048,19 @@ function editForm({ title, obj, fields, list, isNew, order = true, onDelete, del
       list.splice(p, 0, obj);
     }
     if (after) after(obj);
-    save(); closeSheet(); render(); toast(isNew ? '추가했습니다' : '저장했습니다');
+    save(); closeSheet(); render(); toast(isNew ? L('추가했습니다', 'Added') : L('저장했습니다', 'Saved'));
   };
   form.addEventListener('keydown', e => {
     if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox' && !e.isComposing) { e.preventDefault(); doSave(); }
   });
   openSheet(title, form, [
     !isNew && onDelete ? h('button', { type: 'button', class: 'btn danger', onclick: () => {
-      if (!confirm(deleteMsg || '삭제할까요?')) return;
-      onDelete(); save(); closeSheet(); render(); toast('삭제했습니다');
-    } }, icon('trash'), '삭제') : null,
+      if (!confirm(deleteMsg || L('삭제할까요?', 'Delete this?'))) return;
+      onDelete(); save(); closeSheet(); render(); toast(L('삭제했습니다', 'Deleted'));
+    } }, icon('trash'), L('삭제', 'Delete')) : null,
     h('span', { class: 'grow' }),
-    btn('취소', closeSheet, 'ghost'),
-    btn(isNew ? '추가' : '저장', doSave, 'primary')
+    btn(L('취소', 'Cancel'), closeSheet, 'ghost'),
+    btn(isNew ? L('추가', 'Add') : L('저장', 'Save'), doSave, 'primary')
   ]);
   if (isNew && first) setTimeout(() => first.focus(), 60);
 }
@@ -887,56 +1069,57 @@ function editForm({ title, obj, fields, list, isNew, order = true, onDelete, del
 function editCity(c) {
   const m = trip.meta, isNew = !c, last = trip.cities[trip.cities.length - 1];
   const obj = c || { id: uid(), name: '', country: last ? last.country : '', nights: num(m.minNights) || 3, daily: last ? last.daily : 50, alt: '', base: '', trek: false, todos: '' };
-  editForm({ title: isNew ? '도시 추가' : (c.name || '도시') + ' 편집', obj, isNew, list: trip.cities,
+  editForm({ title: isNew ? L('도시 추가', 'Add city') : (c.name || L('도시', 'City')) + L(' 편집', ''), obj, isNew, list: trip.cities,
     fields: [
-      { key: 'name', label: '도시', ph: '예: Lisbon', full: true },
-      { key: 'country', label: '국가', list: trip.cities.map(x => x.country).filter(Boolean) },
-      { key: 'nights', label: '박 수', type: 'number' },
-      { key: 'daily', label: '1일 예산 (' + m.baseCur + ')', type: 'number', hint: '숙소 + 식비 + 현지 교통' },
-      { key: 'alt', label: '고도 (m)', type: 'number', hint: '2,500m 이상이면 고산 표시' },
-      { key: 'base', label: '숙소 지역', ph: '예: Centro', full: true },
-      { key: 'todos', label: '할 일 · 갈 곳 (한 줄에 하나)', type: 'textarea', full: true },
-      { key: 'trek', label: '트레킹 거점 (오래 머물러도 경고 안 함)', type: 'checkbox', full: true }
+      { key: 'name', label: L('도시', 'City'), ph: L('예: Lisbon', 'e.g. Lisbon'), full: true },
+      { key: 'country', label: L('국가', 'Country'), list: trip.cities.map(x => x.country).filter(Boolean) },
+      { key: 'nights', label: L('박 수', 'Nights'), type: 'number' },
+      { key: 'daily', label: L('1일 예산 (', 'Daily budget (') + m.baseCur + ')', type: 'number', hint: L('숙소 + 식비 + 현지 교통', 'Stay + food + local transport') },
+      { key: 'alt', label: L('고도 (m)', 'Altitude (m)'), type: 'number', hint: L('2,500m 이상이면 고산 표시', 'Marked high altitude above 2,500m') },
+      { key: 'base', label: L('숙소 지역', 'Where to stay'), ph: L('예: Centro', 'e.g. Centro'), full: true },
+      { key: 'todos', label: L('할 일 · 갈 곳 (한 줄에 하나)', 'To do · places (one per line)'), type: 'textarea', full: true },
+      { key: 'trek', label: L('트레킹 거점 (오래 머물러도 경고 안 함)', 'Trekking base (no warning for long stays)'), type: 'checkbox', full: true }
     ],
-    onDelete: () => trip.cities.splice(trip.cities.indexOf(obj), 1), deleteMsg: '"' + (obj.name || '도시') + '"를 일정에서 삭제할까요?' });
+    onDelete: () => { trip.cities.splice(trip.cities.indexOf(obj), 1); deleteCityPhotos(trip.id, obj.id); },
+    deleteMsg: L('"' + (obj.name || '도시') + '"를 일정에서 삭제할까요?', 'Remove "' + (obj.name || 'this city') + '" from the trip?') });
 }
 function editRoute(r, preset) {
   const isNew = !r, names = trip.cities.map(c => c.name).filter(Boolean);
   const obj = r || Object.assign({ id: uid(), from: '', to: '', mode: '버스', op: '', hours: '', cost: '' }, preset || {});
-  editForm({ title: isNew ? '이동 추가' : '이동 편집', obj, isNew, list: trip.routes, order: false,
+  editForm({ title: isNew ? L('이동 추가', 'Add transfer') : L('이동 편집', 'Edit transfer'), obj, isNew, list: trip.routes, order: false,
     fields: [
-      { key: 'from', label: '출발', list: names }, { key: 'to', label: '도착', list: names },
-      { key: 'mode', label: '이동 수단', type: 'chips', full: true, options: MODES.map(x => ({ v: x, l: MODE_ICON[x] + ' ' + x })) },
-      { key: 'op', label: '업체 · 경로 메모', ph: '예: ADO, 직항', full: true },
-      { key: 'hours', label: '걸리는 시간 (시간)', type: 'number' },
-      { key: 'cost', label: '비용 (' + trip.meta.baseCur + ')', type: 'number' }
+      { key: 'from', label: L('출발', 'From'), list: names }, { key: 'to', label: L('도착', 'To'), list: names },
+      { key: 'mode', label: L('이동 수단', 'How'), type: 'chips', full: true, options: MODES.map(x => ({ v: x, l: modeText(x) })) },
+      { key: 'op', label: L('업체 · 경로 메모', 'Company · route notes'), ph: L('예: ADO, 직항', 'e.g. ADO, direct'), full: true },
+      { key: 'hours', label: L('걸리는 시간 (시간)', 'Duration (hours)'), type: 'number' },
+      { key: 'cost', label: L('비용 (', 'Cost (') + trip.meta.baseCur + ')', type: 'number' }
     ],
     onDelete: () => trip.routes.splice(trip.routes.indexOf(obj), 1) });
 }
 function editCost(c) {
   const isNew = !c, obj = c || { id: uid(), label: '', amount: '' };
-  editForm({ title: isNew ? '고정비 추가' : '고정비 편집', obj, isNew, list: trip.costs,
-    fields: [{ key: 'label', label: '항목', ph: '예: 여행자 보험, 비자', full: true }, { key: 'amount', label: '금액 (' + trip.meta.baseCur + ')', type: 'number', full: true }],
+  editForm({ title: isNew ? L('고정비 추가', 'Add fixed cost') : L('고정비 편집', 'Edit fixed cost'), obj, isNew, list: trip.costs,
+    fields: [{ key: 'label', label: L('항목', 'Item'), ph: L('예: 여행자 보험, 비자', 'e.g. insurance, visa'), full: true }, { key: 'amount', label: L('금액 (', 'Amount (') + trip.meta.baseCur + ')', type: 'number', full: true }],
     onDelete: () => trip.costs.splice(trip.costs.indexOf(obj), 1) });
 }
 function editBooking(b) {
   const isNew = !b, obj = b || { id: uid(), item: '', country: '', when: '', memo: '', done: false };
-  editForm({ title: isNew ? '예약 항목 추가' : '예약 항목 편집', obj, isNew, list: trip.bookings,
+  editForm({ title: isNew ? L('예약 항목 추가', 'Add booking') : L('예약 항목 편집', 'Edit booking'), obj, isNew, list: trip.bookings,
     fields: [
-      { key: 'item', label: '항목', ph: '예: 마추픽추 입장권', full: true },
-      { key: 'country', label: '국가', list: totals().countries }, { key: 'when', label: '언제 예약', ph: '예: 3개월 전' },
-      { key: 'memo', label: '메모', type: 'textarea', rows: 2, full: true },
-      { key: 'done', label: '예약 완료', type: 'checkbox', full: true }
+      { key: 'item', label: L('항목', 'Item'), ph: L('예: 마추픽추 입장권', 'e.g. Machu Picchu tickets'), full: true },
+      { key: 'country', label: L('국가', 'Country'), list: totals().countries }, { key: 'when', label: L('언제 예약', 'Book when'), ph: L('예: 3개월 전', 'e.g. 3 months before') },
+      { key: 'memo', label: L('메모', 'Notes'), type: 'textarea', rows: 2, full: true },
+      { key: 'done', label: L('예약 완료', 'Booked'), type: 'checkbox', full: true }
     ],
     onDelete: () => trip.bookings.splice(trip.bookings.indexOf(obj), 1) });
 }
 function editCountry(c) {
   const isNew = !c, obj = c || { id: uid(), name: '', emergency: '', currency: '', payment: '', advisory: '' };
-  editForm({ title: isNew ? '국가 추가' : (c.name || '국가') + ' 정보', obj, isNew, list: trip.countries,
+  editForm({ title: isNew ? L('국가 추가', 'Add country') : (c.name || L('국가', 'Country')) + L(' 정보', ' info'), obj, isNew, list: trip.countries,
     fields: [
-      { key: 'name', label: '국가', full: true, list: totals().countries },
-      { key: 'emergency', label: '긴급번호', ph: '예: 911' }, { key: 'currency', label: '통화', ph: '예: MXN' },
-      { key: 'payment', label: '결제 수단', full: true }, { key: 'advisory', label: '치안 · 여행경보', type: 'textarea', rows: 2, full: true }
+      { key: 'name', label: L('국가', 'Country'), full: true, list: totals().countries },
+      { key: 'emergency', label: L('긴급번호', 'Emergency'), ph: L('예: 911', 'e.g. 911') }, { key: 'currency', label: L('통화', 'Currency'), ph: L('예: MXN', 'e.g. MXN') },
+      { key: 'payment', label: L('결제 수단', 'Payment'), full: true }, { key: 'advisory', label: L('치안 · 여행경보', 'Safety · advisories'), type: 'textarea', rows: 2, full: true }
     ],
     onDelete: () => trip.countries.splice(trip.countries.indexOf(obj), 1) });
 }
@@ -946,14 +1129,14 @@ function editEntry(l) {
   if (!l.cur) { l.cur = base; l.orig = num(l.amount); l.rate = 1; }   // 통화 기능 이전 기록
   const origCur = l.cur, curs = currencies();
   if (!curs.includes(l.cur)) curs.unshift(l.cur);
-  editForm({ title: '지출 편집', obj: l, list: trip.ledger, order: false,
+  editForm({ title: L('지출 편집', 'Edit expense'), obj: l, list: trip.ledger, order: false,
     fields: [
-      { key: 'orig', label: '금액', type: 'number' }, { key: 'date', label: '날짜', type: 'date' },
-      { key: 'cur', label: '통화', type: 'chips', full: true, options: curs },
-      { key: 'rate', label: '환율 (1 ' + base + ' = ? 이 통화)', type: 'number', hint: '통화를 바꾸면 저장된 환율로 다시 계산' },
+      { key: 'orig', label: L('금액', 'Amount'), type: 'number' }, { key: 'date', label: L('날짜', 'Date'), type: 'date' },
+      { key: 'cur', label: L('통화', 'Currency'), type: 'chips', full: true, options: curs },
+      { key: 'rate', label: L('환율 (1 ' + base + ' = ? 이 통화)', 'Rate (1 ' + base + ' = ? this currency)'), type: 'number', hint: L('통화를 바꾸면 저장된 환율로 다시 계산', 'Changing currency recalculates with the saved rate') },
       { key: 'fx', label: '1 ' + base + ' = ? ' + trip.meta.homeCur, type: 'number' },
-      { key: 'cat', label: '분류', type: 'chips', full: true, options: CATS.map(x => ({ v: x, l: CAT_ICON[x] + ' ' + x })) },
-      { key: 'desc', label: '내용', full: true }, { key: 'city', label: '도시', list: trip.cities.map(c => c.name), full: true }
+      { key: 'cat', label: L('분류', 'Category'), type: 'chips', full: true, options: CATS.map(x => ({ v: x, l: CAT_ICON[x] + ' ' + catName(x) })) },
+      { key: 'desc', label: L('내용', 'What'), full: true }, { key: 'city', label: L('도시', 'City'), list: trip.cities.map(c => c.name), full: true }
     ],
     after: o => {
       if (o.cur === base) o.rate = 1;
@@ -1020,11 +1203,12 @@ function pace() {
 function diffChip(actual, plan) {
   if (!plan || !actual) return null;
   const p = Math.round((actual - plan) / plan * 100);
-  return h('span', { class: 'chip ' + (p > 5 ? 'high' : p < -5 ? 'low' : ''), title: p > 0 ? '계획보다 많이 씀' : '계획보다 적게 씀' }, (p > 0 ? '+' : '') + p + '%');
+  return h('span', { class: 'chip ' + (p > 5 ? 'high' : p < -5 ? 'low' : ''), title: p > 0 ? L('계획보다 많이 씀', 'Over plan') : L('계획보다 적게 씀', 'Under plan') }, (p > 0 ? '+' : '') + p + '%');
 }
+const noCountry = () => L('국가 미입력', 'No country');
 function planByCountry() {
   const by = {};
-  trip.cities.forEach(c => { const k = (c.country || '').trim() || '국가 미입력'; by[k] = (by[k] || 0) + num(c.nights) * num(c.daily); });
+  trip.cities.forEach(c => { const k = (c.country || '').trim() || noCountry(); by[k] = (by[k] || 0) + num(c.nights) * num(c.daily); });
   trip.routes.forEach(r => { const k = countryOfCity(r.from); if (k) by[k] = (by[k] || 0) + num(r.cost); });
   return by;
 }
@@ -1035,7 +1219,7 @@ function planToDateByCountry() {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const sch = schedule(), { between } = linkRoutes(), D = 864e5;
   sch.forEach((s, i) => {
-    const k = (s.c.country || '').trim() || '국가 미입력';
+    const k = (s.c.country || '').trim() || noCountry();
     const done = Math.max(0, Math.min(s.n, Math.floor((today - s.arr) / D) + 1));
     by[k] = (by[k] || 0) + done * num(s.c.daily) + (between[i] && today >= s.dep ? num(between[i].cost) : 0);
   });
@@ -1043,27 +1227,28 @@ function planToDateByCountry() {
 }
 function actualByCountry() {
   const by = {};
-  trip.ledger.forEach(l => { const k = countryOfCity(l.city) || '도시 미지정'; by[k] = (by[k] || 0) + num(l.amount); });
+  trip.ledger.forEach(l => { const k = countryOfCity(l.city) || L('도시 미지정', 'No city'); by[k] = (by[k] || 0) + num(l.amount); });
   return by;
 }
 function compareSection(v) {
   const plan = planByCountry(), act = actualByCountry(), toDate = planToDateByCountry(), p = pace();
   const keys = [...new Set([...Object.keys(plan), ...Object.keys(act)])];
   const max = Math.max(1, ...keys.map(k => Math.max(plan[k] || 0, act[k] || 0)));
-  v.append(h('div', { class: 'page-title' }, h('h2', {}, '계획 대비 실제'), h('span', { class: 'muted small' }, '가계부 기준')),
+  v.append(h('div', { class: 'page-title' }, h('h2', {}, L('계획 대비 실제', 'Plan vs. actual')), h('span', { class: 'muted small' }, L('가계부 기준', 'From spending'))),
     h('div', { class: 'card' },
-      p && !p.before ? h('div', { class: 'pace-box' }, h('div', { class: 'lbl' }, p.ended ? '여행 전체' : '여행 ' + p.day + '일째까지'),
-        h('div', {}, '계획 ', h('b', {}, fmtBase(p.plan)), ' · 실제 ', h('b', {}, fmtBase(p.actual)), ' ', diffChip(p.actual, p.plan))) : null,
+      p && !p.before ? h('div', { class: 'pace-box' }, h('div', { class: 'lbl' }, p.ended ? L('여행 전체', 'Whole trip') : L('여행 ' + p.day + '일째까지', 'Through day ' + p.day)),
+        h('div', {}, L('계획 ', 'Plan '), h('b', {}, fmtBase(p.plan)), L(' · 실제 ', ' · Actual '), h('b', {}, fmtBase(p.actual)), ' ', diffChip(p.actual, p.plan))) : null,
       keys.map(k => {
         const a = act[k] || 0, pl = plan[k] || 0, over = pl && a > pl;
         return h('div', { class: 'cmp-row' },
           h('div', { class: 'cmp-top' }, h('span', { class: 'row-t' }, k),
-            h('span', { class: 'cmp-val' }, a ? h('b', {}, fmtBase(a)) : h('span', { class: 'muted' }, '기록 없음'), h('span', { class: 'muted small' }, ' / ' + fmtBase(pl)), ' ',
+            h('span', { class: 'cmp-val' }, a ? h('b', {}, fmtBase(a)) : h('span', { class: 'muted' }, L('기록 없음', 'None yet')), h('span', { class: 'muted small' }, ' / ' + fmtBase(pl)), ' ',
               diffChip(a, toDate[k] || 0))),   // 퍼센트는 "오늘까지 계획" 대비 (도착 전 나라는 표시 안 함)
           h('div', { class: 'cmp-bar' }, h('i', { style: 'width:' + (a / max * 100) + '%' + (over ? ';background:var(--rose)' : '') }),
-            pl ? h('b', { style: 'left:' + (pl / max * 100) + '%', title: '계획' }) : null));
+            pl ? h('b', { style: 'left:' + (pl / max * 100) + '%', title: L('계획', 'Plan') }) : null));
       }),
-      h('p', { class: 'hint', style: 'margin:10px 0 0' }, '막대 = 실제 지출, 세로선 = 그 나라 전체 계획, 퍼센트 = 오늘까지 계획 대비. 계획은 체류비와 그 나라에서 출발하는 이동비, 실제는 가계부에서 그 나라 도시로 적은 지출입니다. 국제선·보험 같은 고정비는 계획에서 빠져 있어요.')));
+      h('p', { class: 'hint', style: 'margin:10px 0 0' }, L('막대 = 실제 지출, 세로선 = 그 나라 전체 계획, 퍼센트 = 오늘까지 계획 대비. 계획은 체류비와 그 나라에서 출발하는 이동비, 실제는 가계부에서 그 나라 도시로 적은 지출입니다. 국제선·보험 같은 고정비는 계획에서 빠져 있어요.',
+        'Bar = actual spending, line = the country\'s full plan, % = vs. plan to date. Plan is stays plus transfers leaving that country; actual is what you logged for its cities. Fixed costs like flights and insurance are not included.'))));
 }
 
 /* ============ 백업 알림 ============ */
@@ -1081,10 +1266,10 @@ function backupBanner() {
   const b = backupState();
   if (!b.need) return null;
   return h('div', { class: 'banner' },
-    h('div', { class: 'grow' }, h('b', {}, b.last ? '마지막 백업 ' + b.days + '일 전' : '아직 백업한 적이 없어요'),
-      h('div', { class: 'small muted' }, '여행 데이터는 이 기기에만 있어요. 바뀐 내용이 있으니 백업 파일을 만들어 두세요.')),
-    h('div', { class: 'banner-btns' }, btn('지금 백업', exportAll, 'sm primary'),
-      btn('나중에', () => { lsSet(SNOOZE_KEY, new Date(Date.now() + 3 * 864e5).toISOString()); render(); }, 'sm ghost')));
+    h('div', { class: 'grow' }, h('b', {}, b.last ? L('마지막 백업 ' + b.days + '일 전', 'Last backup ' + b.days + ' days ago') : L('아직 백업한 적이 없어요', 'No backup yet')),
+      h('div', { class: 'small muted' }, L('여행 데이터는 이 기기에만 있어요. 바뀐 내용이 있으니 백업 파일을 만들어 두세요.', 'Your trips live only on this device. Things changed, so save a backup file.'))),
+    h('div', { class: 'banner-btns' }, btn(L('지금 백업', 'Back up now'), exportAll, 'sm primary'),
+      btn(L('나중에', 'Later'), () => { lsSet(SNOOZE_KEY, new Date(Date.now() + 3 * 864e5).toISOString()); render(); }, 'sm ghost')));
 }
 
 /* ============ 홈 화면 앱 (오프라인) ============ */
@@ -1094,17 +1279,18 @@ const isStandalone = () => matchMedia('(display-mode: standalone)').matches || n
 const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const canOffline = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
 function installCard() {
-  const c = h('div', { class: 'card' }, h('h3', {}, '홈 화면 앱 · 오프라인'));
-  if (isStandalone()) c.append(h('p', { class: 'hint', style: 'margin:0' }, '✓ 홈 화면 앱으로 실행 중입니다. 인터넷이 없어도 열립니다.'));
-  else if (!canOffline()) c.append(h('p', { class: 'hint', style: 'margin:0' }, '파일로 열었을 때는 설치할 수 없어요. GitHub Pages 주소로 열어 주세요.'));
+  const c = h('div', { class: 'card' }, h('h3', {}, L('홈 화면 앱 · 오프라인', 'Home screen app · offline')));
+  if (isStandalone()) c.append(h('p', { class: 'hint', style: 'margin:0' }, L('✓ 홈 화면 앱으로 실행 중입니다. 인터넷이 없어도 열립니다.', '✓ Running as a home screen app. It opens without internet.')));
+  else if (!canOffline()) c.append(h('p', { class: 'hint', style: 'margin:0' }, L('파일로 열었을 때는 설치할 수 없어요. GitHub Pages 주소로 열어 주세요.', 'Can\'t install from a local file. Open the GitHub Pages address.')));
   else {
-    c.append(h('p', { class: 'hint' }, '홈 화면에 추가하면 앱처럼 열리고, 인터넷이 없어도(산, 비행기) 일정과 체크리스트를 볼 수 있어요.'));
-    if (installEvt) c.append(btn('홈 화면에 설치', async () => { installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(); }, 'primary'));
-    else if (isIOS) c.append(h('ol', { class: 'steps' }, h('li', {}, 'Safari 아래쪽 ', h('b', {}, '공유 버튼'), '(네모에 위쪽 화살표)을 누르기'), h('li', {}, h('b', {}, '홈 화면에 추가'), '를 고르고 추가')));
-    else c.append(h('p', { class: 'hint', style: 'margin:0' }, '브라우저 메뉴에서 "앱 설치" 또는 "홈 화면에 추가"를 고르세요.'));
+    c.append(h('p', { class: 'hint' }, L('홈 화면에 추가하면 앱처럼 열리고, 인터넷이 없어도(산, 비행기) 일정과 체크리스트를 볼 수 있어요.', 'Add it to your home screen to open it like an app and see your plan offline (mountains, flights).')));
+    if (installEvt) c.append(btn(L('홈 화면에 설치', 'Install'), async () => { installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(); }, 'primary'));
+    else if (isIOS) c.append(h('ol', { class: 'steps' }, h('li', {}, L('Safari 아래쪽 ', 'Tap the '), h('b', {}, L('공유 버튼', 'Share button')), L('(네모에 위쪽 화살표)을 누르기', ' (square with an up arrow) in Safari')), h('li', {}, L('', 'Choose '), h('b', {}, L('홈 화면에 추가', 'Add to Home Screen')), L('를 고르고 추가', ''))));
+    else c.append(h('p', { class: 'hint', style: 'margin:0' }, L('브라우저 메뉴에서 "앱 설치" 또는 "홈 화면에 추가"를 고르세요.', 'Choose "Install app" or "Add to Home screen" in the browser menu.')));
   }
   if (isIOS && !isStandalone() && canOffline()) c.append(h('div', { class: 'warn', style: 'margin-top:12px' },
-    'iPhone은 홈 화면 앱과 Safari가 데이터를 따로 저장해요. 설치 전에 여기서 "모든 여행 백업"을 하고, 앱을 연 뒤 "백업 파일 가져오기"로 옮기세요.'));
+    L('iPhone은 홈 화면 앱과 Safari가 데이터를 따로 저장해요. 설치 전에 여기서 "모든 여행 백업"을 하고, 앱을 연 뒤 "백업 파일 가져오기"로 옮기세요.',
+      'On iPhone, the home screen app and Safari keep separate data. Back up all trips here first, then use "Import backup" in the app.')));
   return c;
 }
 
@@ -1122,14 +1308,180 @@ async function deliver(text, type, filename) {
   return true;
 }
 
+/* ============ 사진 (도시마다 내 사진) ============
+   사진은 용량이 커서 localStorage가 아니라 IndexedDB에 저장 (이 기기에만).
+   여행 데이터에는 대표 사진 id(city.cover)만 저장. 백업 파일을 만들 때 사진도 함께 넣을 수 있음 */
+const PHOTO_DB = 'tripPlanner_photos';
+let photoDB = null;
+const PHOTOS = new Map();          // id → { rec, url }
+const reqP = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+function openPhotoDB() {
+  return new Promise((res, rej) => {
+    if (!('indexedDB' in window)) return rej(new Error('no indexedDB'));
+    const r = indexedDB.open(PHOTO_DB, 1);
+    r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('photos')) db.createObjectStore('photos', { keyPath: 'id' }); };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+const photoStore = mode => photoDB.transaction('photos', mode).objectStore('photos');
+async function loadPhotos() {
+  try {
+    photoDB = await openPhotoDB();
+    const all = await reqP(photoStore('readonly').getAll());
+    all.forEach(rec => { if (rec && rec.blob) PHOTOS.set(rec.id, { rec, url: URL.createObjectURL(rec.blob) }); });
+  } catch (e) { photoDB = null; }
+}
+async function putPhoto(rec) {
+  await reqP(photoStore('readwrite').put(rec));
+  const old = PHOTOS.get(rec.id);
+  const same = old && old.rec.blob === rec.blob;
+  if (old && !same) URL.revokeObjectURL(old.url);
+  PHOTOS.set(rec.id, { rec, url: same ? old.url : URL.createObjectURL(rec.blob) });
+}
+async function delPhoto(id) {
+  try { if (photoDB) await reqP(photoStore('readwrite').delete(id)); } catch (e) {}
+  const p = PHOTOS.get(id); if (p) URL.revokeObjectURL(p.url);
+  PHOTOS.delete(id);
+}
+const cityPhotos = (tripId, cityId) => [...PHOTOS.values()].filter(p => p.rec.trip === tripId && p.rec.city === cityId).sort((a, b) => String(a.rec.at).localeCompare(String(b.rec.at)));
+function coverOf(c) { const list = cityPhotos(trip.id, c.id); return list.find(p => p.rec.id === c.cover) || list[0] || null; }
+function deleteCityPhotos(tripId, cityId) { cityPhotos(tripId, cityId).forEach(p => delPhoto(p.rec.id)); }
+function deleteTripPhotos(tripId) { [...PHOTOS.values()].filter(p => p.rec.trip === tripId).forEach(p => delPhoto(p.rec.id)); }
+const tripPhotoCount = tripId => [...PHOTOS.values()].filter(p => p.rec.trip === tripId).length;
+
+// 긴 쪽 1280px, JPEG로 줄여서 저장 (사진 한 장 보통 150~300KB)
+async function shrinkImage(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const s = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * s)), hh = Math.max(1, Math.round(img.naturalHeight * s));
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = hh;
+    cv.getContext('2d').drawImage(img, 0, 0, w, hh);
+    const blob = await new Promise(res => cv.toBlob(res, 'image/jpeg', 0.82));
+    if (!blob) throw new Error('encode');
+    return { blob, w, h: hh };
+  } finally { URL.revokeObjectURL(url); }
+}
+const blobToDataURL = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+async function dataURLToBlob(d) { return (await fetch(d)).blob(); }
+// 백업 파일용: 사진을 글자(data URL)로
+async function photosForExport(tripIds) {
+  const out = [];
+  for (const p of PHOTOS.values()) {
+    if (!tripIds.includes(p.rec.trip)) continue;
+    const { blob, ...rest } = p.rec;
+    out.push(Object.assign(rest, { data: await blobToDataURL(blob) }));
+  }
+  return out;
+}
+
+/* 사진 넣기 창: 사진 찍기 · 앨범에서 고르기 · 위치 맞추기 · 대표 사진 · 삭제 */
+function openPhotos(c, selId) {
+  if (!photoDB) { alert(L('이 브라우저에서는 사진을 저장할 수 없어요. (개인정보 보호 모드에서는 안 될 수 있어요)', 'This browser can\'t store photos here. (Private browsing may block it.)')); return; }
+  const list = cityPhotos(trip.id, c.id);
+  const sel = list.find(p => p.rec.id === selId) || coverOf(c);
+  const stage = h('div', { class: 'ph-stage', 'aria-label': L('사진 위치 맞추기', 'Adjust photo position') });
+  if (sel) {
+    const img = h('img', { src: sel.url, alt: c.name || '' });
+    img.style.objectPosition = (sel.rec.x ?? 50) + '% ' + (sel.rec.y ?? 50) + '%';
+    stage.append(img, h('div', { class: 'grid3' }));
+    // 끌어서 보이는 부분 옮기기
+    let drag = null;
+    stage.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, ox: sel.rec.x ?? 50, oy: sel.rec.y ?? 50 }; stage.setPointerCapture(e.pointerId); });
+    stage.addEventListener('pointermove', e => {
+      if (!drag) return;
+      const r = stage.getBoundingClientRect(), k = 1.4;
+      sel.rec.x = Math.min(100, Math.max(0, drag.ox - (e.clientX - drag.x) / r.width * 100 * k));
+      sel.rec.y = Math.min(100, Math.max(0, drag.oy - (e.clientY - drag.y) / r.height * 100 * k));
+      img.style.objectPosition = sel.rec.x + '% ' + sel.rec.y + '%';
+    });
+    const end = () => { if (!drag) return; drag = null; putPhoto(sel.rec).then(render); };
+    stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
+  } else stage.append(h('div', { class: 'ph-empty' }, L('아직 사진이 없어요. 아래에서 사진을 넣어 주세요.', 'No photo yet. Add one below.')));
+
+  const pickAlbum = h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true });
+  const pickCam = h('input', { type: 'file', accept: 'image/*', capture: 'environment', hidden: true });
+  const onFiles = async input => {
+    const files = [...input.files]; input.value = '';
+    if (!files.length) return;
+    toast(L('사진을 줄여서 저장하는 중…', 'Saving photos…'));
+    let lastId = null;
+    for (const f of files) {
+      try {
+        const { blob, w, h: hh } = await shrinkImage(f);
+        const rec = { id: uid(), trip: trip.id, city: c.id, blob, w, h: hh, x: 50, y: 50, at: new Date().toISOString() };
+        await putPhoto(rec); lastId = rec.id;
+        if (!c.cover) c.cover = rec.id;
+      } catch (e) { toast(L('사진을 읽지 못했어요', 'Couldn\'t read that photo')); }
+    }
+    if (lastId) { save(); render(); openPhotos(c, lastId); toast(L('사진을 저장했습니다', 'Photo saved')); }
+  };
+  pickAlbum.addEventListener('change', () => onFiles(pickAlbum));
+  pickCam.addEventListener('change', () => onFiles(pickCam));
+
+  const cover = coverOf(c);
+  const thumbs = h('div', { class: 'ph-thumbs' },
+    list.map(p => h('button', { type: 'button', class: 'ph-thumb' + (sel && p.rec.id === sel.rec.id ? ' on' : ''), 'aria-label': L('사진 보기', 'Show photo'), onclick: () => openPhotos(c, p.rec.id) },
+      h('img', { src: p.url, alt: '' }), cover && p.rec.id === cover.rec.id ? h('span', { class: 'ck', title: L('대표 사진', 'Cover') }, '★') : null)),
+    h('button', { type: 'button', class: 'ph-thumb', 'aria-label': L('사진 추가', 'Add photo'), style: 'border:1.5px dashed var(--line);display:grid;place-items:center;font-size:28px;color:var(--accent-strong)', onclick: () => pickAlbum.click() }, '＋'));
+
+  const body = h('div', {},
+    stage,
+    sel ? h('p', { class: 'hint', style: 'text-align:center;margin:8px 0 12px' }, L('끌어서 보이는 부분을 맞추세요', 'Drag to choose what shows')) : null,
+    h('div', { style: 'display:flex;justify-content:space-between;align-items:baseline;margin:6px 0' }, h('b', {}, L('이 도시 사진 ', 'Photos here ') + list.length), h('span', { class: 'muted small' }, L('📱 이 기기에 저장', '📱 Saved on this device'))),
+    thumbs,
+    h('div', { class: 'btn-grid', style: 'margin-top:14px' }, btn(L('📷 사진 찍기', '📷 Take photo'), () => pickCam.click()), btn(L('🖼️ 앨범에서 고르기', '🖼️ Choose photos'), () => pickAlbum.click())),
+    sel ? h('div', { class: 'btn-grid', style: 'margin-top:8px' },
+      cover && sel.rec.id === cover.rec.id ? h('span', { class: 'btn ghost', style: 'cursor:default' }, L('★ 대표 사진', '★ Cover photo'))
+        : btn(L('대표 사진으로', 'Make cover'), () => { c.cover = sel.rec.id; save(); render(); openPhotos(c, sel.rec.id); }, 'ghost'),
+      btn(L('사진 삭제', 'Delete photo'), async () => {
+        if (!confirm(L('이 사진을 삭제할까요?', 'Delete this photo?'))) return;
+        await delPhoto(sel.rec.id);
+        if (c.cover === sel.rec.id) { const rest = cityPhotos(trip.id, c.id); c.cover = rest.length ? rest[0].rec.id : ''; }
+        save(); render(); openPhotos(c);
+      }, 'danger')) : null,
+    h('p', { class: 'hint', style: 'text-align:center;margin:14px 0 0' }, L('사진은 작게 줄여서 이 기기에만 저장돼요. 백업 파일에 함께 넣을 수 있어요.', 'Photos are shrunk and kept on this device. You can include them in backups.')),
+    pickAlbum, pickCam);
+  openSheet((c.name || L('도시', 'City')) + L(' · 사진', ' · Photos'), body, [
+    btn(L('도시 편집', 'Edit city'), () => editCity(c), 'ghost'), h('span', { class: 'grow' }), btn(L('완료', 'Done'), closeSheet, 'primary')]);
+}
+
+/* ============ 그림 (코드에 고정된 SVG) ============ */
+// 찢어진 종이 테마의 해: 불꽃 햇살 + 웃는 얼굴 + 까만 볼
+const SUN_SVG = (() => {
+  const c = 60, p = (r, t) => (c + r * Math.cos(t)).toFixed(1) + ' ' + (c + r * Math.sin(t)).toFixed(1);
+  let rays = '';
+  for (let i = 0; i < 14; i++) {
+    const a = i * 2 * Math.PI / 14 - Math.PI / 2;
+    rays += '<path d="M' + p(31, a - .13) + 'Q' + p(43, a - .2) + ' ' + p(53, a + .04) + 'Q' + p(42, a + .1) + ' ' + p(31, a + .13) + '" fill="#fff"/>';
+  }
+  return '<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' + rays +
+    '<circle cx="60" cy="60" r="27" fill="#fff"/><path d="M46 57q4.5-5.5 9 0M65 57q4.5-5.5 9 0M51 68q9 8 18 0"/>' +
+    '<ellipse cx="43.5" cy="67" rx="4.6" ry="3.4" fill="currentColor" stroke="none"/><ellipse cx="76.5" cy="67" rx="4.6" ry="3.4" fill="currentColor" stroke="none"/></svg>';
+})();
+// 두들 테마: 나라마다 다른 낙서
+const DOODLES = [
+  '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2 2M16.7 16.7l2 2M5.3 18.7l2-2M16.7 7.3l2-2"/>',
+  '<path d="M10 21V6a2 2 0 0 1 4 0v15M10 13H8a2 2 0 0 1-2-2V9M14 11h2a2 2 0 0 0 2-2V7M6 21h12"/>',
+  '<path d="M4 21V11l8-6 8 6v10zM10 21v-5h4v5M12 2v3"/>',
+  '<circle cx="12" cy="8" r="2.4"/><path d="M12 5.6c-1.4-3 3.4-3 2 0M14.4 8c3-1.4 3 3.4 0 2M9.6 8c-3-1.4-3 3.4 0 2M12 10.4V21M12 16c-2-2-4-1.5-4 0M12 18.5c2-2 4-1.5 4 0"/>',
+  '<path d="M2 9c2.5-2.5 4.5 2.5 7 0s4.5 2.5 7 0 4 1 6 0M2 15c2.5-2.5 4.5 2.5 7 0s4.5 2.5 7 0 4 1 6 0"/>',
+  '<path d="M2 20 9 7l4 6 3-3 6 10zM7.4 10.2 9 12l1.6-1.6"/>',
+  '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
+  '<path d="M5 19C5 10 11 5 20 4c0 9-5 15-15 15zM5 19l8-8"/>',
+  '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>'
+];
+
 /* ============ 화면 ============ */
 const VIEWS = [
-  { id: 'plan', label: '일정' }, { id: 'budget', label: '예산' }, { id: 'ledger', label: '가계부' },
-  { id: 'prep', label: '준비' }, { id: 'info', label: '정보' }, { id: 'settings', label: '설정', desk: true }
+  { id: 'plan', ko: '일정', en: 'Trip' }, { id: 'budget', ko: '예산', en: 'Budget' }, { id: 'ledger', ko: '가계부', en: 'Spending' },
+  { id: 'prep', ko: '준비', en: 'Prep' }, { id: 'info', ko: '정보', en: 'Info' }, { id: 'settings', ko: '설정', en: 'Settings', desk: true }
 ];
 const VIEW_KEY = 'tripPlanner_view';
 let view = (() => { try { const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(x => x.id === v) ? v : 'plan'; } catch (e) { return 'plan'; } })();
-let prepSub = 'bookings', focusAfter = null;
+let prepSub = 'bookings', focusAfter = null, heroPick = null, albumMode = 'grid';
 const editingGroups = new Set();
 
 function go(id) {
@@ -1137,21 +1489,26 @@ function go(id) {
   try { localStorage.setItem(VIEW_KEY, id); } catch (e) {}
   render(); window.scrollTo(0, 0);
 }
-function render() { renderNav(); renderTop(); renderView(); }
+function render() {
+  applySkin();
+  renderNav(); renderTop(); renderView();
+  if (!trip.meta.skin) openPicker();
+}
 
 function renderNav() {
   const nav = $('#nav'); nav.innerHTML = '';
+  nav.setAttribute('aria-label', L('메뉴', 'Menu'));
   nav.append(h('div', { class: 'nav-brand' }, 'Trip Planner'));
-  VIEWS.forEach(v => nav.append(h('button', { type: 'button', class: 'nav-item' + (v.desk ? ' desk' : '') + (v.id === view ? ' on' : ''), 'aria-current': v.id === view ? 'page' : null, onclick: () => go(v.id) }, icon(v.id), h('span', {}, v.label))));
-  nav.append(h('div', { class: 'nav-foot' }, '이 기기: ', h('b', {}, deviceName()), h('br'), '마지막 저장 ', h('span', { id: 'saved-at' }, savedText())));
+  VIEWS.forEach(v => nav.append(h('button', { type: 'button', class: 'nav-item' + (v.desk ? ' desk' : '') + (v.id === view ? ' on' : ''), 'aria-current': v.id === view ? 'page' : null, onclick: () => go(v.id) }, icon(v.id), h('span', {}, v[lang]))));
+  nav.append(h('div', { class: 'nav-foot' }, L('이 기기: ', 'This device: '), h('b', {}, deviceName()), h('br'), L('마지막 저장 ', 'Last saved '), h('span', { id: 'saved-at' }, savedText())));
 }
 function renderTop() {
   const top = $('#top'); top.innerHTML = '';
   top.append(...[
-    h('button', { type: 'button', class: 'trip-switch', onclick: openTrips, title: '여행 바꾸기 · 새 여행' }, h('span', { class: 't' }, trip.meta.title || '(제목 없음)'), icon('down')),
-    navigator.onLine === false ? h('span', { class: 'offline', title: '인터넷 연결 없음. 입력한 내용은 이 기기에 저장됩니다' }, '오프라인') : null,
-    h('button', { type: 'button', class: 'btn sm ghost top-export', onclick: openExport, 'aria-label': '내보내기 · 공유' }, icon('share'), h('span', { class: 'lbl' }, '내보내기')),
-    h('button', { type: 'button', class: 'icon-btn only-mobile', onclick: () => go('settings'), 'aria-label': '설정' }, icon('settings'))].filter(Boolean));
+    h('button', { type: 'button', class: 'trip-switch', onclick: openTrips, title: L('여행 바꾸기 · 새 여행', 'Switch trip · new trip') }, h('span', { class: 't' }, trip.meta.title || L('(제목 없음)', '(untitled)')), icon('down')),
+    navigator.onLine === false ? h('span', { class: 'offline', title: L('인터넷 연결 없음. 입력한 내용은 이 기기에 저장됩니다', 'No internet. Changes are saved on this device') }, L('오프라인', 'Offline')) : null,
+    h('button', { type: 'button', class: 'btn sm ghost top-export', onclick: openExport, 'aria-label': L('내보내기 · 공유', 'Export · share') }, icon('share'), h('span', { class: 'lbl' }, L('내보내기', 'Export'))),
+    h('button', { type: 'button', class: 'icon-btn only-mobile', onclick: () => go('settings'), 'aria-label': L('설정', 'Settings') }, icon('settings'))].filter(Boolean));
   document.title = (trip.meta.title || 'Trip') + ' · Planner';
 }
 function renderView() {
@@ -1161,92 +1518,200 @@ function renderView() {
   if (focusAfter) { const el = document.querySelector('[data-focus="' + focusAfter + '"]'); if (el) el.focus({ preventScroll: true }); focusAfter = null; }
 }
 
+/* --- 일정: 테마별 대표 화면 --- */
+function tripState() {
+  const sch = schedule(), start = addDays(trip.meta.startDate, 0), D = 864e5;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  if (!sch.length) return null;
+  if (!start) return { state: 'nodate', i: 0 };
+  const cur = sch.findIndex(s => s.now);
+  if (cur >= 0) return { state: 'now', i: cur, day: Math.floor((today - sch[cur].arr) / D) + 1, tripDay: Math.floor((today - start) / D) + 1 };
+  if (today < start) return { state: 'before', i: 0, days: Math.round((start - today) / D) };
+  return { state: 'after', i: sch.length - 1 };
+}
+function todayHero(v) {
+  const sch = schedule(), st = tripState(), t = totals();
+  if (!st) return;
+  const i = heroPick == null ? st.i : Math.min(Math.max(0, heroPick), sch.length - 1), s = sch[i], c = s.c, auto = i === st.i;
+  const ctry = (c.country || '').trim();
+  let bubble, dd, ddSub;
+  if (!auto) { bubble = L(nightsL(s.n) + ' 머무는 곳', 'Staying ' + nightsL(s.n)); dd = s.arr ? md(s.arr) : '#' + (i + 1); ddSub = s.arr ? mdw(s.arr) + ' – ' + mdw(s.dep) : ''; }
+  else if (st.state === 'now') { bubble = L(c.name + '에서 ' + st.day + '일째', 'Day ' + st.day + ' in ' + c.name); dd = L(st.tripDay + '일째', 'Day ' + st.tripDay); ddSub = L('전체 ' + t.nights + '박 중', 'of ' + t.nights + ' nights'); }
+  else if (st.state === 'before') { bubble = L(c.name + '까지 ' + st.days + '일 남았어요', st.days + ' days until ' + c.name); dd = 'D-' + st.days; ddSub = [ymd(s.arr), nightsL(t.nights), L(t.countries.length + '개국', t.countries.length + ' countries')].join(' · '); }
+  else if (st.state === 'after') { bubble = L('여행 끝! 수고했어요 🎉', 'Trip complete! 🎉'); dd = nightsL(t.nights); ddSub = L(trip.cities.length + '개 도시 · ' + t.countries.length + '개국', trip.cities.length + ' cities · ' + t.countries.length + ' countries'); }
+  else { bubble = L('출발일을 정하면 D-day가 나와요', 'Set a start date for the countdown'); dd = '—'; ddSub = ''; }
+  const alt = num(c.alt);
+  const hero = h('section', { class: 'today', style: '--tc:' + TODAY_COLORS[countryIndex(ctry) % TODAY_COLORS.length] },
+    i > 0 ? h('button', { type: 'button', class: 'nav-c prev', 'aria-label': L('이전 도시', 'Previous city'), onclick: () => { heroPick = i - 1; render(); } }, '‹') : null,
+    i < sch.length - 1 ? h('button', { type: 'button', class: 'nav-c next', 'aria-label': L('다음 도시', 'Next city'), onclick: () => { heroPick = i + 1; render(); } }, '›') : null,
+    h('div', { class: 'where' }, '📍 ' + (c.name || L('(이름 없음)', '(untitled)'))),
+    h('div', { class: 'where-sub' }, [ctry ? flagOf(ctry) + ' ' + ctry : '', s.arr ? md(s.arr) + ' – ' + md(s.dep) : ''].filter(Boolean).join(' · ')),
+    h('div', { class: 'orb', 'aria-hidden': 'true' }, flagOf(ctry)),
+    h('div', {}, h('span', { class: 'bubble' }, bubble)),
+    st.state === 'nodate' && auto ? h('div', { style: 'margin-top:10px' }, h('button', { type: 'button', class: 'btn sm', style: 'background:#fff;color:#111', onclick: editStart }, L('출발일 정하기', 'Set start date')))
+      : h('div', { class: 'dd' }, dd),
+    ddSub ? h('div', { class: 'dd-sub' }, ddSub) : null,
+    h('div', { class: 'stats' }, h('span', {}, '🌙 ' + nightsL(s.n)), h('span', {}, '💵 ' + L('하루 ', '') + fmtBase(num(c.daily)) + L('', '/day')),
+      alt ? h('span', {}, '⛰️ ' + alt.toLocaleString('en-US') + 'm') : c.trek ? h('span', {}, L('🥾 트레킹', '🥾 Trek')) : null),
+    !auto ? h('div', { style: 'margin-top:10px' }, h('button', { type: 'button', class: 'btn sm', style: 'background:rgba(255,255,255,.9);color:#111', onclick: () => { heroPick = null; render(); } }, L('오늘로 돌아가기', 'Back to today'))) : null);
+  v.append(hero);
+}
+function zineHead(v) {
+  const m = trip.meta, t = totals(), start = addDays(m.startDate, 0), end = addDays(m.startDate, t.nights);
+  v.append(h('section', { class: 'zine' }, svgEl(SUN_SVG, 'sun'),
+    h('div', {}, h('h2', {}, m.title || L('여행', 'Trip')),
+      h('div', { class: 'meta' }, [start ? ymd(start) + ' – ' + ymd(end) : L('출발일 미정', 'No start date'), nightsL(t.nights)].join(' · ')))));
+}
+function garden(v) {
+  const sch = schedule(), t = totals(), st = tripState();
+  if (!sch.length || !t.nights) return;
+  const start = addDays(trip.meta.startDate, 0), D = 864e5;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const todayIdx = start ? Math.floor((today - start) / D) : -1;
+  const grid = h('div', { class: 'garden-grid', role: 'img', 'aria-label': L('여행 ' + t.nights + '일 중 ' + Math.max(0, Math.min(todayIdx, t.nights)) + '일 지남', Math.max(0, Math.min(todayIdx, t.nights)) + ' of ' + t.nights + ' days done') });
+  const N = Math.min(t.nights, 400);
+  for (let k = 0; k < N; k++) {
+    const s = sch.find(x => k >= x.startN && k < x.startN + x.n) || sch[sch.length - 1];
+    const sym = DOODLES[countryIndex(s.c.country) % DOODLES.length];
+    if (k < todayIdx || k === todayIdx) {
+      const cell = h('i', { class: k === todayIdx ? 't' : '' }); cell.innerHTML = '<svg viewBox="0 0 24 24">' + sym + '</svg>'; grid.append(cell);
+    } else grid.append(h('i', { class: 'f' }));
+  }
+  const ctryList = countryOrder();
+  const cur = st && st.state === 'now' ? sch[st.i] : null;
+  v.append(h('section', { class: 'garden' },
+    h('h2', {}, L('하루에 하나씩', 'One doodle a day'), h('br'), L(t.nights + '일의 여행 정원', 'a ' + t.nights + '-day travel garden')),
+    h('div', { class: 'g-sub' }, start ? (todayIdx < 0 ? L('출발하면 하루에 하나씩 낙서가 채워져요', 'Fills in one doodle per day once you leave') : todayIdx >= t.nights ? L('여행 끝! 정원이 다 채워졌어요', 'Trip done! The garden is full') : L('오늘 ' + (todayIdx + 1) + '일째', 'Today: day ' + (todayIdx + 1)))
+      : L('출발일을 정하면 낙서가 채워져요', 'Set a start date to fill it in')),
+    grid,
+    h('div', { class: 'garden-legend' }, ctryList.slice(0, 9).map((k, j) => { const sp = h('span', {}); sp.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;stroke:currentColor;fill:none;stroke-width:2">' + DOODLES[j % DOODLES.length] + '</svg>'; sp.append(' ' + k); return sp; }),
+      todayIdx >= 0 && todayIdx < t.nights ? h('span', { class: 't' }, L('● 오늘', '● Today')) : null),
+    cur ? clickable(h('div', { class: 'today-card' }, svgEl('<svg viewBox="0 0 24 24" width="42" height="42" style="stroke:#3f8a22;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round">' + DOODLES[countryIndex(cur.c.country) % DOODLES.length] + '</svg>'),
+      h('div', { class: 'grow' }, h('div', { class: 'tc-t' }, L(cur.c.name + ', ' + st.day + '일째', cur.c.name + ', day ' + st.day)),
+        h('div', { class: 'small' }, [cur.c.country, L(nightsL(cur.n) + ' 중 ' + st.day, 'night ' + st.day + ' of ' + cur.n), L('하루 ', '') + fmtBase(num(cur.c.daily)) + L('', '/day')].filter(Boolean).join(' · ')))), () => go('ledger')) : null));
+}
+function albumView(v) {
+  const sch = schedule();
+  v.append(h('div', { class: 'seg', role: 'tablist', style: 'max-width:320px' },
+    [['grid', L('📷 사진', '📷 Photos')], ['list', L('📋 목록', '📋 List')]].map(([id, l]) => h('button', { type: 'button', role: 'tab', 'aria-selected': albumMode === id ? 'true' : 'false', class: albumMode === id ? 'on' : '', onclick: () => { albumMode = id; render(); } }, l))));
+  if (albumMode !== 'grid') return false;
+  if (!sch.length) { v.append(h('div', { class: 'card' }, emptyState(L('아직 도시가 없어요', 'No cities yet'), L('도시를 추가하면 도시마다 사진 칸이 생겨요.', 'Add a city and it gets a photo tile.'))), h('button', { type: 'button', class: 'add-btn', onclick: () => editCity() }, icon('plus'), L('첫 도시 추가', 'Add first city'))); return true; }
+  let prev = null, grid = null;
+  sch.forEach((s, i) => {
+    const c = s.c, ctry = (c.country || '').trim() || noCountry();
+    if (ctry !== prev) {
+      let j = i, nights = 0; while (j < sch.length && (((sch[j].c.country || '').trim() || noCountry()) === ctry)) { nights += sch[j].n; j++; }
+      v.append(h('div', { class: 'album-head' }, h('h3', {}, flagOf(ctry) + ' ' + ctry), h('span', { class: 'muted small' }, L((j - i) + '곳 · ', (j - i) + ' cities · ') + nightsL(nights))));
+      grid = h('div', { class: 'album' }); v.append(grid); prev = ctry;
+    }
+    const cov = coverOf(c), col = TILE_COLORS[countryIndex(ctry) % TILE_COLORS.length];
+    const tile = h('button', { type: 'button', class: 'tile' + (s.now ? ' now' : '') + (cov ? '' : ' add'), 'aria-label': (c.name || '') + L(' 사진', ' photos'), onclick: () => openPhotos(c) },
+      cov ? h('img', { src: cov.url, alt: '', style: 'object-position:' + (cov.rec.x ?? 50) + '% ' + (cov.rec.y ?? 50) + '%' })
+        : h('span', { class: 'ph', style: '--t1:' + col[0] + ';--t2:' + col[1] }, h('span', { class: 'cam' }, '📷'), h('span', { class: 'lbl' }, L('사진 넣기', 'Add photo'))),
+      h('span', { class: 'shade' }),
+      s.past ? h('span', { class: 'done', 'aria-label': L('다녀옴', 'Visited') }, '✓') : null,
+      s.now ? h('span', { class: 'now-b' }, L('지금 여기', 'Now here')) : null,
+      h('span', { class: 'cap' }, h('span', {}, c.name || '?'), h('span', {}, L(s.n + '박', s.n + 'n'))));
+    grid.append(tile);
+  });
+  v.append(h('div', { style: 'margin-top:14px' }, h('button', { type: 'button', class: 'add-btn', onclick: () => editCity() }, icon('plus'), L('도시 추가', 'Add city'))),
+    h('p', { class: 'hint', style: 'margin-top:12px' }, L('칸을 누르면 사진을 넣거나 도시를 고칠 수 있어요. 사진은 이 기기에만 저장돼요.', 'Tap a tile to add photos or edit the city. Photos stay on this device.')));
+  return true;
+}
+
 /* --- 일정 --- */
 function viewPlan(v) {
-  const m = trip.meta, t = totals(), fx = num(m.fx), sch = schedule();
+  const m = trip.meta, t = totals(), fx = num(m.fx), sch = schedule(), skin = skinOf(trip);
   const start = addDays(m.startDate, 0), end = addDays(m.startDate, t.nights);
+  if (skin === 'today') todayHero(v);
+  if (skin === 'torn') zineHead(v);
+  if (skin === 'doodle') garden(v);
+  if (skin === 'album' && albumView(v)) return;
   v.append(h('section', { class: 'hero' },
     m.subtitle ? h('div', { class: 'hero-route' }, m.subtitle) : null,
     h('div', { class: 'hero-dates' }, start ? ymd(start) + ' → ' + ymd(end)
-      : h('button', { type: 'button', class: 'btn sm primary', onclick: editStart }, '출발일 정하기 (날짜 자동 계산)')),
+      : h('button', { type: 'button', class: 'btn sm primary', onclick: editStart }, L('출발일 정하기 (날짜 자동 계산)', 'Set start date (dates fill in)'))),
     h('div', { class: 'kpis' },
-      kpi('기간', t.nights + '박', (t.nights / 7).toFixed(1) + '주 · 약 ' + (t.nights / 30.4).toFixed(1) + '개월'),
-      kpi('도시 · 국가', trip.cities.length + '곳 · ' + t.countries.length + '개국'),
-      kpi('총 예산', fmtBase(t.grand), fmtHome(t.grand * fx)),
-      kpi('하루 평균', t.nights ? fmtBase(t.grand / t.nights) : '-', t.nights ? fmtHome(t.grand / t.nights * fx) : ''))));
+      kpi(L('기간', 'Length'), nightsL(t.nights), L((t.nights / 7).toFixed(1) + '주 · 약 ' + (t.nights / 30.4).toFixed(1) + '개월', (t.nights / 7).toFixed(1) + ' weeks · ~' + (t.nights / 30.4).toFixed(1) + ' months')),
+      kpi(L('도시 · 국가', 'Cities · countries'), L(trip.cities.length + '곳 · ' + t.countries.length + '개국', trip.cities.length + ' · ' + t.countries.length)),
+      kpi(L('총 예산', 'Total budget'), fmtBase(t.grand), fmtHome(t.grand * fx)),
+      kpi(L('하루 평균', 'Per day'), t.nights ? fmtBase(t.grand / t.nights) : '-', t.nights ? fmtHome(t.grand / t.nights * fx) : ''))));
 
-  v.append(h('div', { class: 'page-title' }, h('h2', {}, '도시별 일정'),
-    h('button', { type: 'button', class: 'btn sm', onclick: () => editCity() }, icon('plus'), '도시')));
+  v.append(h('div', { class: 'page-title' }, h('h2', {}, L('도시별 일정', 'Cities')),
+    h('button', { type: 'button', class: 'btn sm', onclick: () => editCity() }, icon('plus'), L('도시', 'City'))));
   if (!trip.cities.length) {
-    v.append(h('div', { class: 'card' }, emptyState('아직 도시가 없어요', '첫 도시를 추가하면 날짜와 예산이 자동으로 계산됩니다.')),
-      h('button', { type: 'button', class: 'add-btn', onclick: () => editCity() }, icon('plus'), '첫 도시 추가'));
+    v.append(h('div', { class: 'card' }, emptyState(L('아직 도시가 없어요', 'No cities yet'), L('첫 도시를 추가하면 날짜와 예산이 자동으로 계산됩니다.', 'Add your first city and dates and budget fill in.'))),
+      h('button', { type: 'button', class: 'add-btn', onclick: () => editCity() }, icon('plus'), L('첫 도시 추가', 'Add first city')));
     return;
   }
-  if (t.countries.length > 1) v.append(h('div', { class: 'jump', 'aria-label': '국가로 이동' }, t.countries.map(name =>
-    h('button', { type: 'button', onclick: () => { const el = [...document.querySelectorAll('.country-head')].find(x => x.dataset.country === name); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }, name))));
-  v.append(h('p', { class: 'hint' }, '도시나 이동을 누르면 고칠 수 있어요. 점 색: 하늘 = 저비용, 보라 = 보통, 분홍 = 고비용'));
+  if (t.countries.length > 1) v.append(h('div', { class: 'jump', 'aria-label': L('국가로 이동', 'Jump to country') }, t.countries.map(name =>
+    h('button', { type: 'button', onclick: () => { const el = [...document.querySelectorAll('.ctry')].find(x => x.dataset.country === name); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }, flagOf(name) + ' ' + name))));
+  v.append(h('p', { class: 'hint' }, L('도시나 이동을 누르면 고칠 수 있어요. 점 색: 하늘 = 저비용, 보라 = 보통, 분홍 = 고비용', 'Tap a city or transfer to edit. Dot colors: blue = low cost, purple = medium, pink = high')));
 
   const { between, loose } = linkRoutes();
   const tl = h('div', { class: 'timeline' });
-  let prev = null;
+  let sec = null, prev = null;
   sch.forEach((s, i) => {
-    const ctry = (s.c.country || '').trim() || '국가 미입력';
+    const ctry = (s.c.country || '').trim() || noCountry();
     if (ctry !== prev) {
       let j = i, nights = 0, cost = 0;
-      while (j < sch.length && (((sch[j].c.country || '').trim() || '국가 미입력') === ctry)) { nights += sch[j].n; cost += sch[j].n * num(sch[j].c.daily); j++; }
-      const head = h('div', { class: 'country-head' }, h('h3', {}, ctry), h('span', { class: 'muted small' }, (j - i) + '곳 · ' + nights + '박 · ' + fmtBase(cost)));
-      head.dataset.country = ctry;
-      tl.append(head);
+      while (j < sch.length && (((sch[j].c.country || '').trim() || noCountry()) === ctry)) { nights += sch[j].n; cost += sch[j].n * num(sch[j].c.daily); j++; }
+      const ci = countryIndex(ctry);
+      sec = h('section', { class: 'ctry', style: '--band:' + BAND_COLORS[ci % BAND_COLORS.length] });
+      sec.dataset.country = ctry;
+      sec.append(h('div', { class: 'country-head' }, h('h3', {}, h('span', { 'aria-hidden': 'true' }, flagOf(ctry)), ctry),
+        h('span', { class: 'muted small' }, L((j - i) + '곳 · ', (j - i) + ' cities · ') + nightsL(nights) + ' · ' + fmtBase(cost))));
+      tl.append(sec);
       prev = ctry;
     }
-    tl.append(stopEl(s, i));
-    if (i < sch.length - 1) tl.append(legEl(between[i], s.c, sch[i + 1].c));
+    sec.append(stopEl(s, i, i === sch.length - 1));
+    if (i < sch.length - 1) sec.append(legEl(between[i], s.c, sch[i + 1].c));
   });
-  v.append(tl, h('div', { style: 'margin:16px 0 0 44px' }, h('button', { type: 'button', class: 'add-btn', onclick: () => editCity() }, icon('plus'), '도시 추가')));
+  v.append(tl, h('div', { class: 'after-tl', style: 'margin:16px 0 0 44px' }, h('button', { type: 'button', class: 'add-btn', onclick: () => editCity() }, icon('plus'), L('도시 추가', 'Add city'))));
 
-  if (loose.length) v.append(h('div', { class: 'page-title' }, h('h2', {}, '일정에 연결되지 않은 이동')),
-    h('div', { class: 'card' }, h('p', { class: 'hint' }, '출발·도착 도시 이름이 일정의 순서와 맞지 않는 이동입니다. 비용은 예산에 포함돼요.'),
+  if (loose.length) v.append(h('div', { class: 'page-title' }, h('h2', {}, L('일정에 연결되지 않은 이동', 'Unlinked transfers'))),
+    h('div', { class: 'card' }, h('p', { class: 'hint' }, L('출발·도착 도시 이름이 일정의 순서와 맞지 않는 이동입니다. 비용은 예산에 포함돼요.', 'Their from/to cities don\'t match the order of your plan. Costs still count in the budget.')),
       h('div', { class: 'rows' }, loose.map(r => h('button', { type: 'button', class: 'row', onclick: () => editRoute(r) },
-        h('div', { class: 'grow' }, h('div', { class: 'row-t' }, (r.from || '?') + ' → ' + (r.to || '?')), h('div', { class: 'muted small' }, MODE_ICON[r.mode] + ' ' + r.mode + (routeText(r) ? ' · ' + routeText(r) : ''))))))));
-  v.append(h('p', { class: 'hint', style: 'margin-top:16px' }, '이동비 합계 ' + fmtBase(t.transport) + ' · 항공 ' + trip.routes.filter(r => r.mode === '항공').length + '회'));
+        h('div', { class: 'grow' }, h('div', { class: 'row-t' }, (r.from || '?') + ' → ' + (r.to || '?')), h('div', { class: 'muted small' }, modeText(r.mode) + (routeText(r) ? ' · ' + routeText(r) : ''))))))));
+  v.append(h('p', { class: 'hint', style: 'margin-top:16px' }, L('이동비 합계 ', 'Transfers total ') + fmtBase(t.transport) + L(' · 항공 ', ' · flights ') + trip.routes.filter(r => r.mode === '항공').length + L('회', '')));
 }
 function editStart() {
-  editForm({ title: '출발일', obj: trip.meta, fields: [{ key: 'startDate', label: '출발일', type: 'date', full: true, hint: '도시별 박 수를 더해 날짜가 자동으로 계산됩니다' }] });
+  editForm({ title: L('출발일', 'Start date'), obj: trip.meta, fields: [{ key: 'startDate', label: L('출발일', 'Start date'), type: 'date', full: true, hint: L('도시별 박 수를 더해 날짜가 자동으로 계산됩니다', 'City dates are calculated from the nights') }] });
 }
-function stopEl(s, i) {
+function stopEl(s, i, last) {
   const c = s.c, d = num(c.daily), tier = tierOf(d), alt = num(c.alt), todos = lines(c.todos);
-  const card = clickable(h('div', { class: 'stop-card', 'aria-label': (c.name || '도시') + ' 편집' },
-    h('div', { class: 'stop-top' }, h('h4', {}, c.name || '(이름 없음)'), s.arr ? h('span', { class: 'stop-when' }, mdw(s.arr) + ' – ' + mdw(s.dep)) : null),
+  const card = clickable(h('div', { class: 'stop-card', 'aria-label': (c.name || L('도시', 'City')) + L(' 편집', ' — edit') },
+    h('div', { class: 'stop-top' }, h('h4', {}, c.name || L('(이름 없음)', '(untitled)')), s.arr ? h('span', { class: 'stop-when' }, mdw(s.arr) + ' – ' + mdw(s.dep)) : null),
     h('div', { class: 'chips' },
-      s.now ? h('span', { class: 'chip now' }, '지금 여기') : null,
-      h('span', { class: 'chip' }, s.n + '박'),
-      h('span', { class: 'chip ' + tier }, '하루 ' + fmtBase(d)),
-      alt ? h('span', { class: 'chip ' + (alt >= 2500 ? 'high' : alt >= 1500 ? 'mid' : 'low') }, (alt >= 2500 ? '⛰ 고산 ' : '') + alt.toLocaleString() + 'm') : null,
-      c.trek ? h('span', { class: 'chip mid' }, '🥾 트레킹') : null),
-    c.base ? h('div', { class: 'stop-area' }, '숙소 · ' + c.base) : null,
+      s.now ? h('span', { class: 'chip now' }, L('지금 여기', 'You are here')) : null,
+      h('span', { class: 'chip' }, nightsL(s.n)),
+      h('span', { class: 'chip ' + tier }, L('하루 ', '') + fmtBase(d) + L('', '/day')),
+      alt ? h('span', { class: 'chip ' + (alt >= 2500 ? 'high' : alt >= 1500 ? 'mid' : 'low') }, (alt >= 2500 ? L('⛰ 고산 ', '⛰ High ') : '') + alt.toLocaleString('en-US') + 'm') : null,
+      c.trek ? h('span', { class: 'chip mid' }, L('🥾 트레킹', '🥾 Trek')) : null),
+    c.base ? h('div', { class: 'stop-area' }, L('숙소 · ', 'Stay · ') + c.base) : null,
     cityWarnings(c).map(w => h('div', { class: 'warn' }, '⚠ ' + w)),
     todos.length ? h('ul', { class: 'todos' }, todos.map(x => h('li', {}, x))) : null), () => editCity(c));
-  return h('div', { class: 'stop ' + tier + (s.now ? ' now' : '') }, h('div', { class: 'rail' }, h('span', { class: 'dot' }, i + 1)), card);
+  return h('div', { class: 'stop ' + tier + (s.now ? ' now' : '') + (last ? ' last' : '') }, h('div', { class: 'rail' }, h('span', { class: 'dot' }, i + 1)), card);
 }
 function legEl(r, A, B) {
   if (!r) return h('div', { class: 'leg none' }, h('span', { class: 'line' }),
-    h('button', { type: 'button', class: 'leg-btn', onclick: () => editRoute(null, { from: A.name, to: B.name }) }, '+ 이동 방법 추가'));
+    h('button', { type: 'button', class: 'leg-btn', onclick: () => editRoute(null, { from: A.name, to: B.name }) }, L('+ 이동 방법 추가', '+ Add how to get there')));
   const w = routeWarning(r);
   return h('div', { class: 'leg' + (w ? ' warn' : '') }, h('span', { class: 'line' }),
     h('button', { type: 'button', class: 'leg-btn', onclick: () => editRoute(r) },
-      h('span', { class: 'leg-mode' }, MODE_ICON[r.mode] + ' ' + r.mode), routeText(r),
+      h('span', { class: 'leg-mode' }, modeText(r.mode)), routeText(r),
       w ? h('span', { class: 'leg-warn' }, '⚠ ' + w) : null));
 }
 
 /* --- 예산 --- */
 function viewBudget(v) {
   const m = trip.meta, t = totals(), fx = num(m.fx);
-  const parts = [['체류비', t.ground, 'peri'], ['이동비', t.transport, 'mauve'], ['기타 고정비', t.fixed, 'rose']];
+  const parts = [[L('체류비', 'Stays'), t.ground, 'peri'], [L('이동비', 'Transfers'), t.transport, 'mauve'], [L('기타 고정비', 'Fixed costs'), t.fixed, 'rose']];
   const pct = x => t.grand ? Math.round(x / t.grand * 100) : 0;
   v.append(h('section', { class: 'hero' },
-    h('div', { class: 'lbl' }, '총 예산'),
+    h('div', { class: 'lbl' }, L('총 예산', 'Total budget')),
     h('div', { class: 'big' }, fmtBase(t.grand)),
-    h('div', { class: 'muted' }, fmtHome(t.grand * fx) + ' · 하루 평균 ' + (t.nights ? fmtBase(t.grand / t.nights) : '-')),
+    h('div', { class: 'muted' }, fmtHome(t.grand * fx) + L(' · 하루 평균 ', ' · per day ') + (t.nights ? fmtBase(t.grand / t.nights) : '-')),
     h('div', { class: 'stack' }, parts.map(p => t.grand ? h('i', { style: 'width:' + (p[1] / t.grand * 100) + '%;background:var(--' + p[2] + ')' }) : null)),
     h('div', { class: 'legend' }, parts.map(p => h('div', {},
       h('div', { class: 'lg-l' }, h('span', { class: 'sw', style: 'background:var(--' + p[2] + ')' }), p[0]),
@@ -1257,30 +1722,31 @@ function viewBudget(v) {
   // 국가별 체류비
   const byC = {};
   trip.cities.forEach(c => {
-    const k = (c.country || '국가 미입력').trim();
+    const k = (c.country || '').trim() || noCountry();
     byC[k] = byC[k] || { nights: 0, sum: 0, cities: 0 };
     byC[k].nights += num(c.nights); byC[k].sum += num(c.nights) * num(c.daily); byC[k].cities++;
   });
   const maxSum = Math.max(1, ...Object.values(byC).map(x => x.sum));
-  v.append(h('div', { class: 'page-title' }, h('h2', {}, '나라별 체류비'), h('span', { class: 'muted small' }, fmtBase(t.ground))),
+  v.append(h('div', { class: 'page-title' }, h('h2', {}, L('나라별 체류비', 'Stays by country')), h('span', { class: 'muted small' }, fmtBase(t.ground))),
     h('div', { class: 'card' }, Object.keys(byC).length ? Object.entries(byC).map(([k, x]) => h('div', { class: 'bar-row' },
-      h('div', {}, h('div', { class: 'row-t' }, k), h('div', { class: 'muted small' }, x.cities + '곳 · ' + x.nights + '박 · 하루 ' + (x.nights ? fmtBase(x.sum / x.nights) : '-'))),
+      h('div', {}, h('div', { class: 'row-t' }, flagOf(k) + ' ' + k), h('div', { class: 'muted small' }, L(x.cities + '곳 · ', x.cities + ' cities · ') + nightsL(x.nights) + L(' · 하루 ', ' · ') + (x.nights ? fmtBase(x.sum / x.nights) : '-') + L('', '/day'))),
       h('div', { class: 'amt', style: 'text-align:right' }, h('div', { class: 'row-t' }, fmtBase(x.sum)), h('div', { class: 'muted small' }, fmtHome(x.sum * fx))),
       h('div', { class: 'progress' }, h('i', { style: 'width:' + (x.sum / maxSum * 100) + '%' }))))
-      : emptyState('도시가 없어요', '일정에 도시를 추가하면 나라별로 계산됩니다.')));
+      : emptyState(L('도시가 없어요', 'No cities'), L('일정에 도시를 추가하면 나라별로 계산됩니다.', 'Add cities to see costs by country.'))));
 
   // 고정비
-  v.append(h('div', { class: 'page-title' }, h('h2', {}, '기타 고정비'), h('button', { type: 'button', class: 'btn sm', onclick: () => editCost() }, icon('plus'), '항목')),
-    h('div', { class: 'card' }, h('p', { class: 'hint' }, '국제선, 투어, 보험, 비자처럼 도시·이동에 들어가지 않는 비용'),
+  v.append(h('div', { class: 'page-title' }, h('h2', {}, L('기타 고정비', 'Fixed costs')), h('button', { type: 'button', class: 'btn sm', onclick: () => editCost() }, icon('plus'), L('항목', 'Item'))),
+    h('div', { class: 'card' }, h('p', { class: 'hint' }, L('국제선, 투어, 보험, 비자처럼 도시·이동에 들어가지 않는 비용', 'Things like flights, tours, insurance and visas')),
       trip.costs.length ? h('div', { class: 'rows' }, trip.costs.map(c => h('button', { type: 'button', class: 'row', onclick: () => editCost(c) },
-        h('div', { class: 'grow row-t' }, c.label || '(이름 없음)'),
-        num(c.amount) ? h('div', { class: 'amt' }, fmtBase(num(c.amount)), h('small', {}, fmtHome(num(c.amount) * fx))) : h('span', { class: 'chip high' }, '금액 미입력'))))
-        : emptyState('고정비가 없어요', '오른쪽 위 + 항목으로 추가하세요.')));
+        h('div', { class: 'grow row-t' }, c.label || L('(이름 없음)', '(untitled)')),
+        num(c.amount) ? h('div', { class: 'amt' }, fmtBase(num(c.amount)), h('small', {}, fmtHome(num(c.amount) * fx))) : h('span', { class: 'chip high' }, L('금액 미입력', 'No amount')))))
+        : emptyState(L('고정비가 없어요', 'No fixed costs'), L('오른쪽 위 + 항목으로 추가하세요.', 'Add one with + Item above.'))));
 
-  v.append(h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h3', {}, '이동비'), h('b', {}, fmtBase(t.transport))),
-    h('p', { class: 'hint', style: 'margin:0' }, '이동 ' + trip.routes.length + '건 · 항공 ' + trip.routes.filter(r => r.mode === '항공').length + '회. 일정 화면에서 도시 사이의 이동을 눌러 고칠 수 있어요.')));
-  v.append(h('p', { class: 'hint' }, '환율 1 ' + m.baseCur + ' = ' + fx.toLocaleString() + ' ' + m.homeCur + (m.fxUpdated ? ' (' + m.fxUpdated + ')' : ' (직접 입력)') + ' · ',
-    h('a', { href: '#', onclick: e => { e.preventDefault(); go('settings'); } }, '설정에서 바꾸기')));
+  v.append(h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h3', {}, L('이동비', 'Transfers')), h('b', {}, fmtBase(t.transport))),
+    h('p', { class: 'hint', style: 'margin:0' }, L('이동 ' + trip.routes.length + '건 · 항공 ' + trip.routes.filter(r => r.mode === '항공').length + '회. 일정 화면에서 도시 사이의 이동을 눌러 고칠 수 있어요.',
+      trip.routes.length + ' transfers · ' + trip.routes.filter(r => r.mode === '항공').length + ' flights. Edit them between cities on the Trip tab.'))));
+  v.append(h('p', { class: 'hint' }, L('환율 1 ', 'Rate 1 ') + m.baseCur + ' = ' + fx.toLocaleString('en-US') + ' ' + m.homeCur + (m.fxUpdated ? ' (' + m.fxUpdated + ')' : L(' (직접 입력)', ' (manual)')) + ' · ',
+    h('a', { href: '#', onclick: e => { e.preventDefault(); go('settings'); } }, L('설정에서 바꾸기', 'Change in Settings'))));
 }
 
 /* --- 가계부 --- */
@@ -1296,28 +1762,28 @@ function viewLedger(v) {
   const pct = t.grand ? Math.min(100, t.spent / t.grand * 100) : 0;
   const p = pace();
   v.append(h('section', { class: 'hero' },
-    h('div', { class: 'lbl' }, '지금까지 쓴 돈'),
+    h('div', { class: 'lbl' }, L('지금까지 쓴 돈', 'Spent so far')),
     h('div', { class: 'big' }, fmtBase(t.spent)),
-    h('div', { class: 'muted' }, fmtHome(t.spentHome) + ' · 예산 ' + fmtBase(t.grand) + '의 ' + Math.round(pct) + '%'),
+    h('div', { class: 'muted' }, fmtHome(t.spentHome) + L(' · 예산 ' + fmtBase(t.grand) + '의 ' + Math.round(pct) + '%', ' · ' + Math.round(pct) + '% of ' + fmtBase(t.grand))),
     h('div', { class: 'progress', style: 'margin:14px 0 10px;height:10px' }, h('i', { style: 'width:' + pct + '%' })),
-    h('div', { class: 'small' }, '남은 예산 ', h('b', {}, fmtBase(t.grand - t.spent)), h('span', { class: 'muted' }, ' · ' + fmtHome(t.grand * fx - t.spentHome))),
-    p && !p.before ? h('div', { class: 'pace' }, (p.ended ? '여행 끝 · ' : '여행 ' + p.day + '일째 · ') + '계획 ', h('b', {}, fmtBase(p.plan)), ' / 실제 ', h('b', {}, fmtBase(p.actual)), ' ', diffChip(p.actual, p.plan)) : null));
+    h('div', { class: 'small' }, L('남은 예산 ', 'Left '), h('b', {}, fmtBase(t.grand - t.spent)), h('span', { class: 'muted' }, ' · ' + fmtHome(t.grand * fx - t.spentHome))),
+    p && !p.before ? h('div', { class: 'pace' }, (p.ended ? L('여행 끝 · ', 'Trip over · ') : L('여행 ' + p.day + '일째 · ', 'Day ' + p.day + ' · ')) + L('계획 ', 'Plan '), h('b', {}, fmtBase(p.plan)), L(' / 실제 ', ' / Actual '), h('b', {}, fmtBase(p.actual)), ' ', diffChip(p.actual, p.plan)) : null));
 
   // 빠른 입력
-  const amt = h('input', { type: 'text', inputmode: 'decimal', placeholder: '0', 'aria-label': '금액', 'data-focus': 'amount' });
-  const curSel = h('select', { class: 'cur-sel', 'aria-label': '통화' });
+  const amt = h('input', { type: 'text', inputmode: 'decimal', placeholder: '0', 'aria-label': L('금액', 'Amount'), 'data-focus': 'amount' });
+  const curSel = h('select', { class: 'cur-sel', 'aria-label': L('통화', 'Currency') });
   const curs = currencies(); if (!curs.includes(draft.cur)) curs.unshift(draft.cur);
   curs.forEach(c => curSel.append(h('option', { value: c }, c)));
   curSel.value = draft.cur;
   const preview = h('div', { class: 'amt-preview' });
-  const desc = h('input', { type: 'text', placeholder: '내용 (예: 점심, 호스텔 2박)', 'aria-label': '내용' });
-  const city = h('input', { type: 'text', placeholder: '도시', list: 'ledger-cities', value: draft.city, 'aria-label': '도시' });
-  const date = h('input', { type: 'date', value: draft.date, 'aria-label': '날짜' });
-  const rateIn = h('input', { type: 'text', inputmode: 'decimal', 'aria-label': '현지 통화 환율' });
+  const desc = h('input', { type: 'text', placeholder: L('내용 (예: 점심, 호스텔 2박)', 'What (e.g. lunch, hostel 2 nights)'), 'aria-label': L('내용', 'What') });
+  const city = h('input', { type: 'text', placeholder: L('도시', 'City'), list: 'ledger-cities', value: draft.city, 'aria-label': L('도시', 'City') });
+  const date = h('input', { type: 'date', value: draft.date, 'aria-label': L('날짜', 'Date') });
+  const rateIn = h('input', { type: 'text', inputmode: 'decimal', 'aria-label': L('현지 통화 환율', 'Local currency rate') });
   const rateLbl = h('span', {});
   const rateRow = h('label', { class: 'fld' }, rateLbl, rateIn);
-  const fxIn = h('input', { type: 'text', inputmode: 'decimal', value: fx, 'aria-label': '원화 환율' });
-  const rateBox = h('details', { style: 'margin-bottom:10px' }, h('summary', { class: 'muted small', style: 'cursor:pointer' }, '환율 보기 · 고치기'),
+  const fxIn = h('input', { type: 'text', inputmode: 'decimal', value: fx, 'aria-label': L('원화 환율', 'Home currency rate') });
+  const rateBox = h('details', { style: 'margin-bottom:10px' }, h('summary', { class: 'muted small', style: 'cursor:pointer' }, L('환율 보기 · 고치기', 'See or fix rates')),
     h('div', { class: 'form', style: 'margin-top:8px' }, rateRow, h('label', { class: 'fld' }, h('span', {}, '1 ' + base + ' = ? ' + m.homeCur), fxIn)));
   const upd = () => {
     const cur = draft.cur, r = rateOf(cur), a = parseFloat(amt.value);
@@ -1325,10 +1791,10 @@ function viewLedger(v) {
     rateLbl.textContent = '1 ' + base + ' = ? ' + cur;
     if (document.activeElement !== rateIn) rateIn.value = r || '';
     preview.innerHTML = '';
-    if (cur !== base && !r) preview.append(h('span', { class: 'warn-text' }, cur + ' 환율이 없어요. '),
-      h('button', { type: 'button', class: 'link', onclick: e => fetchFX(e.currentTarget) }, '최신 환율 불러오기'), ' 또는 환율 칸에 직접 입력');
+    if (cur !== base && !r) preview.append(h('span', { class: 'warn-text' }, L(cur + ' 환율이 없어요. ', 'No ' + cur + ' rate yet. ')),
+      h('button', { type: 'button', class: 'link', onclick: e => fetchFX(e.currentTarget) }, L('최신 환율 불러오기', 'Get latest rates')), L(' 또는 환율 칸에 직접 입력', ' or type one in'));
     else if (a > 0) preview.append('≈ ' + (cur !== base ? fmtExact(a / r) + ' · ' : '') + fmtHome(a / r * (parseFloat(fxIn.value) || fx)));
-    else preview.append(cur !== base ? '1 ' + base + ' = ' + Number(r).toLocaleString() + ' ' + cur + (m.fxUpdated ? ' (' + m.fxUpdated + ')' : '') : ' ');
+    else preview.append(cur !== base ? '1 ' + base + ' = ' + Number(r).toLocaleString('en-US') + ' ' + cur + (m.fxUpdated ? ' (' + m.fxUpdated + ')' : '') : ' ');
   };
   amt.addEventListener('input', upd);
   fxIn.addEventListener('input', upd);
@@ -1343,49 +1809,49 @@ function viewLedger(v) {
   });
   date.addEventListener('input', () => draft.date = date.value);
   rateIn.addEventListener('input', () => { const r = parseFloat(rateIn.value); if (r > 0) { m.rates = m.rates || {}; m.rates[draft.cur] = r; save(); } upd(); });
-  const cats = h('div', { class: 'cat-pick', role: 'radiogroup', 'aria-label': '분류' });
-  const drawCats = () => { cats.innerHTML = ''; CATS.forEach(c => cats.append(h('button', { type: 'button', class: 'pick' + (draft.cat === c ? ' on' : ''), 'aria-pressed': draft.cat === c ? 'true' : 'false', onclick: () => { draft.cat = c; drawCats(); } }, CAT_ICON[c] + ' ' + c))); };
+  const cats = h('div', { class: 'cat-pick', role: 'radiogroup', 'aria-label': L('분류', 'Category') });
+  const drawCats = () => { cats.innerHTML = ''; CATS.forEach(c => cats.append(h('button', { type: 'button', class: 'pick' + (draft.cat === c ? ' on' : ''), 'aria-pressed': draft.cat === c ? 'true' : 'false', onclick: () => { draft.cat = c; drawCats(); } }, CAT_ICON[c] + ' ' + catName(c)))); };
   drawCats();
   const add = () => {
     const a = parseFloat(amt.value);
-    if (!(a > 0)) { amt.focus(); toast('금액을 입력하세요'); return; }
+    if (!(a > 0)) { amt.focus(); toast(L('금액을 입력하세요', 'Enter an amount')); return; }
     const r = rateOf(draft.cur);
-    if (!r) { rateBox.open = true; rateIn.focus(); toast(draft.cur + ' 환율을 먼저 넣어 주세요'); return; }
-    trip.ledger.push({ id: uid(), date: date.value || todayStr(), city: city.value.trim(), cat: draft.cat, desc: desc.value.trim() || draft.cat,
+    if (!r) { rateBox.open = true; rateIn.focus(); toast(L(draft.cur + ' 환율을 먼저 넣어 주세요', 'Add a ' + draft.cur + ' rate first')); return; }
+    trip.ledger.push({ id: uid(), date: date.value || todayStr(), city: city.value.trim(), cat: draft.cat, desc: desc.value.trim() || catName(draft.cat),
       amount: Math.round(a / r * 100) / 100, orig: a, cur: draft.cur, rate: r, fx: parseFloat(fxIn.value) || fx });
-    save(); focusAfter = 'amount'; render(); toast(fmtCur(a, draft.cur) + ' 기록했습니다');
+    save(); focusAfter = 'amount'; render(); toast(fmtCur(a, draft.cur) + L(' 기록했습니다', ' saved'));
   };
   [amt, desc].forEach(x => x.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); add(); } }));
   upd();
-  v.append(h('div', { class: 'card' }, h('h3', {}, '지출 기록하기'),
+  v.append(h('div', { class: 'card' }, h('h3', {}, L('지출 기록하기', 'Log spending')),
     h('div', { class: 'amount-in' }, curSel, amt), preview,
     cats, h('div', { class: 'form-row' }, h('div', { style: 'grid-column:1/-1' }, desc)),
     h('div', { class: 'form-row' }, city, date),
     h('datalist', { id: 'ledger-cities' }, trip.cities.map(c => h('option', { value: c.name }))),
     rateBox,
-    h('button', { type: 'button', class: 'btn primary block', onclick: add }, '기록하기')));
+    h('button', { type: 'button', class: 'btn primary block', onclick: add }, L('기록하기', 'Save'))));
 
   // 분류별 합계
   const byCat = {};
   trip.ledger.forEach(l => byCat[l.cat] = (byCat[l.cat] || 0) + num(l.amount));
   if (Object.keys(byCat).length) v.append(h('div', { class: 'chips', style: 'margin:4px 0 6px' },
-    Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([k, x]) => h('span', { class: 'chip' }, (CAT_ICON[k] || '') + ' ' + k + ' ' + fmtBase(x)))));
+    Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([k, x]) => h('span', { class: 'chip' }, (CAT_ICON[k] || '') + ' ' + catName(k) + ' ' + fmtBase(x)))));
 
   // 날짜별 목록
-  v.append(h('div', { class: 'page-title' }, h('h2', {}, '기록'), h('span', { class: 'muted small' }, trip.ledger.length + '건')));
-  if (!trip.ledger.length) { v.append(h('div', { class: 'card' }, emptyState('아직 기록이 없어요', '위에서 금액을 넣고 기록하기를 누르세요. 현지 통화로 넣으면 자동으로 환산됩니다.'))); return; }
-  const days = {};
+  v.append(h('div', { class: 'page-title' }, h('h2', {}, L('기록', 'Entries')), h('span', { class: 'muted small' }, L(trip.ledger.length + '건', String(trip.ledger.length)))));
+  if (!trip.ledger.length) { v.append(h('div', { class: 'card' }, emptyState(L('아직 기록이 없어요', 'Nothing logged yet'), L('위에서 금액을 넣고 기록하기를 누르세요. 현지 통화로 넣으면 자동으로 환산됩니다.', 'Enter an amount above and tap Save. Local currency converts automatically.')))); return; }
+  const days = {}, noDate = L('날짜 없음', 'No date');
   trip.ledger.map((l, i) => ({ l, i })).sort((a, b) => (b.l.date || '').localeCompare(a.l.date || '') || b.i - a.i)
-    .forEach(({ l }) => (days[l.date || '날짜 없음'] = days[l.date || '날짜 없음'] || []).push(l));
+    .forEach(({ l }) => (days[l.date || noDate] = days[l.date || noDate] || []).push(l));
   const card = h('div', { class: 'card', style: 'padding-top:4px' });
   Object.entries(days).forEach(([d, list]) => {
     const dt = addDays(d, 0);
-    card.append(h('div', { class: 'day-head' }, h('span', {}, dt ? ymd(dt) + ' ' + WD[dt.getDay()] + '요일' : d), h('span', {}, fmtBase(list.reduce((a, l) => a + num(l.amount), 0)))));
+    card.append(h('div', { class: 'day-head' }, h('span', {}, dt ? (lang === 'en' ? dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' }) : ymd(dt) + ' ' + WDL(dt) + '요일') : d), h('span', {}, fmtBase(list.reduce((a, l) => a + num(l.amount), 0)))));
     card.append(h('div', { class: 'rows' }, list.map(l => {
       const local = l.cur && l.cur !== base;
       return h('button', { type: 'button', class: 'row', onclick: () => editEntry(l) },
         h('span', { class: 'cat-ic' }, CAT_ICON[l.cat] || '🧾'),
-        h('div', { class: 'grow' }, h('div', { class: 'row-t' }, l.desc || l.cat), h('div', { class: 'muted small' }, [l.cat, l.city && l.city !== '-' ? l.city : ''].filter(Boolean).join(' · '))),
+        h('div', { class: 'grow' }, h('div', { class: 'row-t' }, l.desc || catName(l.cat)), h('div', { class: 'muted small' }, [catName(l.cat), l.city && l.city !== '-' ? l.city : ''].filter(Boolean).join(' · '))),
         h('div', { class: 'amt' }, local ? fmtCur(num(l.orig), l.cur) : fmtExact(num(l.amount)),
           h('small', {}, (local ? fmtExact(num(l.amount)) + ' · ' : '') + fmtHome(num(l.amount) * (num(l.fx) || fx)))));
     })));
@@ -1396,67 +1862,67 @@ function viewLedger(v) {
 /* --- 준비 --- */
 function viewPrep(v) {
   const cnt = tab => { const all = trip.checklists.filter(g => g.tab === tab).flatMap(g => g.items); return [all.filter(x => x.done).length, all.length]; };
-  const subs = [['bookings', '예약', [trip.bookings.filter(b => b.done).length, trip.bookings.length]], ['prep', '할 일', cnt('prep')], ['pack', '짐', cnt('pack')]];
+  const subs = [['bookings', L('예약', 'Bookings'), [trip.bookings.filter(b => b.done).length, trip.bookings.length]], ['prep', L('할 일', 'To do'), cnt('prep')], ['pack', L('짐', 'Packing'), cnt('pack')]];
   v.append(h('div', { class: 'seg', role: 'tablist' }, subs.map(([id, l, c]) => h('button', { type: 'button', role: 'tab', 'aria-selected': prepSub === id ? 'true' : 'false', class: prepSub === id ? 'on' : '', onclick: () => { prepSub = id; render(); } }, l, h('small', {}, c[0] + '/' + c[1])))));
   if (prepSub === 'bookings') return prepBookings(v);
   const groups = trip.checklists.filter(g => g.tab === prepSub);
   const all = groups.flatMap(g => g.items);
   groups.forEach(g => v.append(groupEl(g)));
-  if (!groups.length) v.append(h('div', { class: 'card' }, emptyState('목록이 비어 있어요', '그룹(예: 출발 1주 전, 옷)을 만들고 항목을 추가하세요.')));
+  if (!groups.length) v.append(h('div', { class: 'card' }, emptyState(L('목록이 비어 있어요', 'This list is empty'), L('그룹(예: 출발 1주 전, 옷)을 만들고 항목을 추가하세요.', 'Make a group (e.g. 1 week before, clothes) and add items.'))));
   v.append(h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:4px' },
     h('button', { type: 'button', class: 'add-btn', style: 'flex:1', onclick: () => {
-      const g = { id: uid(), tab: prepSub, title: '새 그룹', items: [] };
+      const g = { id: uid(), tab: prepSub, title: L('새 그룹', 'New group'), items: [] };
       trip.checklists.push(g); editingGroups.add(g.id); save(); focusAfter = 'title-' + g.id; render();
-    } }, icon('plus'), '그룹 추가')));
+    } }, icon('plus'), L('그룹 추가', 'Add group'))));
   if (all.some(x => x.done)) v.append(h('p', { style: 'text-align:center;margin-top:14px' }, h('button', { type: 'button', class: 'btn sm ghost', onclick: () => {
-    if (!confirm('이 목록의 체크를 모두 해제할까요?')) return;
+    if (!confirm(L('이 목록의 체크를 모두 해제할까요?', 'Uncheck everything in this list?'))) return;
     all.forEach(x => x.done = false); save(); render();
-  } }, '체크 모두 해제')));
+  } }, L('체크 모두 해제', 'Uncheck all'))));
 }
 function prepBookings(v) {
-  v.append(h('p', { class: 'hint' }, '입장권, 트레킹 퍼밋, 인기 숙소처럼 일찍 마감되는 것. 체크하면 예약 완료.'));
+  v.append(h('p', { class: 'hint' }, L('입장권, 트레킹 퍼밋, 인기 숙소처럼 일찍 마감되는 것. 체크하면 예약 완료.', 'Tickets, trek permits and popular stays that sell out early. Check when booked.')));
   const card = h('div', { class: 'card', style: 'padding-top:4px;padding-bottom:4px' });
-  if (!trip.bookings.length) card.append(emptyState('예약할 항목이 없어요', '아래 버튼으로 추가하세요.'));
+  if (!trip.bookings.length) card.append(emptyState(L('예약할 항목이 없어요', 'Nothing to book'), L('아래 버튼으로 추가하세요.', 'Add one below.')));
   trip.bookings.forEach(b => {
-    const cb = h('input', { type: 'checkbox', 'aria-label': (b.item || '항목') + ' 예약 완료' }); cb.checked = !!b.done;
+    const cb = h('input', { type: 'checkbox', 'aria-label': (b.item || L('항목', 'Item')) + L(' 예약 완료', ' booked') }); cb.checked = !!b.done;
     cb.addEventListener('change', () => { b.done = cb.checked; save(); render(); });
     card.append(h('div', { class: 'booking' + (b.done ? ' done' : '') }, cb,
-      clickable(h('div', { class: 'body' }, h('div', { class: 'row-t' }, b.item || '(이름 없음)'),
+      clickable(h('div', { class: 'body' }, h('div', { class: 'row-t' }, b.item || L('(이름 없음)', '(untitled)')),
         h('div', { class: 'muted small' }, [b.country, b.when].filter(Boolean).join(' · ')),
         b.memo ? h('div', { class: 'small', style: 'margin-top:2px' }, b.memo) : null), () => editBooking(b))));
   });
-  v.append(card, h('button', { type: 'button', class: 'add-btn', onclick: () => editBooking() }, icon('plus'), '예약 항목 추가'));
+  v.append(card, h('button', { type: 'button', class: 'add-btn', onclick: () => editBooking() }, icon('plus'), L('예약 항목 추가', 'Add booking')));
 }
 function groupEl(g) {
   const items = g.items, done = items.filter(x => x.done).length, editing = editingGroups.has(g.id);
   const card = h('div', { class: 'card group' });
   let head;
   if (editing) {
-    const ti = h('input', { type: 'text', value: g.title, 'aria-label': '그룹 이름', 'data-focus': 'title-' + g.id });
+    const ti = h('input', { type: 'text', value: g.title, 'aria-label': L('그룹 이름', 'Group name'), 'data-focus': 'title-' + g.id });
     ti.addEventListener('input', () => { g.title = ti.value; save(); });
-    head = h('div', { class: 'group-head' }, ti, btn('완료', () => { editingGroups.delete(g.id); render(); }, 'sm primary'));
-  } else head = h('div', { class: 'group-head' }, h('h3', {}, g.title || '(이름 없음)'), h('span', { class: 'cnt' }, done + '/' + items.length),
-    h('button', { type: 'button', class: 'btn sm ghost', onclick: () => { editingGroups.add(g.id); render(); } }, icon('edit'), '편집'));
+    head = h('div', { class: 'group-head' }, ti, btn(L('완료', 'Done'), () => { editingGroups.delete(g.id); render(); }, 'sm primary'));
+  } else head = h('div', { class: 'group-head' }, h('h3', {}, g.title || L('(이름 없음)', '(untitled)')), h('span', { class: 'cnt' }, done + '/' + items.length),
+    h('button', { type: 'button', class: 'btn sm ghost', onclick: () => { editingGroups.add(g.id); render(); } }, icon('edit'), L('편집', 'Edit')));
   card.append(head, h('div', { class: 'progress' }, h('i', { style: 'width:' + (items.length ? done / items.length * 100 : 0) + '%' })));
   items.forEach((it, i) => {
     if (editing) {
-      const ti = h('input', { type: 'text', value: it.text, 'aria-label': '항목' });
+      const ti = h('input', { type: 'text', value: it.text, 'aria-label': L('항목', 'Item') });
       ti.addEventListener('input', () => { it.text = ti.value; save(); });
-      card.append(h('div', { class: 'check-edit' }, ti, h('button', { type: 'button', class: 'icon-btn', 'aria-label': '항목 삭제', onclick: () => { items.splice(i, 1); save(); render(); } }, icon('trash'))));
+      card.append(h('div', { class: 'check-edit' }, ti, h('button', { type: 'button', class: 'icon-btn', 'aria-label': L('항목 삭제', 'Delete item'), onclick: () => { items.splice(i, 1); save(); render(); } }, icon('trash'))));
     } else {
       const cb = h('input', { type: 'checkbox' }); cb.checked = !!it.done;
       cb.addEventListener('change', () => { it.done = cb.checked; save(); render(); });
-      card.append(h('label', { class: 'check' + (it.done ? ' done' : '') }, cb, h('span', { class: 't' }, it.text || '(빈 항목)')));
+      card.append(h('label', { class: 'check' + (it.done ? ' done' : '') }, cb, h('span', { class: 't' }, it.text || L('(빈 항목)', '(empty)'))));
     }
   });
-  const ai = h('input', { type: 'text', placeholder: '+ 항목 추가 (Enter)', 'aria-label': '항목 추가', 'data-focus': 'add-' + g.id });
+  const ai = h('input', { type: 'text', placeholder: L('+ 항목 추가 (Enter)', '+ Add item (Enter)'), 'aria-label': L('항목 추가', 'Add item'), 'data-focus': 'add-' + g.id });
   const addItem = () => { const x = ai.value.trim(); if (!x) return; items.push({ id: uid(), text: x, done: false }); save(); focusAfter = 'add-' + g.id; render(); };
   ai.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addItem(); } });
-  card.append(h('div', { class: 'add-line' }, ai, btn('추가', addItem, 'sm')));
+  card.append(h('div', { class: 'add-line' }, ai, btn(L('추가', 'Add'), addItem, 'sm')));
   if (editing) card.append(h('div', { style: 'margin-top:12px;text-align:right' }, h('button', { type: 'button', class: 'btn sm danger', onclick: () => {
-    if (!confirm('"' + g.title + '" 그룹을 통째로 삭제할까요?')) return;
+    if (!confirm(L('"' + g.title + '" 그룹을 통째로 삭제할까요?', 'Delete the whole "' + g.title + '" group?'))) return;
     trip.checklists = trip.checklists.filter(x => x !== g); editingGroups.delete(g.id); save(); render();
-  } }, icon('trash'), '그룹 삭제')));
+  } }, icon('trash'), L('그룹 삭제', 'Delete group'))));
   return card;
 }
 
@@ -1468,27 +1934,27 @@ function telLinks(text) {
 function viewInfo(v) {
   const have = new Set(trip.countries.map(c => (c.name || '').trim()));
   const missing = totals().countries.filter(n => !have.has(n));
-  v.append(h('div', { class: 'page-title' }, h('h2', {}, '나라별 정보'), h('button', { type: 'button', class: 'btn sm', onclick: () => editCountry() }, icon('plus'), '국가')));
-  v.append(h('p', { class: 'hint' }, '치안 정보는 출발 전 외교부 해외안전여행(0404.go.kr)에서 다시 확인하세요.'));
+  v.append(h('div', { class: 'page-title' }, h('h2', {}, L('나라별 정보', 'Country info')), h('button', { type: 'button', class: 'btn sm', onclick: () => editCountry() }, icon('plus'), L('국가', 'Country'))));
+  v.append(h('p', { class: 'hint' }, L('치안 정보는 출발 전 외교부 해외안전여행(0404.go.kr)에서 다시 확인하세요.', 'Check your government\'s travel advisories again before you go.')));
   if (missing.length) v.append(h('div', { class: 'card', style: 'display:flex;gap:12px;align-items:center;flex-wrap:wrap' },
-    h('div', { class: 'grow small' }, '일정에 있지만 정보가 없는 나라: ', h('b', {}, missing.join(', '))),
-    btn('한 번에 추가', () => { missing.forEach(n => trip.countries.push({ id: uid(), name: n, emergency: '', currency: '', payment: '', advisory: '' })); save(); render(); }, 'sm')));
+    h('div', { class: 'grow small' }, L('일정에 있지만 정보가 없는 나라: ', 'In your plan but no info yet: '), h('b', {}, missing.join(', '))),
+    btn(L('한 번에 추가', 'Add all'), () => { missing.forEach(n => trip.countries.push({ id: uid(), name: n, emergency: '', currency: '', payment: '', advisory: '' })); save(); render(); }, 'sm')));
   if (trip.countries.length) v.append(h('div', { class: 'country-grid' }, trip.countries.map(c => h('div', { class: 'card' },
-    h('div', { class: 'card-head' }, h('h3', {}, c.name || '(이름 없음)'), h('button', { type: 'button', class: 'btn sm ghost', onclick: () => editCountry(c) }, icon('edit'), '편집')),
-    h('div', { class: 'info-line' }, h('span', { class: 'k' }, '긴급번호'), h('span', {}, c.emergency ? telLinks(c.emergency) : h('span', { class: 'empty' }, '—'))),
-    h('div', { class: 'info-line' }, h('span', { class: 'k' }, '통화'), h('span', {}, c.currency || h('span', { class: 'empty' }, '—'))),
-    h('div', { class: 'info-line' }, h('span', { class: 'k' }, '결제'), h('span', {}, c.payment || h('span', { class: 'empty' }, '—'))),
+    h('div', { class: 'card-head' }, h('h3', {}, flagOf(c.name) + ' ' + (c.name || L('(이름 없음)', '(untitled)'))), h('button', { type: 'button', class: 'btn sm ghost', onclick: () => editCountry(c) }, icon('edit'), L('편집', 'Edit'))),
+    h('div', { class: 'info-line' }, h('span', { class: 'k' }, L('긴급번호', 'Emergency')), h('span', {}, c.emergency ? telLinks(c.emergency) : h('span', { class: 'empty' }, '—'))),
+    h('div', { class: 'info-line' }, h('span', { class: 'k' }, L('통화', 'Currency')), h('span', {}, c.currency || h('span', { class: 'empty' }, '—'))),
+    h('div', { class: 'info-line' }, h('span', { class: 'k' }, L('결제', 'Payment')), h('span', {}, c.payment || h('span', { class: 'empty' }, '—'))),
     c.advisory ? h('div', { class: 'warn', style: 'margin-top:8px' }, '⚠ ' + c.advisory) : null))));
-  else if (!missing.length) v.append(h('div', { class: 'card' }, emptyState('나라 정보가 없어요', '긴급번호, 통화, 결제 수단을 적어 두세요.')));
+  else if (!missing.length) v.append(h('div', { class: 'card' }, emptyState(L('나라 정보가 없어요', 'No country info'), L('긴급번호, 통화, 결제 수단을 적어 두세요.', 'Note emergency numbers, currency and payment.'))));
 
   // 메모: 입력하면 바로 저장
-  const state = h('span', { class: 'save-state' }, '입력하면 자동 저장');
-  const ta = h('textarea', { class: 'notes', placeholder: '숙소 이름, 예약 번호, 아이디어 등 자유롭게', 'aria-label': '메모' });
+  const state = h('span', { class: 'save-state' }, L('입력하면 자동 저장', 'Saves as you type'));
+  const ta = h('textarea', { class: 'notes', placeholder: L('숙소 이름, 예약 번호, 아이디어 등 자유롭게', 'Hostel names, booking numbers, ideas…'), 'aria-label': L('메모', 'Notes') });
   ta.value = trip.notes || '';
   let timer;
-  ta.addEventListener('input', () => { trip.notes = ta.value; state.textContent = '입력 중…'; clearTimeout(timer); timer = setTimeout(() => { save(); state.textContent = '저장됨'; }, 400); });
+  ta.addEventListener('input', () => { trip.notes = ta.value; state.textContent = L('입력 중…', 'Typing…'); clearTimeout(timer); timer = setTimeout(() => { save(); state.textContent = L('저장됨', 'Saved'); }, 400); });
   ta.addEventListener('blur', () => { clearTimeout(timer); trip.notes = ta.value; save(); });
-  v.append(h('div', { class: 'page-title' }, h('h2', {}, '메모'), state), ta);
+  v.append(h('div', { class: 'page-title' }, h('h2', {}, L('메모', 'Notes')), state), ta);
 }
 
 /* --- 설정 --- */
@@ -1509,7 +1975,7 @@ function bound(obj, key, { type = 'text', ph = '' } = {}) {
 const F = (label, el, hint, full) => h('label', { class: 'fld' + (full ? ' full' : '') }, h('span', {}, label), el, hint ? h('small', {}, hint) : null);
 async function fetchFX(b) {
   const m = trip.meta, label = b.textContent;
-  b.textContent = '불러오는 중…'; b.disabled = true;
+  b.textContent = L('불러오는 중…', 'Loading…'); b.disabled = true;
   try {
     const r = await fetch('https://open.er-api.com/v6/latest/' + encodeURIComponent(m.baseCur));
     const d = await r.json();
@@ -1517,113 +1983,227 @@ async function fetchFX(b) {
     // 모든 통화의 환율을 저장해 두면 오프라인에서도 현지 통화 입력 가능
     m.rates = Object.fromEntries(Object.entries(d.rates).map(([k, x]) => [k, +Number(x).toPrecision(6)]));
     if (d.rates[homeCode()]) { const rate = d.rates[homeCode()]; m.fx = rate >= 100 ? Math.round(rate) : Math.round(rate * 10000) / 10000; }
-    m.fxUpdated = new Date().toLocaleDateString('ko-KR') + ' 기준';
-    save(); render(); toast('환율을 업데이트했습니다');
+    m.fxUpdated = new Date().toLocaleDateString(LOC()) + L(' 기준', '');
+    save(); render(); toast(L('환율을 업데이트했습니다', 'Rates updated'));
   } catch (e) {
-    b.textContent = navigator.onLine === false ? '오프라인 · 직접 입력하세요' : '실패 · 직접 입력하세요'; b.disabled = false;
+    b.textContent = navigator.onLine === false ? L('오프라인 · 직접 입력하세요', 'Offline · type rates in') : L('실패 · 직접 입력하세요', 'Failed · type rates in'); b.disabled = false;
     setTimeout(() => { if (b.isConnected) b.textContent = label; }, 3000);
   }
 }
+function pillSeg(opts, cur, onPick, label) {
+  return h('div', { class: 'pill-seg', role: 'group', 'aria-label': label }, opts.map(([id, l]) => h('button', { type: 'button', class: cur === id ? 'on' : '', 'aria-pressed': cur === id ? 'true' : 'false', onclick: () => onPick(id) }, l)));
+}
+function skinChips(t, after) {
+  return h('div', { class: 'skin-chips' }, SKINS.map(s => h('button', { type: 'button', class: 'skin-chip' + (skinOf(t) === s.id && t.meta.skin ? ' on' : ''), 'aria-pressed': skinOf(t) === s.id ? 'true' : 'false',
+    onclick: () => { t.meta.skin = s.id; save(); if (after) after(); else render(); } }, s[lang][0])));
+}
 function viewSettings(v) {
   const m = trip.meta;
-  v.append(h('div', { class: 'page-title' }, h('h2', {}, '설정'), h('span', { class: 'save-state' }, '바꾸면 바로 저장돼요')));
-  v.append(h('div', { class: 'card' }, h('h3', {}, '여행 정보'), h('div', { class: 'form' },
-    F('여행 이름', bound(m, 'title'), null, true),
-    F('경로 요약', bound(m, 'subtitle', { ph: '예: 리스본 → 포르투 → 마드리드' }), null, true),
-    F('출발일', bound(m, 'startDate', { type: 'date' }), '도시별 날짜가 자동 계산됩니다', true))));
-  const fxBtn = h('button', { type: 'button', class: 'btn sm', onclick: e => fetchFX(e.currentTarget) }, '최신 환율 모두 불러오기');
+  v.append(h('div', { class: 'page-title' }, h('h2', {}, L('설정', 'Settings')), h('span', { class: 'save-state' }, L('바꾸면 바로 저장돼요', 'Changes save right away'))));
+  v.append(h('div', { class: 'card' }, h('h3', {}, L('화면', 'Display')),
+    h('div', { class: 'fld', style: 'margin-bottom:14px' }, h('span', {}, L('이 여행의 테마', 'Theme for this trip')), skinChips(trip),
+      h('small', {}, L('여행마다 따로 저장돼요. ', 'Saved per trip. '), h('button', { type: 'button', class: 'link', onclick: () => openPicker(true) }, L('미리보기로 고르기', 'Choose with previews')))),
+    h('div', { class: 'form' },
+      h('div', { class: 'fld full' }, h('span', {}, L('언어', 'Language')), pillSeg([['ko', '한국어'], ['en', 'English']], lang, x => { setLang(x); render(); }, L('언어', 'Language'))),
+      h('div', { class: 'fld full' }, h('span', {}, L('밝기 (이 기기)', 'Brightness (this device)')), pillSeg([['light', L('밝게', 'Light')], ['dark', L('어둡게', 'Dark')], ['auto', L('기기 설정', 'Auto')]], getMode(), x => { setMode(x); render(); }, L('밝기', 'Brightness'))))));
+  v.append(h('div', { class: 'card' }, h('h3', {}, L('여행 정보', 'Trip')), h('div', { class: 'form' },
+    F(L('여행 이름', 'Trip name'), bound(m, 'title'), null, true),
+    F(L('경로 요약', 'Route summary'), bound(m, 'subtitle', { ph: L('예: 리스본 → 포르투 → 마드리드', 'e.g. Lisbon → Porto → Madrid') }), null, true),
+    F(L('출발일', 'Start date'), bound(m, 'startDate', { type: 'date' }), L('도시별 날짜가 자동 계산됩니다', 'City dates are calculated from this'), true))));
+  const fxBtn = h('button', { type: 'button', class: 'btn sm', onclick: e => fetchFX(e.currentTarget) }, L('최신 환율 모두 불러오기', 'Get all latest rates'));
   m.rates = m.rates || {};
   const base = baseCode(), locals = currencies().filter(c => c !== base && c !== homeCode());
   const whoUses = c => trip.countries.filter(k => curCode(k.currency) === c).map(k => k.name).join(', ');
-  v.append(h('div', { class: 'card' }, h('h3', {}, '통화 · 환율'), h('div', { class: 'form' },
-    F('예산 통화', bound(m, 'baseCur', { ph: 'USD' }), '예산을 적는 통화'),
-    F('내 통화', bound(m, 'homeCur', { ph: 'KRW' })),
+  v.append(h('div', { class: 'card' }, h('h3', {}, L('통화 · 환율', 'Currency · rates')), h('div', { class: 'form' },
+    F(L('예산 통화', 'Budget currency'), bound(m, 'baseCur', { ph: 'USD' }), L('예산을 적는 통화', 'Currency you plan in')),
+    F(L('내 통화', 'Home currency'), bound(m, 'homeCur', { ph: 'KRW' })),
     F('1 ' + m.baseCur + ' = ? ' + m.homeCur, bound(m, 'fx', { type: 'number' }), null, true),
-    h('div', { class: 'full' }, h('div', { class: 'fld', style: 'margin-bottom:8px' }, h('span', {}, '현지 통화 (1 ' + m.baseCur + ' = ?)'),
-      h('small', {}, '가계부에 현지 통화로 적으면 이 환율로 바꿔 계산합니다. 나라별 정보의 "통화" 칸(예: MXN)에서 목록을 만듭니다.')),
-      locals.length ? h('div', { class: 'form' }, locals.map(c => F(c + (whoUses(c) ? ' · ' + whoUses(c) : ''), bound(m.rates, c, { type: 'number', ph: '환율' }))))
-        : h('p', { class: 'hint', style: 'margin:0' }, '아직 현지 통화가 없어요. 정보 화면에서 나라별 통화를 적어 주세요.')),
+    h('div', { class: 'full' }, h('div', { class: 'fld', style: 'margin-bottom:8px' }, h('span', {}, L('현지 통화 (1 ', 'Local currencies (1 ') + m.baseCur + ' = ?)'),
+      h('small', {}, L('가계부에 현지 통화로 적으면 이 환율로 바꿔 계산합니다. 나라별 정보의 "통화" 칸(예: MXN)에서 목록을 만듭니다.', 'Spending in local currency is converted with these. The list comes from each country\'s "Currency" (e.g. MXN).'))),
+      locals.length ? h('div', { class: 'form' }, locals.map(c => F(c + (whoUses(c) ? ' · ' + whoUses(c) : ''), bound(m.rates, c, { type: 'number', ph: L('환율', 'Rate') }))))
+        : h('p', { class: 'hint', style: 'margin:0' }, L('아직 현지 통화가 없어요. 정보 화면에서 나라별 통화를 적어 주세요.', 'No local currencies yet. Add them on the Info tab.'))),
     h('div', { class: 'full', style: 'display:flex;gap:10px;align-items:center;flex-wrap:wrap' }, fxBtn,
-      h('span', { class: 'muted small' }, m.fxUpdated ? m.fxUpdated + '으로 저장됨 (오프라인에서도 사용)' : '아직 불러오지 않음 · 직접 입력해도 돼요')))));
-  v.append(h('div', { class: 'card' }, h('h3', {}, '일정 경고 기준'), h('p', { class: 'hint' }, '0으로 두면 그 경고를 끕니다.'), h('div', { class: 'form' },
-    F('도시당 최소 박 수', bound(m, 'minNights', { type: 'number' })),
-    F('트레킹 없는 도시 최대 박 수', bound(m, 'maxNightsNoTrek', { type: 'number' })),
-    F('낮 버스 최대 (시간)', bound(m, 'maxDayBus', { type: 'number' })),
-    F('야간버스 최대 (시간)', bound(m, 'maxNightBus', { type: 'number' })),
-    F('저비용: 하루 이 금액 미만', bound(m, 'tierLow', { type: 'number' })),
-    F('고비용: 하루 이 금액 이상', bound(m, 'tierHigh', { type: 'number' })))));
+      h('span', { class: 'muted small' }, m.fxUpdated ? L(m.fxUpdated + '으로 저장됨 (오프라인에서도 사용)', 'Saved ' + m.fxUpdated + ' (works offline)') : L('아직 불러오지 않음 · 직접 입력해도 돼요', 'Not loaded yet · you can type them in'))))));
+  v.append(h('div', { class: 'card' }, h('h3', {}, L('일정 경고 기준', 'Plan warnings')), h('p', { class: 'hint' }, L('0으로 두면 그 경고를 끕니다.', 'Set to 0 to turn a warning off.')), h('div', { class: 'form' },
+    F(L('도시당 최소 박 수', 'Min nights per city'), bound(m, 'minNights', { type: 'number' })),
+    F(L('트레킹 없는 도시 최대 박 수', 'Max nights without a trek'), bound(m, 'maxNightsNoTrek', { type: 'number' })),
+    F(L('낮 버스 최대 (시간)', 'Max day bus (hours)'), bound(m, 'maxDayBus', { type: 'number' })),
+    F(L('야간버스 최대 (시간)', 'Max night bus (hours)'), bound(m, 'maxNightBus', { type: 'number' })),
+    F(L('저비용: 하루 이 금액 미만', 'Low cost: under this per day'), bound(m, 'tierLow', { type: 'number' })),
+    F(L('고비용: 하루 이 금액 이상', 'High cost: this per day or more'), bound(m, 'tierHigh', { type: 'number' })))));
   v.append(installCard());
-  v.append(h('div', { class: 'card' }, h('h3', {}, '화면 테마'), h('p', { class: 'hint' }, '이 기기에서만 적용됩니다.'), themePicker()));
   const dev = h('input', { type: 'text', value: deviceName() });
   dev.addEventListener('change', () => { try { localStorage.setItem(DEVICE_KEY, dev.value.trim() || guessDevice()); } catch (e) {} renderNav(); });
-  v.append(h('div', { class: 'card' }, h('h3', {}, '데이터 · 백업'),
-    h('p', { class: 'hint' }, '여행 데이터는 이 기기의 브라우저에만 저장됩니다. 다른 기기로 옮기거나 백업하려면 백업 파일을 만들고, 다른 기기에서 가져오기를 누르세요.'),
-    h('div', { class: 'info-line' }, h('span', { class: 'k' }, '마지막 저장'), h('span', {}, savedText())),
-    h('div', { class: 'info-line', style: 'margin-bottom:10px' }, h('span', { class: 'k' }, '마지막 백업'), h('span', {}, lsGet(BACKUP_KEY) ? new Date(lsGet(BACKUP_KEY)).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' (' + backupState().days + '일 전)' : h('span', { class: 'warn-text' }, '아직 없음'))),
-    h('div', { class: 'btn-grid', style: 'margin-bottom:14px' }, btn('모든 여행 백업', exportAll, 'primary'), btn('백업 파일 가져오기', () => $('#import-file').click())),
-    h('button', { type: 'button', class: 'btn ghost block', style: 'margin-bottom:14px', onclick: openExport }, '문서(PDF · HTML)로 내보내기'),
-    h('div', { class: 'form' }, F('이 기기 이름', dev, '백업 파일에 함께 기록됩니다', true))));
-  v.append(h('div', { class: 'card' }, h('h3', {}, '기타'), h('div', { class: 'btn-grid' },
-    btn('샘플 여행 추가', () => { const s = sampleTrip(); store.trips[s.id] = s; store.current = s.id; trip = s; save(); go('plan'); toast('샘플 여행을 추가했습니다'); }),
-    btn('가계부 비우기', () => { if (confirm('"' + m.title + '"의 가계부 기록 ' + trip.ledger.length + '건을 모두 지울까요? 되돌릴 수 없습니다.')) { trip.ledger = []; save(); render(); toast('가계부를 비웠습니다'); } }, 'danger'))));
+  const lastB = lsGet(BACKUP_KEY);
+  v.append(h('div', { class: 'card' }, h('h3', {}, L('데이터 · 백업', 'Data · backup')),
+    h('p', { class: 'hint' }, L('여행 데이터와 사진은 이 기기의 브라우저에만 저장됩니다. 다른 기기로 옮기거나 백업하려면 백업 파일을 만들고, 다른 기기에서 가져오기를 누르세요.', 'Trips and photos are stored only in this browser. To move or back up, make a backup file and import it on the other device.')),
+    h('div', { class: 'info-line' }, h('span', { class: 'k' }, L('마지막 저장', 'Last saved')), h('span', {}, savedText())),
+    h('div', { class: 'info-line', style: 'margin-bottom:10px' }, h('span', { class: 'k' }, L('마지막 백업', 'Last backup')), h('span', {}, lastB ? new Date(lastB).toLocaleString(LOC(), { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + L(' (' + backupState().days + '일 전)', ' (' + backupState().days + ' days ago)') : h('span', { class: 'warn-text' }, L('아직 없음', 'None yet')))),
+    h('div', { class: 'btn-grid', style: 'margin-bottom:14px' }, btn(L('모든 여행 백업', 'Back up all trips'), exportAll, 'primary'), btn(L('백업 파일 가져오기', 'Import backup'), () => $('#import-file').click())),
+    h('button', { type: 'button', class: 'btn ghost block', style: 'margin-bottom:14px', onclick: openExport }, L('문서(PDF · HTML)로 내보내기', 'Export as a document (PDF · HTML)')),
+    h('div', { class: 'form' }, F(L('이 기기 이름', 'Device name'), dev, L('백업 파일에 함께 기록됩니다', 'Recorded in backup files'), true))));
+  v.append(h('div', { class: 'card' }, h('h3', {}, L('기타', 'More')), h('div', { class: 'btn-grid' },
+    btn(L('샘플 여행 추가', 'Add sample trip'), () => { const s = sampleTrip(); store.trips[s.id] = s; store.current = s.id; trip = s; save(); go('plan'); toast(L('샘플 여행을 추가했습니다', 'Sample trip added')); }),
+    btn(L('가계부 비우기', 'Clear spending'), () => { if (confirm(L('"' + m.title + '"의 가계부 기록 ' + trip.ledger.length + '건을 모두 지울까요? 되돌릴 수 없습니다.', 'Delete all ' + trip.ledger.length + ' entries in "' + m.title + '"? This can\'t be undone.'))) { trip.ledger = []; save(); render(); toast(L('가계부를 비웠습니다', 'Spending cleared')); } }, 'danger'))));
 }
+
+/* ============ 테마 미리보기 그림 (174 × 210, 테마와 상관없이 고정 색) ============ */
+function miniFor(id) {
+  const S = (style, ...kids) => h('div', { style }, ...kids);
+  const ab = 'position:absolute;';
+  if (id === 'torn') {
+    const band = (c, y, d) => svgEl('<svg width="174" height="12" viewBox="0 0 174 12" style="display:block"><path d="' + d + '" fill="' + c + '"/></svg>', '');
+    const b1 = band('#8fd0ea', 0, 'M0 6C20 0 40 10 70 5S120 0 174 7V12H0z'); b1.style.cssText = ab + 'left:0;top:70px';
+    const b2 = band('#a6dd82', 0, 'M0 8C30 2 60 12 100 5S150 2 174 6V12H0z'); b2.style.cssText = ab + 'left:0;top:130px';
+    const b3 = band('#b6a6e0', 0, 'M0 5C40 12 70 2 110 7S160 10 174 4V12H0z'); b3.style.cssText = ab + 'left:0;top:172px';
+    const sun = svgEl(SUN_SVG, ''); sun.style.cssText = 'display:block;width:40px;height:40px;color:#111';
+    return S('width:174px;height:210px;position:relative;overflow:hidden;background:#fff;color:#111', h('div', { style: 'position:absolute;inset:0' },
+      S(ab + 'left:12px;top:18px;display:flex;align-items:center;gap:6px', sun, S('font-family:"Song Myung",serif;font-size:18px;line-height:1.15', L('라틴아메리카', 'Latin America'))),
+      b1, S(ab + 'left:0;right:0;top:81px;height:60px;background:#8fd0ea;padding:4px 12px;box-sizing:border-box', S('font-family:"Song Myung",serif;font-size:18px', L('멕시코', 'Mexico')), S('margin-top:4px;height:14px;background:#fff;border-radius:6px')),
+      b2, S(ab + 'left:0;right:0;top:141px;height:40px;background:#a6dd82;padding:4px 12px;box-sizing:border-box;font-family:"Song Myung",serif;font-size:18px', L('과테말라', 'Guatemala')),
+      b3, S(ab + 'left:0;right:0;top:183px;bottom:0;background:#b6a6e0'),
+      S(ab + 'left:22px;right:22px;bottom:8px;height:18px;background:#fff;border:1.5px solid #111;border-radius:999px')));
+  }
+  if (id === 'doodle') {
+    const cells = [];
+    for (let i = 0; i < 70; i++) {
+      if (i < 22) cells.push(i % 3 ? S('width:9px;height:9px;border:1.3px solid #1a0dc4;border-radius:50%;box-sizing:border-box') : S('width:9px;height:9px;color:#1a0dc4;font-size:9px;line-height:9px;text-align:center', '☼'));
+      else if (i === 22) cells.push(S('width:9px;height:9px;background:#3f8a22;border-radius:50%'));
+      else cells.push(S('width:9px;height:9px;display:grid;place-items:center', S('width:2px;height:2px;border-radius:50%;background:#1a0dc4')));
+    }
+    return S('width:174px;height:210px;position:relative;overflow:hidden;background:#e3e2e6;color:#1a0dc4',
+      S(ab + 'left:0;right:0;top:12px;text-align:center', h('span', { style: 'display:inline-block;background:rgba(190,186,232,.7);border:1px solid rgba(255,255,255,.8);border-radius:999px;padding:3px 10px;font-size:10px;font-weight:700' }, '2027')),
+      S(ab + 'left:0;right:0;top:36px;text-align:center;font-family:"Gaegu",sans-serif;font-weight:700;font-size:17px', L('154일의 여행 정원', 'a 154-day garden')),
+      S(ab + 'left:22px;top:70px;display:grid;grid-template-columns:repeat(10,9px);gap:4px', ...cells),
+      S(ab + 'left:14px;right:14px;top:166px;height:22px;border-radius:10px;background:rgba(205,201,236,.75);border:1px solid rgba(255,255,255,.85)'),
+      S(ab + 'left:52px;right:52px;bottom:6px;height:14px;border-radius:6px;background:rgba(190,186,232,.75)'));
+  }
+  if (id === 'album') {
+    const tiles = TILE_COLORS.concat(TILE_COLORS).slice(0, 9).map(([a, b], i) => S('aspect-ratio:1;background:linear-gradient(160deg,' + a + ',' + b + ');display:grid;place-items:center;font-size:16px', ['🌮', '🌵', '⛪', '💧', '🛶', '🌋', '🏞️', '♨️', '🦥'][i]));
+    return S('width:174px;height:210px;position:relative;overflow:hidden;background:#fff;color:#111',
+      S(ab + 'left:10px;top:10px;font-size:20px;font-weight:800;letter-spacing:-.02em', L('일정', 'Itinerary')),
+      S(ab + 'left:0;right:0;top:42px;display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px', ...tiles),
+      S(ab + 'left:14px;right:14px;bottom:8px;height:22px;border-radius:999px;background:rgba(246,246,248,.92);box-shadow:0 3px 10px rgba(0,0,0,.15)'));
+  }
+  // today
+  return S('width:174px;height:210px;position:relative;overflow:hidden;background:#4f2410',
+    S(ab + 'left:0;right:0;top:0;height:138px;background:#c65a2a;border-radius:0 0 18px 18px'),
+    S(ab + 'left:47px;top:12px;width:80px;height:80px;border-radius:50%;background:rgba(255,226,190,.2)'),
+    S(ab + 'left:59px;top:24px;width:56px;height:56px;border-radius:50%;background:rgba(255,238,210,.4);display:grid;place-items:center;font-size:30px', '🇲🇽'),
+    S(ab + 'left:0;right:0;top:86px;text-align:center;color:#fff;font-family:"Jua",sans-serif;font-size:26px;line-height:1', 'D-295'),
+    S(ab + 'left:0;right:0;top:114px;text-align:center', h('span', { style: 'background:rgba(70,28,8,.45);color:#fff;border-radius:999px;padding:2px 8px;font-size:9px;font-weight:700' }, L('올라! 295일 남았어', '¡Hola! 295 days to go'))),
+    S(ab + 'left:10px;right:10px;top:148px;height:30px;background:#fff;border-radius:10px;display:flex;justify-content:space-around;align-items:center;font-size:12px', '🌮🌮🚌🌵🌵'),
+    S(ab + 'left:22px;right:22px;bottom:8px;height:18px;background:#1c1c1c;border-radius:999px'));
+}
+
+/* ============ 테마 고르기 (처음 들어왔을 때 · 새 여행 · 설정) ============ */
+let pickerEl = null, pickerSel = null, pickerClosable = false;
+function openPicker(closable) {
+  if (pickerEl) return;
+  pickerSel = trip.meta.skin || 'today';
+  pickerClosable = !!closable || !!trip.meta.skin;
+  pickerEl = h('div', { class: 'picker', role: 'dialog', 'aria-modal': 'true' });
+  pickerEl.addEventListener('keydown', e => { if (e.key === 'Escape' && pickerClosable) closePicker(); });
+  document.body.append(pickerEl);
+  document.body.style.overflow = 'hidden';
+  drawPicker();
+  setTimeout(() => { const f = pickerEl && pickerEl.querySelector('.pick-card.on'); if (f) f.focus(); }, 30);
+}
+function closePicker() { if (!pickerEl) return; pickerEl.remove(); pickerEl = null; document.body.style.overflow = ''; }
+function drawPicker() {
+  const sel = SKINS.find(s => s.id === pickerSel) || SKINS[0];
+  pickerEl.setAttribute('aria-label', L('테마 고르기', 'Pick a theme'));
+  pickerEl.innerHTML = '';
+  const grid = h('div', { class: 'picker-grid' }, SKINS.map(s => h('button', { type: 'button', class: 'pick-card' + (pickerSel === s.id ? ' on' : ''), 'aria-pressed': pickerSel === s.id ? 'true' : 'false',
+    onclick: () => { pickerSel = s.id; drawPicker(); const f = pickerEl.querySelector('.pick-card.on'); if (f) f.focus(); } },
+    h('div', { class: 'frame' }, h('div', { class: 'mini' }, miniFor(s.id)), h('span', { class: 'ck', 'aria-hidden': 'true' }, '✓')),
+    h('b', {}, s[lang][0]), h('small', {}, s[lang][1]))));
+  pickerEl.append(h('div', { class: 'picker-in' },
+    h('div', { class: 'picker-top' }, h('span', { style: 'font-size:.85rem;font-weight:700;color:#6e6e73' }, '✈️ Trip Planner'),
+      pillSeg([['ko', '한국어'], ['en', 'English']], lang, x => { setLang(x); drawPicker(); render(); }, 'Language')),
+    h('h1', {}, L('이 여행은', 'Which diary style'), h('br'), L('어떤 다이어리로 쓸까요?', 'for this trip?')),
+    h('p', { class: 'sub' }, h('b', {}, '"' + (trip.meta.title || L('여행', 'Trip')) + '"'), h('br'), L('여행마다 다른 테마를 고를 수 있어요. 나중에 설정에서 언제든 바꿀 수 있어요.', 'Each trip can have its own theme. You can change it anytime in Settings.')),
+    grid),
+    h('div', { class: 'picker-cta' },
+      pickerClosable ? h('button', { type: 'button', class: 'sec', onclick: closePicker }, L('닫기', 'Close')) : null,
+      h('button', { type: 'button', onclick: () => { trip.meta.skin = pickerSel; save(); closePicker(); render(); toast(L(sel[lang][0] + ' 테마로 바꿨어요', 'Theme: ' + sel[lang][0])); } },
+        L(sel.ko[0] + ' 테마로 시작', 'Start with ' + sel.en[0]))));
+  requestAnimationFrame(() => { if (pickerEl) pickerEl.querySelectorAll('.frame').forEach(f => { const m = f.querySelector('.mini'); if (m) m.style.transform = 'scale(' + (f.clientWidth / 174) + ')'; }); });
+}
+window.addEventListener('resize', () => { if (pickerEl) pickerEl.querySelectorAll('.frame').forEach(f => { const m = f.querySelector('.mini'); if (m) m.style.transform = 'scale(' + (f.clientWidth / 174) + ')'; }); });
 
 /* ============ 여행 관리 ============ */
 function tripLine(t) {
   const n = t.cities.reduce((a, c) => a + num(c.nights), 0), s = addDays(t.meta.startDate, 0);
-  return [s ? ymd(s) + ' 출발' : '출발일 미정', t.cities.length + '곳', n + '박'].join(' · ');
+  return [s ? ymd(s) + L(' 출발', '') : L('출발일 미정', 'No start date'), L(t.cities.length + '곳', t.cities.length + ' cities'), nightsL(n)].join(' · ');
 }
 function openTrips() {
-  const list = h('div', { class: 'rows' }, Object.values(store.trips).map(t => h('button', { type: 'button', class: 'row' + (t.id === trip.id ? ' on' : ''), onclick: () => { closeSheet(); switchTrip(t.id); } },
-    h('div', { class: 'grow', style: 'padding:0 8px' }, h('div', { class: 'row-t' }, t.meta.title || '(제목 없음)'), h('div', { class: 'muted small' }, tripLine(t))),
-    t.id === trip.id ? h('span', { class: 'chip now', style: 'margin-right:8px' }, '보는 중') : null)));
-  openSheet('내 여행', h('div', {}, list, h('div', { class: 'btn-grid', style: 'margin-top:16px' },
-    btn('+ 새 여행', newTrip, 'primary'), btn('지금 여행 복제', dupTrip),
-    btn('가져오기', () => { closeSheet(); $('#import-file').click(); }), btn('지금 여행 삭제', delTrip, 'danger'))));
+  const list = h('div', {}, Object.values(store.trips).map(t => h('button', { type: 'button', class: 'trip-row' + (t.id === trip.id ? ' on' : ''), onclick: () => { closeSheet(); switchTrip(t.id); } },
+    h('span', { class: 'mini-wrap', 'aria-hidden': 'true' }, h('span', { class: 'mini' }, miniFor(skinOf(t)))),
+    h('div', { class: 'grow' }, h('div', { class: 'row-t' }, t.meta.title || L('(제목 없음)', '(untitled)')), h('div', { class: 'muted small' }, tripLine(t)),
+      h('span', { class: 'chip', style: 'margin-top:5px' }, '🎨 ' + (t.meta.skin ? skinName(t.meta.skin) : L('테마 고르기 전', 'No theme yet')))),
+    t.id === trip.id ? h('span', { class: 'chip now' }, L('보는 중', 'Open')) : null)));
+  openSheet(L('내 여행', 'My trips'), h('div', {}, list,
+    h('div', { class: 'sheet-sec', style: 'margin-top:14px' }, h('h4', { style: 'margin-bottom:8px' }, L('지금 여행의 테마', 'Theme for this trip')),
+      skinChips(trip, () => { render(); openTrips(); })),
+    h('div', { class: 'btn-grid', style: 'margin-top:16px' },
+      btn(L('+ 새 여행', '+ New trip'), newTrip, 'primary'), btn(L('지금 여행 복제', 'Duplicate'), dupTrip),
+      btn(L('가져오기', 'Import'), () => { closeSheet(); $('#import-file').click(); }), btn(L('지금 여행 삭제', 'Delete trip'), delTrip, 'danger'))));
 }
 function switchTrip(id) {
   if (!store.trips[id]) return;
-  store.current = id; trip = store.trips[id];
+  store.current = id; trip = store.trips[id]; heroPick = null;
   save(); render();
 }
 function newTrip() {
   const t = blankTrip();
-  editForm({ title: '새 여행', obj: t.meta, isNew: true, fields: [
-    { key: 'title', label: '여행 이름', ph: '예: 2027 포르투갈', full: true },
-    { key: 'startDate', label: '출발일', type: 'date', full: true, hint: '나중에 정해도 돼요' },
-    { key: 'baseCur', label: '예산 통화', ph: 'USD' }, { key: 'homeCur', label: '내 통화', ph: 'KRW' }
-  ], after: () => { if (!t.meta.title) t.meta.title = '새 여행'; store.trips[t.id] = t; store.current = t.id; trip = t; view = 'plan'; } });
+  editForm({ title: L('새 여행', 'New trip'), obj: t.meta, isNew: true, fields: [
+    { key: 'title', label: L('여행 이름', 'Trip name'), ph: L('예: 2027 포르투갈', 'e.g. Portugal 2027'), full: true },
+    { key: 'startDate', label: L('출발일', 'Start date'), type: 'date', full: true, hint: L('나중에 정해도 돼요', 'You can set it later') },
+    { key: 'baseCur', label: L('예산 통화', 'Budget currency'), ph: 'USD' }, { key: 'homeCur', label: L('내 통화', 'Home currency'), ph: 'KRW' }
+  ], after: () => { if (!t.meta.title) t.meta.title = L('새 여행', 'New trip'); store.trips[t.id] = t; store.current = t.id; trip = t; view = 'plan'; heroPick = null; } });   // 저장하면 테마 고르기가 열림
 }
 function dupTrip() {
   const t = JSON.parse(JSON.stringify(trip));
-  t.id = uid(); t.meta.title = (t.meta.title || '여행') + ' (복사)'; t.ledger = [];
+  t.id = uid(); t.meta.title = (t.meta.title || L('여행', 'Trip')) + L(' (복사)', ' (copy)'); t.ledger = [];
+  t.cities.forEach(c => { c.cover = ''; });
   store.trips[t.id] = t;
-  closeSheet(); switchTrip(t.id); toast('복제했습니다 (가계부 제외)');
+  closeSheet(); switchTrip(t.id); toast(L('복제했습니다 (가계부·사진 제외)', 'Duplicated (without spending and photos)'));
 }
 function delTrip() {
-  if (Object.keys(store.trips).length <= 1) { alert('마지막 여행은 삭제할 수 없습니다. 새 여행을 먼저 만드세요.'); return; }
-  if (!confirm('"' + trip.meta.title + '"을(를) 삭제할까요? 되돌릴 수 없습니다.\n(먼저 내보내기 → 백업을 해 두면 나중에 되살릴 수 있어요)')) return;
+  if (Object.keys(store.trips).length <= 1) { alert(L('마지막 여행은 삭제할 수 없습니다. 새 여행을 먼저 만드세요.', 'You can\'t delete your only trip. Make a new one first.')); return; }
+  if (!confirm(L('"' + trip.meta.title + '"을(를) 삭제할까요? 되돌릴 수 없습니다.\n(먼저 내보내기 → 백업을 해 두면 나중에 되살릴 수 있어요)', 'Delete "' + trip.meta.title + '"? This can\'t be undone.\n(Back it up first if you might want it later.)'))) return;
+  deleteTripPhotos(trip.id);
   delete store.trips[trip.id];
-  closeSheet(); switchTrip(Object.keys(store.trips)[0]); toast('삭제했습니다');
+  closeSheet(); switchTrip(Object.keys(store.trips)[0]); toast(L('삭제했습니다', 'Deleted'));
 }
 
 /* ============ 내보내기: 문서(PDF·HTML)와 백업(JSON) ============ */
 const reportOpts = { plan: true, budget: true, prep: true, info: true, notes: true, ledger: false };
+let exportPhotos = true;
 function openExport() {
-  const checks = h('div', { class: 'opt-grid' }, [['plan', '일정 · 이동'], ['budget', '예산'], ['prep', '예약 · 할 일 · 짐'], ['info', '나라별 정보'], ['notes', '메모'], ['ledger', '가계부']].map(([k, l]) => {
+  const checks = h('div', { class: 'opt-grid' }, [['plan', L('일정 · 이동', 'Plan · transfers')], ['budget', L('예산', 'Budget')], ['prep', L('예약 · 할 일 · 짐', 'Bookings · to do · packing')], ['info', L('나라별 정보', 'Country info')], ['notes', L('메모', 'Notes')], ['ledger', L('가계부', 'Spending')]].map(([k, l]) => {
     const cb = h('input', { type: 'checkbox' }); cb.checked = reportOpts[k];
     cb.addEventListener('change', () => reportOpts[k] = cb.checked);
     return h('label', { class: 'fld-check' }, cb, h('span', {}, l));
   }));
   const big = (em, title, sub, fn) => h('button', { type: 'button', class: 'big-btn', onclick: fn }, h('span', { class: 'em' }, em), h('span', {}, h('b', {}, title), h('small', {}, sub)));
-  openSheet('내보내기 · 공유', h('div', {},
-    h('div', { class: 'sheet-sec' }, h('h4', {}, '문서로 저장'), h('p', { class: 'muted small' }, '보기 좋게 정리된 일정표. 다른 사람에게 보내거나 출력할 때 쓰세요.'),
+  const nPhotos = PHOTOS.size;
+  let photoOpt = null;
+  if (nPhotos) {
+    const cb = h('input', { type: 'checkbox' }); cb.checked = exportPhotos;
+    cb.addEventListener('change', () => exportPhotos = cb.checked);
+    photoOpt = h('label', { class: 'fld-check', style: 'margin-bottom:8px' }, cb, h('span', {}, L('사진도 함께 넣기 (' + nPhotos + '장 · 파일이 커져요)', 'Include photos (' + nPhotos + ' · bigger file)')));
+  }
+  openSheet(L('내보내기 · 공유', 'Export · share'), h('div', {},
+    h('div', { class: 'sheet-sec' }, h('h4', {}, L('문서로 저장', 'Save as a document')), h('p', { class: 'muted small' }, L('보기 좋게 정리된 일정표. 다른 사람에게 보내거나 출력할 때 쓰세요.', 'A tidy itinerary to share or print.')),
       checks,
-      big('📄', 'PDF로 저장', '인쇄 창이 열리면 "PDF로 저장"을 고르세요 (iPhone은 공유 버튼 → 파일에 저장)', exportPDF),
-      big('🌐', 'HTML 파일로 저장', '아무 브라우저에서나 열리는 읽기 전용 웹 문서', exportHTML)),
-    h('div', { class: 'sheet-sec' }, h('h4', {}, '백업 · 다른 기기로 옮기기'), h('p', { class: 'muted small' }, '이 앱의 "가져오기"로 다시 불러오는 데이터 파일(.json)입니다. 문서로 보는 용도가 아니에요.'),
-      h('div', { class: 'btn-grid' }, btn('지금 여행 백업', exportTrip), btn('모든 여행 백업', exportAll)),
-      h('button', { type: 'button', class: 'btn ghost block', style: 'margin-top:8px', onclick: () => { closeSheet(); $('#import-file').click(); } }, '백업 파일 가져오기'))));
+      big('📄', L('PDF로 저장', 'Save as PDF'), L('인쇄 창이 열리면 "PDF로 저장"을 고르세요 (iPhone은 공유 버튼 → 파일에 저장)', 'Choose "Save as PDF" in the print window (iPhone: Share → Save to Files)'), exportPDF),
+      big('🌐', L('HTML 파일로 저장', 'Save as HTML'), L('아무 브라우저에서나 열리는 읽기 전용 웹 문서', 'A read-only page that opens in any browser'), exportHTML)),
+    h('div', { class: 'sheet-sec' }, h('h4', {}, L('백업 · 다른 기기로 옮기기', 'Backup · move to another device')), h('p', { class: 'muted small' }, L('이 앱의 "가져오기"로 다시 불러오는 데이터 파일(.json)입니다. 문서로 보는 용도가 아니에요.', 'A data file (.json) to load back with Import. Not for reading.')),
+      photoOpt,
+      h('div', { class: 'btn-grid' }, btn(L('지금 여행 백업', 'Back up this trip'), exportTrip), btn(L('모든 여행 백업', 'Back up all trips'), exportAll)),
+      h('button', { type: 'button', class: 'btn ghost block', style: 'margin-top:8px', onclick: () => { closeSheet(); $('#import-file').click(); } }, L('백업 파일 가져오기', 'Import backup')))));
 }
 function stamp() {
   const d = new Date(), z = x => String(x).padStart(2, '0');
@@ -1637,20 +2217,21 @@ function downloadBlob(text, type, filename) {
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
-function download(obj, filename) { downloadBlob(JSON.stringify(obj, null, 2), 'application/json', filename); }
 async function exportTrip() {
-  const ok = await deliver(JSON.stringify({ type: 'trip', version: 1, exportedAt: new Date().toISOString(), device: deviceName(), trip }, null, 2),
-    'application/json', safeName(trip.meta.title) + '_백업_' + stamp() + '.json');
+  const photos = exportPhotos ? await photosForExport([trip.id]) : [];
+  const ok = await deliver(JSON.stringify({ type: 'trip', version: 2, exportedAt: new Date().toISOString(), device: deviceName(), trip, photos }, null, 2),
+    'application/json', safeName(trip.meta.title) + L('_백업_', '_backup_') + stamp() + '.json');
   if (!ok) return;
   if (Object.keys(store.trips).length === 1) lsSet(BACKUP_KEY, new Date().toISOString());   // 여행이 하나뿐이면 전체 백업과 같음
-  closeSheet(); render(); toast('백업 파일을 저장했습니다');
+  closeSheet(); render(); toast(L('백업 파일을 저장했습니다', 'Backup saved'));
 }
 async function exportAll() {
-  const ok = await deliver(JSON.stringify({ type: 'backup', version: 1, exportedAt: new Date().toISOString(), device: deviceName(), trips: Object.values(store.trips) }, null, 2),
-    'application/json', 'TripPlanner_전체백업_' + stamp() + '.json');
+  const photos = exportPhotos ? await photosForExport(Object.keys(store.trips)) : [];
+  const ok = await deliver(JSON.stringify({ type: 'backup', version: 2, exportedAt: new Date().toISOString(), device: deviceName(), trips: Object.values(store.trips), photos }, null, 2),
+    'application/json', L('TripPlanner_전체백업_', 'TripPlanner_backup_all_') + stamp() + '.json');
   if (!ok) return;
   lsSet(BACKUP_KEY, new Date().toISOString());
-  closeSheet(); render(); toast('전체 백업 파일을 저장했습니다');
+  closeSheet(); render(); toast(L('전체 백업 파일을 저장했습니다', 'Full backup saved'));
 }
 function exportPDF() {
   closeSheet();
@@ -1659,11 +2240,11 @@ function exportPDF() {
 }
 async function exportHTML() {
   const node = reportNode(reportOpts);
-  const doc = '<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>' + escapeHTML(trip.meta.title || '여행') + ' · 일정표</title>\n<style>\nbody{margin:0;background:#f4f3f7}\n'
+  const doc = '<!DOCTYPE html>\n<html lang="' + lang + '">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>' + escapeHTML(trip.meta.title || L('여행', 'Trip')) + L(' · 일정표', ' · itinerary') + '</title>\n<style>\nbody{margin:0;background:#f4f3f7}\n'
     + $('#report-css').textContent
     + '\n.report{margin:24px auto;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.06)}\n@media print{body{background:#fff}.report{margin:0;box-shadow:none;padding:0}@page{margin:14mm}}\n@media (max-width:640px){.report{margin:0;border-radius:0}}\n</style>\n</head>\n<body>\n'
     + node.outerHTML + '\n</body>\n</html>\n';
-  deliver(doc, 'text/html', safeName(trip.meta.title) + '_일정표.html').then(ok => { if (ok) { closeSheet(); toast('HTML 파일을 저장했습니다'); } });
+  deliver(doc, 'text/html', safeName(trip.meta.title) + L('_일정표.html', '_itinerary.html')).then(ok => { if (ok) { closeSheet(); toast(L('HTML 파일을 저장했습니다', 'HTML saved')); } });
 }
 function escapeHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function buildReport() { const r = $('#report'); r.innerHTML = ''; r.append(reportNode(reportOpts)); }
@@ -1674,11 +2255,11 @@ function reportNode(o) {
   const start = addDays(m.startDate, 0), end = addDays(m.startDate, t.nights);
   const tbl = (head, rows, foot, cls) => h('div', { class: 'tw' }, h('table', { class: cls || null },
     h('thead', {}, h('tr', {}, head.map(x => h('th', { class: x[1] || '' }, x[0])))), h('tbody', {}, rows), foot ? h('tfoot', {}, foot) : null));
-  const r = h('article', { class: 'report' });
-  r.append(h('header', {}, h('h1', {}, m.title || '여행'), m.subtitle ? h('p', { class: 'r-sub' }, m.subtitle) : null,
-    h('p', { class: 'r-meta' }, [start ? ymd(start) + ' – ' + ymd(end) : '출발일 미정', t.nights + '박', trip.cities.length + '개 도시', t.countries.length + '개국'].join(' · '))));
-  r.append(h('div', { class: 'r-kpis' }, [['총 예산', fmtBase(t.grand), fmtHome(t.grand * fx)], ['하루 평균', t.nights ? fmtBase(t.grand / t.nights) : '-', ''],
-    ['체류비', fmtBase(t.ground), ''], ['이동비', fmtBase(t.transport), ''], ['기타 고정비', fmtBase(t.fixed), '']].map(([l, v, s]) =>
+  const r = h('article', { class: 'report', lang });
+  r.append(h('header', {}, h('h1', {}, m.title || L('여행', 'Trip')), m.subtitle ? h('p', { class: 'r-sub' }, m.subtitle) : null,
+    h('p', { class: 'r-meta' }, [start ? ymd(start) + ' – ' + ymd(end) : L('출발일 미정', 'No start date'), nightsL(t.nights), L(trip.cities.length + '개 도시', trip.cities.length + ' cities'), L(t.countries.length + '개국', t.countries.length + ' countries')].join(' · '))));
+  r.append(h('div', { class: 'r-kpis' }, [[L('총 예산', 'Total budget'), fmtBase(t.grand), fmtHome(t.grand * fx)], [L('하루 평균', 'Per day'), t.nights ? fmtBase(t.grand / t.nights) : '-', ''],
+    [L('체류비', 'Stays'), fmtBase(t.ground), ''], [L('이동비', 'Transfers'), fmtBase(t.transport), ''], [L('기타 고정비', 'Fixed costs'), fmtBase(t.fixed), '']].map(([l, v, s]) =>
     h('div', { class: 'r-kpi' }, h('div', { class: 'l' }, l), h('div', { class: 'v' }, v), s ? h('div', { class: 's' }, s) : null))));
 
   if (o.plan && trip.cities.length) {
@@ -1687,47 +2268,47 @@ function reportNode(o) {
     sch.forEach((s, i) => {
       const c = s.c, todos = lines(c.todos);
       rows.push(h('tr', {}, h('td', { class: 'n c-n' }, i + 1), h('td', { class: 'nw c-d' }, s.arr ? mdw(s.arr) + ' – ' + mdw(s.dep) : ''),
-        h('td', { class: 'c-c' }, h('b', {}, c.name || '(이름 없음)'), h('br'), h('span', { class: 'r-todo' }, [c.country, c.base].filter(Boolean).join(' · ')),
+        h('td', { class: 'c-c' }, h('b', {}, c.name || L('(이름 없음)', '(untitled)')), h('br'), h('span', { class: 'r-todo' }, [c.country, c.base].filter(Boolean).join(' · ')),
           cityWarnings(c).map(w => h('div', { class: 'r-warn r-todo' }, '⚠ ' + w))),
-        h('td', { class: 'n c-k' }, s.n), h('td', { class: 'n c-p' }, fmtBase(num(c.daily))),
+        h('td', { class: 'n c-k', 'data-u': L('박', ' nights') }, s.n), h('td', { class: 'n c-p' }, fmtBase(num(c.daily))),
         h('td', { class: 'r-todo c-t' }, todos.join(' · '))));
       const rt = between[i];
-      if (rt) rows.push(h('tr', { class: 'leg' + (routeWarning(rt) ? ' w' : '') }, h('td', { colspan: 6 }, '↓ ' + MODE_ICON[rt.mode] + ' ' + rt.mode + (routeText(rt) ? ' · ' + routeText(rt) : '') + (routeWarning(rt) ? '  ⚠ ' + routeWarning(rt) : ''))));
+      if (rt) rows.push(h('tr', { class: 'leg' + (routeWarning(rt) ? ' w' : '') }, h('td', { colspan: 6 }, '↓ ' + modeText(rt.mode) + (routeText(rt) ? ' · ' + routeText(rt) : '') + (routeWarning(rt) ? '  ⚠ ' + routeWarning(rt) : ''))));
     });
-    r.append(h('h2', {}, '일정'), tbl([['#', 'n'], ['날짜'], ['도시'], ['박', 'n'], ['하루', 'n'], ['할 일 · 갈 곳']], rows, null, 'r-plan'));
-    if (loose.length) r.append(h('h3', {}, '기타 이동'), tbl([['구간'], ['수단'], ['메모 · 시간 · 비용']],
-      loose.map(x => h('tr', {}, h('td', {}, (x.from || '?') + ' → ' + (x.to || '?')), h('td', { class: 'nw' }, MODE_ICON[x.mode] + ' ' + x.mode), h('td', {}, routeText(x))))));
+    r.append(h('h2', {}, L('일정', 'Itinerary')), tbl([['#', 'n'], [L('날짜', 'Dates')], [L('도시', 'City')], [L('박', 'Nights'), 'n'], [L('하루', 'Per day'), 'n'], [L('할 일 · 갈 곳', 'To do · places')]], rows, null, 'r-plan'));
+    if (loose.length) r.append(h('h3', {}, L('기타 이동', 'Other transfers')), tbl([[L('구간', 'Route')], [L('수단', 'How')], [L('메모 · 시간 · 비용', 'Notes · time · cost')]],
+      loose.map(x => h('tr', {}, h('td', {}, (x.from || '?') + ' → ' + (x.to || '?')), h('td', { class: 'nw' }, modeText(x.mode)), h('td', {}, routeText(x))))));
   }
   if (o.budget) {
     const byC = {};
-    trip.cities.forEach(c => { const k = (c.country || '국가 미입력').trim(); byC[k] = byC[k] || { n: 0, s: 0 }; byC[k].n += num(c.nights); byC[k].s += num(c.nights) * num(c.daily); });
-    r.append(h('h2', {}, '예산'),
-      tbl([['나라'], ['박', 'n'], ['하루 평균', 'n'], ['체류비', 'n'], [m.homeCur, 'n']],
+    trip.cities.forEach(c => { const k = (c.country || '').trim() || noCountry(); byC[k] = byC[k] || { n: 0, s: 0 }; byC[k].n += num(c.nights); byC[k].s += num(c.nights) * num(c.daily); });
+    r.append(h('h2', {}, L('예산', 'Budget')),
+      tbl([[L('나라', 'Country')], [L('박', 'Nights'), 'n'], [L('하루 평균', 'Per day'), 'n'], [L('체류비', 'Stays'), 'n'], [m.homeCur, 'n']],
         Object.entries(byC).map(([k, x]) => h('tr', {}, h('td', {}, k), h('td', { class: 'n' }, x.n), h('td', { class: 'n' }, x.n ? fmtBase(x.s / x.n) : '-'), h('td', { class: 'n' }, fmtBase(x.s)), h('td', { class: 'n' }, fmtHome(x.s * fx)))),
-        h('tr', {}, h('td', {}, '체류비 합계'), h('td', { class: 'n' }, t.nights), h('td', {}), h('td', { class: 'n' }, fmtBase(t.ground)), h('td', { class: 'n' }, fmtHome(t.ground * fx)))),
-      tbl([['항목'], ['금액', 'n'], [m.homeCur, 'n']],
-        [h('tr', {}, h('td', {}, '이동비 (' + trip.routes.length + '건)'), h('td', { class: 'n' }, fmtBase(t.transport)), h('td', { class: 'n' }, fmtHome(t.transport * fx))),
-          ...trip.costs.map(c => h('tr', {}, h('td', {}, c.label), h('td', { class: 'n' }, num(c.amount) ? fmtBase(num(c.amount)) : '미입력'), h('td', { class: 'n' }, fmtHome(num(c.amount) * fx))))],
-        h('tr', {}, h('td', {}, '총 예산'), h('td', { class: 'n' }, fmtBase(t.grand)), h('td', { class: 'n' }, fmtHome(t.grand * fx)))),
-      h('p', { class: 'r-todo' }, '환율 1 ' + m.baseCur + ' = ' + fx.toLocaleString() + ' ' + m.homeCur + (m.fxUpdated ? ' (' + m.fxUpdated + ')' : '')));
+        h('tr', {}, h('td', {}, L('체류비 합계', 'Stays total')), h('td', { class: 'n' }, t.nights), h('td', {}), h('td', { class: 'n' }, fmtBase(t.ground)), h('td', { class: 'n' }, fmtHome(t.ground * fx)))),
+      tbl([[L('항목', 'Item')], [L('금액', 'Amount'), 'n'], [m.homeCur, 'n']],
+        [h('tr', {}, h('td', {}, L('이동비 (' + trip.routes.length + '건)', 'Transfers (' + trip.routes.length + ')')), h('td', { class: 'n' }, fmtBase(t.transport)), h('td', { class: 'n' }, fmtHome(t.transport * fx))),
+          ...trip.costs.map(c => h('tr', {}, h('td', {}, c.label), h('td', { class: 'n' }, num(c.amount) ? fmtBase(num(c.amount)) : L('미입력', '—')), h('td', { class: 'n' }, fmtHome(num(c.amount) * fx))))],
+        h('tr', {}, h('td', {}, L('총 예산', 'Total budget')), h('td', { class: 'n' }, fmtBase(t.grand)), h('td', { class: 'n' }, fmtHome(t.grand * fx)))),
+      h('p', { class: 'r-todo' }, L('환율 1 ', 'Rate 1 ') + m.baseCur + ' = ' + fx.toLocaleString('en-US') + ' ' + m.homeCur + (m.fxUpdated ? ' (' + m.fxUpdated + ')' : '')));
   }
   if (o.prep) {
-    if (trip.bookings.length) r.append(h('h2', {}, '미리 예약할 것'), tbl([['', ''], ['항목'], ['나라'], ['언제'], ['메모']],
+    if (trip.bookings.length) r.append(h('h2', {}, L('미리 예약할 것', 'Book ahead')), tbl([['', ''], [L('항목', 'Item')], [L('나라', 'Country')], [L('언제', 'When')], [L('메모', 'Notes')]],
       trip.bookings.map(b => h('tr', {}, h('td', {}, b.done ? '☑' : '☐'), h('td', {}, b.item), h('td', {}, b.country), h('td', {}, b.when), h('td', { class: 'r-todo' }, b.memo)))));
-    [['prep', '준비할 일'], ['pack', '짐']].forEach(([tab, label]) => {
+    [['prep', L('준비할 일', 'To do')], ['pack', L('짐', 'Packing')]].forEach(([tab, label]) => {
       const gs = trip.checklists.filter(g => g.tab === tab);
       if (gs.length) r.append(h('h2', {}, label), h('div', { class: 'r-groups' }, gs.map(g => h('div', { class: 'r-group' }, h('h3', {}, g.title),
         h('ul', { class: 'r-check' }, g.items.map(it => h('li', { class: it.done ? 'd' : '' }, (it.done ? '☑ ' : '☐ ') + it.text)))))));
     });
   }
-  if (o.info && trip.countries.length) r.append(h('h2', {}, '나라별 정보'), tbl([['나라'], ['긴급번호'], ['통화'], ['결제'], ['치안 · 여행경보']],
+  if (o.info && trip.countries.length) r.append(h('h2', {}, L('나라별 정보', 'Country info')), tbl([[L('나라', 'Country')], [L('긴급번호', 'Emergency')], [L('통화', 'Currency')], [L('결제', 'Payment')], [L('치안 · 여행경보', 'Safety · advisories')]],
     trip.countries.map(c => h('tr', {}, h('td', {}, h('b', {}, c.name)), h('td', {}, c.emergency), h('td', {}, c.currency), h('td', {}, c.payment), h('td', { class: c.advisory ? 'r-warn' : '' }, c.advisory)))));
-  if (o.notes && (trip.notes || '').trim()) r.append(h('h2', {}, '메모'), h('div', { class: 'r-notes' }, trip.notes));
-  if (o.ledger && trip.ledger.length) r.append(h('h2', {}, '가계부'), tbl([['날짜'], ['도시'], ['분류'], ['내용'], ['현지 금액', 'n'], [m.baseCur, 'n'], [m.homeCur, 'n']],
-    trip.ledger.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(l => h('tr', {}, h('td', { class: 'nw' }, l.date), h('td', {}, l.city === '-' ? '' : l.city), h('td', {}, l.cat), h('td', {}, l.desc),
+  if (o.notes && (trip.notes || '').trim()) r.append(h('h2', {}, L('메모', 'Notes')), h('div', { class: 'r-notes' }, trip.notes));
+  if (o.ledger && trip.ledger.length) r.append(h('h2', {}, L('가계부', 'Spending')), tbl([[L('날짜', 'Date')], [L('도시', 'City')], [L('분류', 'Category')], [L('내용', 'What')], [L('현지 금액', 'Local'), 'n'], [m.baseCur, 'n'], [m.homeCur, 'n']],
+    trip.ledger.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(l => h('tr', {}, h('td', { class: 'nw' }, l.date), h('td', {}, l.city === '-' ? '' : l.city), h('td', {}, catName(l.cat)), h('td', {}, l.desc),
       h('td', { class: 'n' }, l.cur && l.cur !== baseCode() ? fmtCur(num(l.orig), l.cur) : ''), h('td', { class: 'n' }, fmtBase(num(l.amount))), h('td', { class: 'n' }, fmtHome(num(l.amount) * (num(l.fx) || fx))))),
-    h('tr', {}, h('td', { colspan: 5 }, '합계'), h('td', { class: 'n' }, fmtBase(t.spent)), h('td', { class: 'n' }, fmtHome(t.spentHome)))));
-  r.append(h('p', { class: 'r-foot' }, new Date().toLocaleDateString('ko-KR') + ' 기준 · Trip Planner'));
+    h('tr', {}, h('td', { colspan: 5 }, L('합계', 'Total')), h('td', { class: 'n' }, fmtBase(t.spent)), h('td', { class: 'n' }, fmtHome(t.spentHome)))));
+  r.append(h('p', { class: 'r-foot' }, new Date().toLocaleDateString(LOC()) + L(' 기준 · Trip Planner', ' · Trip Planner')));
   return r;
 }
 
@@ -1742,10 +2323,11 @@ function normalizeTrip(t) {
 function addImported(t, log) {
   const ex = store.trips[t.id];
   if (ex) {
-    const keep = confirm('"' + (ex.meta.title || '') + '" 여행이 이미 이 기기에 있습니다.\n\n확인: 가져온 파일로 덮어쓰기\n취소: 사본으로 따로 추가');
-    if (!keep) { t.id = uid(); t.meta.title = (t.meta.title || '여행') + ' (가져옴)'; log.push('사본 추가: ' + t.meta.title); }
-    else log.push('덮어씀: ' + t.meta.title);
-  } else log.push('추가: ' + t.meta.title);
+    const keep = confirm(L('"' + (ex.meta.title || '') + '" 여행이 이미 이 기기에 있습니다.\n\n확인: 가져온 파일로 덮어쓰기\n취소: 사본으로 따로 추가',
+      '"' + (ex.meta.title || '') + '" is already on this device.\n\nOK: replace it with the file\nCancel: add as a copy'));
+    if (!keep) { t.id = uid(); t.meta.title = (t.meta.title || L('여행', 'Trip')) + L(' (가져옴)', ' (imported)'); log.push(L('사본 추가: ', 'Added copy: ') + t.meta.title); }
+    else log.push(L('덮어씀: ', 'Replaced: ') + t.meta.title);
+  } else log.push(L('추가: ', 'Added: ') + t.meta.title);
   store.trips[t.id] = t;
   return t.id;
 }
@@ -1754,7 +2336,7 @@ async function importFiles(input) {
   input.value = '';
   if (!files.length) return;
   const log = [], bad = [];
-  let lastId = null;
+  let lastId = null, nPhotos = 0, skipped = 0;
   for (const f of files) {
     try {
       const d = JSON.parse(await f.text());
@@ -1762,26 +2344,39 @@ async function importFiles(input) {
       if (d && d.type === 'backup' && Array.isArray(d.trips)) list = d.trips;
       else if (d && d.type === 'trip' && d.trip) list = [d.trip];
       else list = [d];                       // 예전 형식 (여행 객체만 있는 파일)
-      const valid = list.map(normalizeTrip).filter(Boolean);
+      const map = {};
+      const valid = list.map(x => { const old = x && x.id; const n = normalizeTrip(x); if (n) n._old = old; return n; }).filter(Boolean);
       if (!valid.length) throw new Error();
-      valid.forEach(t => lastId = addImported(t, log));
+      valid.forEach(t => { const old = t._old; delete t._old; lastId = addImported(t, log); if (old) map[old] = t.id; });
+      for (const p of (Array.isArray(d.photos) ? d.photos : [])) {
+        if (!photoDB) { skipped++; continue; }
+        const tid = map[p.trip];
+        if (!tid || !p.data) continue;
+        try { const { data, ...rest } = p; await putPhoto(Object.assign(rest, { trip: tid, blob: await dataURLToBlob(data) })); nPhotos++; } catch (e) { skipped++; }
+      }
     } catch (e) { bad.push(f.name); }
   }
   if (lastId) switchTrip(lastId);
-  alert((log.length ? log.join('\n') : '가져온 여행 없음') + (bad.length ? '\n\n읽지 못한 파일: ' + bad.join(', ') : ''));
+  alert((log.length ? log.join('\n') : L('가져온 여행 없음', 'No trips imported'))
+    + (nPhotos ? L('\n사진 ' + nPhotos + '장', '\n' + nPhotos + ' photos') : '')
+    + (skipped ? L('\n저장하지 못한 사진 ' + skipped + '장', '\nCouldn\'t save ' + skipped + ' photos') : '')
+    + (bad.length ? L('\n\n읽지 못한 파일: ', '\n\nCouldn\'t read: ') + bad.join(', ') : ''));
 }
 document.getElementById('import-file').addEventListener('change', e => importFiles(e.target));
 
-applyTheme(getTheme());
+/* ============ 시작 ============ */
+setLang(lang);
+applyMode();
 const firstRun = !lsGet(STORE_KEY);
 store = loadStore();
-// 새로 생긴 설정값(예: 현지 통화 환율)을 예전 데이터에도 채워 넣기
+// 새로 생긴 설정값(예: 현지 통화 환율, 테마)을 예전 데이터에도 채워 넣기
 Object.values(store.trips).forEach(t => { t.meta = Object.assign(blankTrip().meta, t.meta); if (!t.meta.rates) t.meta.rates = {}; });
 trip = store.trips[store.current] || Object.values(store.trips)[0];
 store.current = trip.id;
 if (firstRun) save();
 if (!lsGet(FIRST_KEY)) lsSet(FIRST_KEY, new Date().toISOString());
 render();
+loadPhotos().then(() => { if (PHOTOS.size) render(); });
 
 // 오프라인 지원: GitHub Pages(https)나 localhost에서만
 if (canOffline()) {
