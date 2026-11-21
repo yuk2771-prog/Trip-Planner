@@ -259,6 +259,19 @@ button.row:hover,.row.click:hover{background:var(--gray-bg);border-radius:10px}
 .bar-row:last-child{border-bottom:0}
 .bar-row .progress{grid-column:1/-1;height:6px}
 .bar-row .progress i{background:var(--peri)}
+button.bar-row{width:100%;text-align:left;cursor:pointer}
+button.bar-row:hover{background:var(--gray-bg);border-radius:10px}
+.cap-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;font-size:.92rem}
+.lg-btn{text-align:left;border-radius:10px;padding:4px 6px;margin:-4px -6px}
+.lg-btn:hover{background:var(--gray-bg)}
+.lg-edit{color:var(--accent-strong);font-weight:700;white-space:nowrap}
+.bud-card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer}
+.bud-card:hover{border-color:var(--accent)}
+.bud-row{display:grid;grid-template-columns:minmax(0,1fr) 78px 112px;gap:8px;align-items:end;padding:10px 0;border-bottom:1px solid var(--line)}
+.bud-row.two{grid-template-columns:minmax(0,1fr) 120px}
+.bud-row .bud-name{align-self:center;overflow-wrap:anywhere}
+.bud-row .fld{gap:3px;font-size:.75rem}
+.bud-total{display:flex;justify-content:space-between;align-items:baseline;padding:12px 2px 0;font-size:1rem}
 
 /* ===== 가계부 ===== */
 .amount-in{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:14px;padding:4px 14px;background:var(--input-bg)}
@@ -573,7 +586,8 @@ function blankTrip() {
       minNights: 3, maxNightsNoTrek: 5, maxDayBus: 8, maxNightBus: 10,
       tierLow: 45, tierHigh: 65,
       rates: {}, ratesUpdated: '',       // 현지 통화 환율 (1 예산 통화 기준)
-      skin: ''                           // 이 여행의 테마 (today / torn / doodle / album). 비어 있으면 처음에 고르게 함
+      skin: '',                          // 이 여행의 테마 (today / torn / doodle / album). 비어 있으면 처음에 고르게 함
+      budgetCap: ''                      // 목표 예산 (직접 정한 한도). 비어 있으면 계획 합계
     },
     cities: [],
     routes: [],
@@ -1704,22 +1718,87 @@ function legEl(r, A, B) {
 }
 
 /* --- 예산 --- */
+// 목표 예산(직접 정한 금액). 비어 있으면 계획 합계를 예산으로 씀
+const budgetCap = () => num(trip.meta.budgetCap);
+const budgetBase = t => budgetCap() || t.grand;
+function editCap() {
+  editForm({ title: L('목표 예산', 'Target budget'), obj: trip.meta, fields: [
+    { key: 'budgetCap', label: L('목표 예산 (', 'Target budget (') + trip.meta.baseCur + ')', type: 'number', full: true,
+      hint: L('쓸 수 있는 돈의 한도. 계획 합계와 비교하고, 가계부의 "남은 예산"도 이 금액 기준이 됩니다. 비워 두면 계획 합계를 씁니다.',
+        'How much you can spend. Compared with the planned total, and Spending\'s "left" uses it. Leave empty to use the planned total.') }] });
+}
+// 숫자 입력칸 (입력하는 동안 객체에 바로 반영, 저장은 창의 저장 버튼)
+function numIn(obj, key, label, onChange) {
+  const el = h('input', { type: 'text', inputmode: 'decimal', value: obj[key] ?? '', 'aria-label': label });
+  el.addEventListener('input', () => { const x = parseFloat(el.value); obj[key] = el.value.trim() === '' ? 0 : isNaN(x) ? obj[key] : x; if (onChange) onChange(); });
+  return el;
+}
+// 나라별 체류비: 그 나라 도시들의 박 수 · 하루 예산을 한 창에서
+function editStays(k) {
+  const cities = trip.cities.filter(c => ((c.country || '').trim() || noCountry()) === k);
+  if (!cities.length) return;
+  const d = cities.map(c => ({ c, nights: num(c.nights), daily: num(c.daily) }));
+  const total = h('b', {});
+  const upd = () => { total.textContent = fmtBase(d.reduce((a, x) => a + x.nights * x.daily, 0)) + ' · ' + nightsL(d.reduce((a, x) => a + x.nights, 0)); };
+  const dailyIns = [];
+  const rows = d.map(x => {
+    const di = numIn(x, 'daily', (x.c.name || '') + L(' 하루 예산', ' daily budget'), upd); dailyIns.push(di);
+    return h('div', { class: 'bud-row' }, h('span', { class: 'row-t bud-name' }, x.c.name || L('(이름 없음)', '(untitled)')),
+      h('label', { class: 'fld' }, h('span', {}, L('박', 'Nights')), numIn(x, 'nights', (x.c.name || '') + L(' 박 수', ' nights'), upd)),
+      h('label', { class: 'fld' }, h('span', {}, L('하루 (', 'Per day (') + trip.meta.baseCur + ')'), di));
+  });
+  const all = h('input', { type: 'text', inputmode: 'decimal', placeholder: L('예: 45', 'e.g. 45'), 'aria-label': L('모든 도시 하루 예산', 'Daily budget for all cities') });
+  all.addEventListener('input', () => { const x = parseFloat(all.value); if (x >= 0) { d.forEach(y => y.daily = x); dailyIns.forEach(i => i.value = x); upd(); } });
+  upd();
+  const doSave = () => { d.forEach(x => { x.c.nights = x.nights; x.c.daily = x.daily; }); save(); closeSheet(); render(); toast(L('저장했습니다', 'Saved')); };
+  openSheet(flagOf(k) + ' ' + k + L(' · 체류비', ' · stays'), h('div', {},
+    h('p', { class: 'hint' }, L('하루 예산 = 숙소 + 식비 + 현지 교통. 박 수를 바꾸면 뒤 도시들의 날짜도 바뀌어요.', 'Daily budget = stay + food + local transport. Changing nights shifts later dates.')),
+    h('label', { class: 'fld', style: 'margin-bottom:6px' }, h('span', {}, L('모든 도시 하루 예산 한 번에', 'Same daily budget for every city')), all),
+    rows,
+    h('div', { class: 'bud-total' }, h('span', {}, L('합계', 'Total')), total)),
+    [h('span', { class: 'grow' }), btn(L('취소', 'Cancel'), closeSheet, 'ghost'), btn(L('저장', 'Save'), doSave, 'primary')]);
+}
+// 이동비: 모든 이동의 비용을 한 창에서
+function editTransfers() {
+  if (!trip.routes.length) { editRoute(); return; }
+  const { between } = linkRoutes();
+  const order = [...between.filter(Boolean), ...trip.routes.filter(r => !between.includes(r))];
+  const d = order.map(r => ({ r, cost: num(r.cost) }));
+  const total = h('b', {});
+  const upd = () => { total.textContent = fmtBase(d.reduce((a, x) => a + x.cost, 0)); };
+  const rows = d.map(x => h('div', { class: 'bud-row two' },
+    h('span', { class: 'bud-name' }, h('span', { class: 'row-t' }, (x.r.from || '?') + ' → ' + (x.r.to || '?')), h('br'), h('span', { class: 'muted small' }, modeText(x.r.mode) + (num(x.r.hours) ? ' · ' + hoursL(num(x.r.hours)) : ''))),
+    h('label', { class: 'fld' }, h('span', {}, L('비용 (', 'Cost (') + trip.meta.baseCur + ')'), numIn(x, 'cost', (x.r.from || '') + ' → ' + (x.r.to || '') + L(' 비용', ' cost'), upd))));
+  upd();
+  const doSave = () => { d.forEach(x => { x.r.cost = x.cost; }); save(); closeSheet(); render(); toast(L('저장했습니다', 'Saved')); };
+  openSheet(L('이동비', 'Transfers'), h('div', {},
+    h('p', { class: 'hint' }, L('수단·시간·메모는 일정 화면에서 이동을 눌러 고칠 수 있어요.', 'Change how, time and notes by tapping a transfer on the Trip tab.')),
+    rows, h('div', { class: 'bud-total' }, h('span', {}, L('합계', 'Total')), total)),
+    [btn(L('+ 이동 추가', '+ Add transfer'), () => editRoute(), 'ghost'), h('span', { class: 'grow' }), btn(L('취소', 'Cancel'), closeSheet, 'ghost'), btn(L('저장', 'Save'), doSave, 'primary')]);
+}
 function viewBudget(v) {
-  const m = trip.meta, t = totals(), fx = num(m.fx);
-  const parts = [[L('체류비', 'Stays'), t.ground, 'peri'], [L('이동비', 'Transfers'), t.transport, 'mauve'], [L('기타 고정비', 'Fixed costs'), t.fixed, 'rose']];
+  const m = trip.meta, t = totals(), fx = num(m.fx), cap = budgetCap();
+  const parts = [[L('체류비', 'Stays'), t.ground, 'peri', () => { const el = document.getElementById('bud-stays'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }],
+    [L('이동비', 'Transfers'), t.transport, 'mauve', editTransfers],
+    [L('기타 고정비', 'Fixed costs'), t.fixed, 'rose', () => { const el = document.getElementById('bud-fixed'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }]];
   const pct = x => t.grand ? Math.round(x / t.grand * 100) : 0;
+  const diff = t.grand - cap;
   v.append(h('section', { class: 'hero' },
-    h('div', { class: 'lbl' }, L('총 예산', 'Total budget')),
+    h('div', { class: 'lbl' }, cap ? L('계획한 비용', 'Planned cost') : L('총 예산 (계획 합계)', 'Total budget (planned)')),
     h('div', { class: 'big' }, fmtBase(t.grand)),
     h('div', { class: 'muted' }, fmtHome(t.grand * fx) + L(' · 하루 평균 ', ' · per day ') + (t.nights ? fmtBase(t.grand / t.nights) : '-')),
+    h('div', { class: 'cap-line' },
+      cap ? [h('span', {}, L('목표 예산 ', 'Target '), h('b', {}, fmtBase(cap))), ' ',
+        h('span', { class: 'chip ' + (diff > 0 ? 'high' : 'low') }, diff > 0 ? L(fmtBase(diff) + ' 초과', fmtBase(diff) + ' over') : L(fmtBase(-diff) + ' 여유', fmtBase(-diff) + ' to spare'))] : null,
+      h('button', { type: 'button', class: 'btn sm ghost', onclick: editCap }, icon('edit'), cap ? L('목표 바꾸기', 'Change target') : L('목표 예산 정하기', 'Set a target budget'))),
     h('div', { class: 'stack' }, parts.map(p => t.grand ? h('i', { style: 'width:' + (p[1] / t.grand * 100) + '%;background:var(--' + p[2] + ')' }) : null)),
-    h('div', { class: 'legend' }, parts.map(p => h('div', {},
+    h('div', { class: 'legend' }, parts.map(p => h('button', { type: 'button', class: 'lg-btn', onclick: p[3] },
       h('div', { class: 'lg-l' }, h('span', { class: 'sw', style: 'background:var(--' + p[2] + ')' }), p[0]),
-      h('div', { class: 'lg-v' }, fmtBase(p[1])), h('div', { class: 'lg-p' }, pct(p[1]) + '%'))))));
+      h('div', { class: 'lg-v' }, fmtBase(p[1])), h('div', { class: 'lg-p' }, pct(p[1]) + '% ', h('span', { class: 'lg-edit' }, L('고치기 ›', 'Edit ›'))))))));
 
   if (trip.ledger.length) compareSection(v);
 
-  // 국가별 체류비
+  // 국가별 체류비 (누르면 그 나라 도시들의 박 수 · 하루 예산 편집)
   const byC = {};
   trip.cities.forEach(c => {
     const k = (c.country || '').trim() || noCountry();
@@ -1727,24 +1806,30 @@ function viewBudget(v) {
     byC[k].nights += num(c.nights); byC[k].sum += num(c.nights) * num(c.daily); byC[k].cities++;
   });
   const maxSum = Math.max(1, ...Object.values(byC).map(x => x.sum));
-  v.append(h('div', { class: 'page-title' }, h('h2', {}, L('나라별 체류비', 'Stays by country')), h('span', { class: 'muted small' }, fmtBase(t.ground))),
-    h('div', { class: 'card' }, Object.keys(byC).length ? Object.entries(byC).map(([k, x]) => h('div', { class: 'bar-row' },
+  v.append(h('div', { class: 'page-title', id: 'bud-stays' }, h('h2', {}, L('나라별 체류비', 'Stays by country')), h('span', { class: 'muted small' }, fmtBase(t.ground))),
+    h('p', { class: 'hint' }, L('나라를 누르면 도시별 박 수와 하루 예산을 고칠 수 있어요.', 'Tap a country to edit nights and daily budget for its cities.')),
+    h('div', { class: 'card' }, Object.keys(byC).length ? Object.entries(byC).map(([k, x]) => h('button', { type: 'button', class: 'bar-row', onclick: () => editStays(k), 'aria-label': k + L(' 체류비 편집', ' — edit stays') },
       h('div', {}, h('div', { class: 'row-t' }, flagOf(k) + ' ' + k), h('div', { class: 'muted small' }, L(x.cities + '곳 · ', x.cities + ' cities · ') + nightsL(x.nights) + L(' · 하루 ', ' · ') + (x.nights ? fmtBase(x.sum / x.nights) : '-') + L('', '/day'))),
-      h('div', { class: 'amt', style: 'text-align:right' }, h('div', { class: 'row-t' }, fmtBase(x.sum)), h('div', { class: 'muted small' }, fmtHome(x.sum * fx))),
+      h('div', { class: 'amt', style: 'text-align:right' }, h('div', { class: 'row-t' }, fmtBase(x.sum) + ' ›'), h('div', { class: 'muted small' }, fmtHome(x.sum * fx))),
       h('div', { class: 'progress' }, h('i', { style: 'width:' + (x.sum / maxSum * 100) + '%' }))))
       : emptyState(L('도시가 없어요', 'No cities'), L('일정에 도시를 추가하면 나라별로 계산됩니다.', 'Add cities to see costs by country.'))));
 
+  // 이동비
+  const nFlights = trip.routes.filter(r => r.mode === '항공').length;
+  v.append(h('div', { class: 'page-title' }, h('h2', {}, L('이동비', 'Transfers')), h('span', { class: 'muted small' }, fmtBase(t.transport))),
+    h('button', { type: 'button', class: 'card bud-card', onclick: editTransfers },
+      h('div', { class: 'grow' }, h('div', { class: 'row-t' }, L('이동 ' + trip.routes.length + '건 · 항공 ' + nFlights + '회', trip.routes.length + ' transfers · ' + nFlights + ' flights')),
+        h('div', { class: 'muted small' }, L('눌러서 이동별 비용 고치기', 'Tap to edit each transfer\'s cost'))),
+      h('b', {}, fmtBase(t.transport) + ' ›')));
+
   // 고정비
-  v.append(h('div', { class: 'page-title' }, h('h2', {}, L('기타 고정비', 'Fixed costs')), h('button', { type: 'button', class: 'btn sm', onclick: () => editCost() }, icon('plus'), L('항목', 'Item'))),
-    h('div', { class: 'card' }, h('p', { class: 'hint' }, L('국제선, 투어, 보험, 비자처럼 도시·이동에 들어가지 않는 비용', 'Things like flights, tours, insurance and visas')),
+  v.append(h('div', { class: 'page-title', id: 'bud-fixed' }, h('h2', {}, L('기타 고정비', 'Fixed costs')), h('button', { type: 'button', class: 'btn sm', onclick: () => editCost() }, icon('plus'), L('항목', 'Item'))),
+    h('div', { class: 'card' }, h('p', { class: 'hint' }, L('국제선, 투어, 보험, 비자처럼 도시·이동에 들어가지 않는 비용. 누르면 고칠 수 있어요.', 'Things like flights, tours, insurance and visas. Tap to edit.')),
       trip.costs.length ? h('div', { class: 'rows' }, trip.costs.map(c => h('button', { type: 'button', class: 'row', onclick: () => editCost(c) },
         h('div', { class: 'grow row-t' }, c.label || L('(이름 없음)', '(untitled)')),
         num(c.amount) ? h('div', { class: 'amt' }, fmtBase(num(c.amount)), h('small', {}, fmtHome(num(c.amount) * fx))) : h('span', { class: 'chip high' }, L('금액 미입력', 'No amount')))))
         : emptyState(L('고정비가 없어요', 'No fixed costs'), L('오른쪽 위 + 항목으로 추가하세요.', 'Add one with + Item above.'))));
 
-  v.append(h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h3', {}, L('이동비', 'Transfers')), h('b', {}, fmtBase(t.transport))),
-    h('p', { class: 'hint', style: 'margin:0' }, L('이동 ' + trip.routes.length + '건 · 항공 ' + trip.routes.filter(r => r.mode === '항공').length + '회. 일정 화면에서 도시 사이의 이동을 눌러 고칠 수 있어요.',
-      trip.routes.length + ' transfers · ' + trip.routes.filter(r => r.mode === '항공').length + ' flights. Edit them between cities on the Trip tab.'))));
   v.append(h('p', { class: 'hint' }, L('환율 1 ', 'Rate 1 ') + m.baseCur + ' = ' + fx.toLocaleString('en-US') + ' ' + m.homeCur + (m.fxUpdated ? ' (' + m.fxUpdated + ')' : L(' (직접 입력)', ' (manual)')) + ' · ',
     h('a', { href: '#', onclick: e => { e.preventDefault(); go('settings'); } }, L('설정에서 바꾸기', 'Change in Settings'))));
 }
@@ -1759,14 +1844,15 @@ function viewLedger(v) {
     const city = nowCity ? nowCity.name : (last && last.city && last.city !== '-' ? last.city : '');
     draft = { tripId: trip.id, date: todayStr(), city, cat: '식비', cur: currencyOfCity(city) || (last && last.cur) || base, curAuto: true };
   }
-  const pct = t.grand ? Math.min(100, t.spent / t.grand * 100) : 0;
+  const bud = budgetBase(t);
+  const pct = bud ? Math.min(100, t.spent / bud * 100) : 0;
   const p = pace();
   v.append(h('section', { class: 'hero' },
     h('div', { class: 'lbl' }, L('지금까지 쓴 돈', 'Spent so far')),
     h('div', { class: 'big' }, fmtBase(t.spent)),
-    h('div', { class: 'muted' }, fmtHome(t.spentHome) + L(' · 예산 ' + fmtBase(t.grand) + '의 ' + Math.round(pct) + '%', ' · ' + Math.round(pct) + '% of ' + fmtBase(t.grand))),
+    h('div', { class: 'muted' }, fmtHome(t.spentHome) + L(' · 예산 ' + fmtBase(bud) + '의 ' + Math.round(pct) + '%', ' · ' + Math.round(pct) + '% of ' + fmtBase(bud))),
     h('div', { class: 'progress', style: 'margin:14px 0 10px;height:10px' }, h('i', { style: 'width:' + pct + '%' })),
-    h('div', { class: 'small' }, L('남은 예산 ', 'Left '), h('b', {}, fmtBase(t.grand - t.spent)), h('span', { class: 'muted' }, ' · ' + fmtHome(t.grand * fx - t.spentHome))),
+    h('div', { class: 'small' }, L('남은 예산 ', 'Left '), h('b', {}, fmtBase(bud - t.spent)), h('span', { class: 'muted' }, ' · ' + fmtHome(bud * fx - t.spentHome))),
     p && !p.before ? h('div', { class: 'pace' }, (p.ended ? L('여행 끝 · ', 'Trip over · ') : L('여행 ' + p.day + '일째 · ', 'Day ' + p.day + ' · ')) + L('계획 ', 'Plan '), h('b', {}, fmtBase(p.plan)), L(' / 실제 ', ' / Actual '), h('b', {}, fmtBase(p.actual)), ' ', diffChip(p.actual, p.plan)) : null));
 
   // 빠른 입력
