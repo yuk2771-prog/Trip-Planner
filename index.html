@@ -498,6 +498,13 @@ dialog.sheet::backdrop{background:rgba(20,16,30,.45)}
 .today-card{display:flex;align-items:center;gap:14px;text-align:left;margin-top:14px;padding:14px 16px;border-radius:22px;background:var(--surface);border:var(--card-border);box-shadow:var(--shadow)}
 .today-card .tc-t{font-family:var(--display);font-weight:var(--display-weight);font-size:1.4rem;line-height:1.1}
 [data-skin="doodle"] .card,[data-skin="doodle"] .stop-card,[data-skin="doodle"] .hero,[data-skin="doodle"] .today-card{background:rgba(241,240,250,.72)}
+/* 두들 테마: 글꼴을 손글씨(Gaegu) 하나로 통일. 손글씨는 작아 보여서 전체 크기를 조금 키움 */
+html[data-skin="doodle"]{font-size:112.5%}
+[data-skin="doodle"] body{font-family:"Gaegu",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;font-size:1rem;letter-spacing:.01em}
+[data-skin="doodle"] input,[data-skin="doodle"] select,[data-skin="doodle"] textarea{font-size:18px}
+[data-skin="doodle"] .qa-amt{font-size:2.2rem}
+[data-skin="doodle"] .amount-in input{font-size:1.8rem}
+[data-skin="doodle"] .hero .lbl,[data-skin="doodle"] .kpi .l,[data-skin="doodle"] .tb-l{font-size:.9rem}
 [data-mode="dark"][data-skin="doodle"] .card,[data-mode="dark"][data-skin="doodle"] .stop-card,[data-mode="dark"][data-skin="doodle"] .hero,[data-mode="dark"][data-skin="doodle"] .today-card{background:rgba(40,36,90,.6)}
 /* 사진첩: 도시마다 사진 칸 */
 .album-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:18px 0 8px}
