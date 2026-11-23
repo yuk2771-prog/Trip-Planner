@@ -131,7 +131,7 @@ textarea{resize:vertical;line-height:1.6}
 .nav-item .icon{width:23px;height:23px}
 .nav-item.on{background:var(--nav-on-bg);color:var(--nav-on-fg)}
 .nav-brand,.nav-foot,.nav-item.desk{display:none}
-.main{padding:0 16px calc(110px + env(safe-area-inset-bottom))}
+.main{padding:0 16px calc(170px + env(safe-area-inset-bottom))}
 .wrap{max-width:860px;margin:0 auto}
 .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:6px;padding:10px 16px;margin:0 -16px;background:var(--bg)}
 .trip-switch{display:flex;align-items:center;gap:6px;min-width:0;flex:1;font-weight:800;font-size:1.15rem;padding:6px 8px;margin-left:-8px;border-radius:10px;letter-spacing:-.01em}
@@ -360,9 +360,52 @@ dialog.sheet::backdrop{background:rgba(20,16,30,.45)}
 .cmp-bar i{display:block;height:100%;border-radius:inherit;background:var(--peri)}
 .cmp-bar b{position:absolute;top:-4px;width:2px;height:16px;margin-left:-1px;background:var(--text);border-radius:1px}
 .steps{padding-left:20px;font-size:.92rem;display:flex;flex-direction:column;gap:4px}
-.toast{position:fixed;width:max-content;max-width:calc(100vw - 32px);text-align:center;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.9rem;font-weight:600;opacity:0;pointer-events:none;transition:all .2s;z-index:100}
+.toast{position:fixed;width:max-content;max-width:calc(100vw - 32px);text-align:center;left:50%;bottom:calc(164px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.9rem;font-weight:600;opacity:0;pointer-events:none;transition:all .2s;z-index:100}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 @media (min-width:880px){.toast{bottom:32px}}
+.toast.act{pointer-events:auto;display:flex;align-items:center;gap:14px;padding:8px 8px 8px 18px}
+.undo-btn{color:inherit;font-weight:800;text-decoration:underline;padding:6px 10px;border-radius:999px;min-height:36px}
+.undo-btn:hover{background:rgba(127,127,127,.25)}
+/* 어디서나 지출 기록 */
+.fab{position:fixed;right:16px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:35;width:58px;height:58px;border-radius:50%;background:var(--accent-strong);color:var(--on-accent);font-size:30px;line-height:1;display:grid;place-items:center;box-shadow:0 8px 22px rgba(0,0,0,.25)}
+@media (min-width:880px){.fab{right:28px;bottom:28px}}
+.qa-amount{display:flex;align-items:center;gap:6px;border-bottom:2px solid var(--line);margin-top:6px}
+.qa-amount:focus-within{border-color:var(--accent-strong)}
+.qa-amt{border:0!important;box-shadow:none!important;background:transparent;font-size:2.2rem;font-weight:800;text-align:center;padding:6px 0}
+.qa-cats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.qa-cat{min-height:62px;border-radius:14px;border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.8rem;font-weight:700;text-align:center;padding:4px}
+.qa-cat .e{font-size:1.5rem;line-height:1.1}
+.qa-cat.on{background:var(--accent-soft);border-color:var(--accent-strong);color:var(--accent-strong)}
+.qa-where{margin-top:10px}
+.qa-where summary{cursor:pointer;color:var(--muted);font-size:.9rem;font-weight:600}
+/* 오늘 쓴 돈 */
+.today-box{background:var(--accent-soft);border-radius:14px;padding:10px 12px;margin-top:12px;text-align:left}
+.today-box .tb-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.today-box .tb-l{font-size:.82rem;font-weight:700;color:var(--muted)}
+.today-box .tb-v b{font-size:1.25rem}
+.today-box .progress{margin-top:6px;height:7px;background:rgba(127,127,127,.18)}
+.today-box.over .progress i{background:var(--rose)}
+.today-box .tb-s{font-size:.8rem;color:var(--muted);margin-top:4px}
+.today-box.over .tb-s{color:var(--rose-text);font-weight:700}
+.today .today-box{background:rgba(0,0,0,.22);color:#fff}
+.today .today-box .tb-l,.today .today-box .tb-s{color:rgba(255,255,255,.9)}
+.today .today-box .progress{background:rgba(255,255,255,.3)}
+.today .today-box .progress i{background:#fff}
+.today .today-box.over .tb-s{color:#ffd2cf}
+.sheet-body > div > .today-box:first-child{margin-top:0;margin-bottom:8px}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:12px}
+.wk-bar{position:relative;height:52px;background:var(--gray-bg);border-radius:8px;overflow:hidden}
+.wk-bar i{position:absolute;left:0;right:0;bottom:0;background:var(--accent);border-radius:6px 6px 0 0}
+.wk.over .wk-bar i{background:var(--rose)}
+.wk-bar b{position:absolute;left:3px;right:3px;height:2px;background:var(--text);opacity:.45}
+.wk-v{font-size:.68rem;font-weight:700;text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-d{font-size:.68rem;text-align:center;color:var(--muted)}
+.wk.t .wk-d{color:var(--accent-strong);font-weight:800}
+/* 일정: 다녀온 나라 접기, 오늘로 */
+.past-sum{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;padding:11px 14px;margin-bottom:6px;border-radius:14px;border:1.5px dashed var(--line);color:var(--muted);font-weight:700;font-size:.9rem}
+.past-sum:hover{background:var(--gray-bg)}
+[data-skin="torn"] .ctry .past-sum{background:rgba(255,255,255,.55);border-color:rgba(0,0,0,.25);color:#333}
+.jump .jump-now{background:var(--accent-strong);color:var(--on-accent);border-color:var(--accent-strong)}
 
 /* ===== 언어 · 밝기 · 테마 선택 ===== */
 .pill-seg{display:inline-flex;padding:3px;border-radius:999px;background:var(--gray-bg);gap:2px}
@@ -617,130 +660,50 @@ function blankTrip() {
   };
 }
 
+// 처음 연 사람에게 보여 주는 예시 여행 (개인 일정과 상관없는 일반 예시)
 function sampleTrip() {
   const t = blankTrip();
-  t.meta.title = '22-Week Latin America';
-  t.meta.subtitle = 'Mexico → Guatemala → Costa Rica → Ecuador → Peru → Bolivia → Chile → Argentina → Uruguay';
-  t.meta.startDate = '2027-09-10';
+  t.meta.title = L('포르투갈 · 스페인 13일', 'Portugal & Spain in 13 days');
+  t.meta.subtitle = L('리스본 → 포르투 → 세비야 → 마드리드', 'Lisbon → Porto → Seville → Madrid');
+  t.meta.startDate = '2027-05-03';
+  t.meta.rates = { EUR: 0.92 };
+  t.meta.ratesUpdated = '';
   const C = (name, country, nights, daily, alt, base, trek, todos) =>
     ({ id: uid(), name, country, nights, daily, alt, base, trek, todos: todos.join('\n') });
   t.cities = [
-    C('Mexico City', 'Mexico', 5, 50, 2240, 'Roma Norte / Condesa', false, ['Historic Center & Zócalo', 'Frida Kahlo Museum (Coyoacán)', 'Teotihuacán day trip', 'Xochimilco']),
-    C('Oaxaca', 'Mexico', 4, 50, 1550, 'Centro', false, ['Hierve el Agua', 'Monte Albán', 'Mercado 20 de Noviembre', 'Cooking class']),
-    C('San Cristóbal de las Casas', 'Mexico', 4, 50, 2200, 'Centro / Real de Guadalupe', false, ['Sumidero Canyon', 'San Juan Chamula', 'Free walking tour']),
-    C('Valladolid', 'Mexico', 4, 50, 30, 'Centro', false, ['Cenotes by bike', 'Chichén Itzá early morning', 'Ek Balam']),
-    C('Bacalar', 'Mexico', 4, 50, 10, 'Lagoon side (not beach resort)', false, ['Lagoon of Seven Colors kayak', 'Los Rápidos', 'Cenote Azul']),
-    C('Antigua', 'Guatemala', 6, 39, 1530, 'Antigua center', true, ['Acatenango overnight trek', 'Cerro de la Cruz', 'Spanish class']),
-    C('Lake Atitlán', 'Guatemala', 5, 39, 1560, 'San Pedro / Panajachel', true, ['Indian Nose sunrise hike', 'Kayak between villages', 'San Juan textile coops']),
-    C('La Fortuna', 'Costa Rica', 4, 71, 250, 'Downtown Fortuna', true, ['Arenal Volcano trails', 'Hot springs', 'La Fortuna waterfall']),
-    C('Monteverde', 'Costa Rica', 4, 71, 1400, 'Santa Elena', true, ['Hanging bridges', 'Night walk', 'Cloud forest reserve']),
-    C('Manuel Antonio', 'Costa Rica', 4, 71, 0, 'Quepos', false, ['National park (sloths)', 'Beach day', 'Surf lesson']),
-    C('Quito', 'Ecuador', 5, 42, 2850, 'La Floresta / La Carolina', true, ['Old town', 'TelefériQo', 'Cotopaxi day hike']),
-    C('Otavalo', 'Ecuador', 3, 42, 2550, 'Center', false, ['Saturday market', 'Laguna Cuicocha hike', 'Peguche waterfall']),
-    C('Quilotoa', 'Ecuador', 3, 42, 3900, 'Chugchilán / Quilotoa village', true, ['Quilotoa loop hike', 'Crater lake rim walk']),
-    C('Baños', 'Ecuador', 5, 42, 1820, 'Center', true, ['Bike Ruta de las Cascadas', 'Pailón del Diablo', 'Casa del Árbol swing']),
-    C('Lima', 'Peru', 3, 45, 150, 'Miraflores / Barranco', false, ['Food tour', 'Barranco street art', 'Huaca Pucllana']),
-    C('Huaraz', 'Peru', 8, 45, 3050, 'Huaraz center', true, ['Laguna Churup (acclimatize)', 'Laguna 69', 'Santa Cruz Trek (3–4 days)']),
-    C('Arequipa', 'Peru', 4, 45, 2335, 'Centro / San Lázaro', true, ['Santa Catalina Monastery', 'Colca Canyon 2-day trek']),
-    C('Cusco', 'Peru', 11, 45, 3400, 'San Blas', true, ['Salkantay Trek to Machu Picchu', 'Rainbow Mountain', 'Sacred Valley', 'Humantay Lake']),
-    C('Puno', 'Peru', 3, 45, 3830, 'Center', false, ['Uros floating islands', 'Taquile island']),
-    C('La Paz', 'Bolivia', 5, 33, 3640, 'Sopocachi', false, ['Death Road bike', 'Mi Teleférico', 'Valle de la Luna']),
-    C('Sucre', 'Bolivia', 4, 33, 2810, 'Center', false, ['White city walk', 'Spanish class', 'Dinosaur tracks']),
-    C('Uyuni (3-day tour)', 'Bolivia', 3, 33, 3660, 'Tour (ends in Atacama)', true, ['Salar de Uyuni', 'Laguna Colorada', 'Geysers']),
-    C('San Pedro de Atacama', 'Chile', 4, 72, 2400, 'Center', false, ['Stargazing tour', 'Valle de la Luna', 'Lagunas Altiplánicas']),
-    C('Valparaíso', 'Chile', 3, 72, 0, 'Cerro Alegre / Concepción', false, ['Street art walk', 'Funiculars', 'Viña del Mar']),
-    C('Santiago', 'Chile', 4, 72, 570, 'Providencia / Lastarria', false, ['Cerro San Cristóbal', 'Wine day trip', 'Museum of Memory']),
-    C('Pucón', 'Chile', 4, 72, 230, 'Center', true, ['Villarrica volcano climb', 'Hot springs', 'Huerquehue NP']),
-    C('Puerto Natales', 'Chile', 8, 72, 0, 'Center / campsites', true, ['Torres del Paine W-Trek (4–5 days)', 'Base Las Torres sunrise', 'Glacier Grey']),
-    C('El Calafate', 'Argentina', 3, 55, 200, 'Center', false, ['Perito Moreno Glacier']),
-    C('El Chaltén', 'Argentina', 5, 55, 400, 'Center', true, ['Laguna de los Tres (Fitz Roy)', 'Laguna Torre']),
-    C('Bariloche', 'Argentina', 6, 55, 850, 'Center', true, ['Refugio Frey hike', 'Circuito Chico bike', 'Cerro Campanario']),
-    C('Mendoza', 'Argentina', 4, 55, 750, 'Center', false, ['Malbec wine tour by bike', 'Aconcagua viewpoint']),
-    C('Buenos Aires', 'Argentina', 5, 55, 25, 'San Telmo / Palermo', false, ['Tango show', 'San Telmo market', 'Recoleta']),
-    C('Colonia del Sacramento', 'Uruguay', 3, 60, 0, 'Barrio Histórico', false, ['Old town walk', 'Lighthouse']),
-    C('Montevideo', 'Uruguay', 4, 60, 40, 'Ciudad Vieja / Pocitos', false, ['Mercado del Puerto', 'Rambla at sunset'])
+    C('Lisbon', 'Portugal', 4, 95, 0, 'Alfama / Baixa', false, ['Tram 28 early morning', 'Belém tower & pastéis', 'Sintra day trip', 'Miradouro sunset']),
+    C('Porto', 'Portugal', 3, 85, 0, 'Ribeira', false, ['Port wine cellar tour', 'Livraria Lello', 'Douro river walk']),
+    C('Seville', 'Spain', 3, 90, 0, 'Santa Cruz', false, ['Real Alcázar', 'Flamenco show', 'Plaza de España']),
+    C('Madrid', 'Spain', 3, 100, 650, 'Sol / Malasaña', false, ['Prado museum', 'Retiro park', 'Toledo day trip'])
   ];
   const R = (from, to, mode, op, hours, cost) => ({ id: uid(), from, to, mode, op, hours, cost });
   t.routes = [
-    R('Mexico City', 'Oaxaca', '버스', 'ADO', 7, 35),
-    R('Oaxaca', 'San Cristóbal', '항공', 'OAX→TGZ (+1h shuttle). Highway 190 blockades', 2, 110),
-    R('San Cristóbal', 'Valladolid', '항공', 'TGZ→CUN + ADO 2.5h', 2.5, 110),
-    R('Valladolid', 'Bacalar', '버스', 'ADO', 4, 20),
-    R('Bacalar', 'Antigua', '항공', 'Bus to CUN 4.5h, CUN→GUA, shuttle 1h', 2, 135),
-    R('Antigua', 'Lake Atitlán', '셔틀', 'Tourist shuttle', 3, 20),
-    R('Lake Atitlán', 'La Fortuna', '항공', 'Shuttle to GUA, GUA→SJO, bus 4h', 1.5, 145),
-    R('La Fortuna', 'Monteverde', '셔틀', 'Jeep-boat-jeep', 3, 30),
-    R('Monteverde', 'Manuel Antonio', '셔틀', 'Shared shuttle', 4, 50),
-    R('Manuel Antonio', 'Quito', '항공', 'SJO→UIO (Avianca / Copa)', 4, 130),
-    R('Quito', 'Otavalo', '버스', 'Terminal Carcelén', 2, 3),
-    R('Otavalo', 'Quilotoa', '버스', 'via Quito / Latacunga', 5, 8),
-    R('Quilotoa', 'Baños', '버스', 'via Latacunga', 3.5, 6),
-    R('Baños', 'Lima', '항공', 'Bus to UIO 3.5h, UIO→LIM', 2.5, 115),
-    R('Lima', 'Huaraz', '야간버스', 'Cruz del Sur / Movil', 8, 30),
-    R('Huaraz', 'Arequipa', '항공', 'Night bus to Lima 8h, LIM→AQP', 1.5, 140),
-    R('Arequipa', 'Cusco', '야간버스', 'Cruz del Sur', 10, 30),
-    R('Cusco', 'Puno', '버스', 'Turismo Mer / Inka Express', 7, 25),
-    R('Puno', 'La Paz', '버스', 'via Copacabana', 7, 30),
-    R('La Paz', 'Sucre', '항공', 'BoA', 1, 110),
-    R('Sucre', 'Uyuni', '야간버스', 'via Potosí', 9, 20),
-    R('Uyuni', 'San Pedro de Atacama', '투어', '3-day 4x4 tour (cost in tours)', 0, 0),
-    R('San Pedro de Atacama', 'Valparaíso', '항공', 'CJC→SCL + bus 1.5h', 2, 120),
-    R('Valparaíso', 'Santiago', '버스', 'Turbus / Pullman', 1.5, 6),
-    R('Santiago', 'Pucón', '야간버스', 'Turbus / Pullman (cama)', 10, 40),
-    R('Pucón', 'Puerto Natales', '항공', 'Bus to Temuco 1.5h, ZCO→PUQ, bus 3h', 3, 140),
-    R('Puerto Natales', 'El Calafate', '버스', 'Bus Sur', 5.5, 35),
-    R('El Calafate', 'El Chaltén', '버스', 'Chaltén Travel', 3, 25),
-    R('El Chaltén', 'Bariloche', '항공', 'Bus to FTE 3h, FTE→BRC', 2, 135),
-    R('Bariloche', 'Mendoza', '항공', 'BRC→MDZ', 2, 110),
-    R('Mendoza', 'Buenos Aires', '항공', 'MDZ→AEP', 2, 100),
-    R('Buenos Aires', 'Colonia', '페리', 'Buquebus / Colonia Express', 1.25, 50),
-    R('Colonia', 'Montevideo', '버스', 'COT / Turil', 2.5, 15)
+    R('Lisbon', 'Porto', '기차', 'CP Alfa Pendular', 3, 35),
+    R('Porto', 'Seville', '항공', 'OPO → SVQ', 1.5, 80),
+    R('Seville', 'Madrid', '기차', 'AVE high-speed', 2.5, 50)
   ];
   t.costs = [
-    { id: uid(), label: L('왕복 국제선 (서울 ↔ 멕시코시티 / 몬테비데오)', 'Round-trip flights (Seoul ↔ Mexico City / Montevideo)'), amount: 1200 },
-    { id: uid(), label: L('트레킹 / 투어 (Salkantay, W-Trek, Uyuni 등)', 'Treks / tours (Salkantay, W-Trek, Uyuni…)'), amount: 1200 },
-    { id: uid(), label: L('여행자 보험 (22주)', 'Travel insurance (22 weeks)'), amount: 0 }
+    { id: uid(), label: L('왕복 국제선', 'Round-trip flights'), amount: 1100 },
+    { id: uid(), label: L('투어 / 입장권', 'Tours / tickets'), amount: 200 },
+    { id: uid(), label: L('여행자 보험', 'Travel insurance'), amount: 60 }
   ];
   const B = (item, country, when, memo) => ({ id: uid(), item, country, when, memo, done: false });
   t.bookings = [
-    B('Machu Picchu entry', 'Peru', '3–5 months before', 'Official site. Sells out in high season'),
-    B('Torres del Paine W-Trek camps', 'Chile', '4–6 months before', 'Vertice & Las Torres'),
-    B('Acatenango trek', 'Guatemala', 'On arrival', 'Book in Antigua'),
-    B('Salkantay Trek', 'Peru', '1 week before', 'Book locally in Cusco'),
-    B('Uyuni 3-day tour', 'Bolivia', '2 days before', 'Book in Uyuni, confirm ends in Atacama')
+    B('Real Alcázar tickets', 'Spain', L('2주 전', '2 weeks before'), L('공식 사이트, 시간 지정', 'Official site, timed entry')),
+    B('Livraria Lello entry', 'Portugal', L('1주 전', '1 week before'), ''),
+    B('Lisbon → Porto train', 'Portugal', L('1달 전', '1 month before'), L('일찍 사면 할인', 'Cheaper when booked early'))
   ];
+  const items = list => list.map(x => ({ id: uid(), text: x, done: false }));
   t.checklists = [
-    { id: uid(), tab: 'prep', title: L('출발 6~4개월 전', '4–6 months before'), items: [
-      'Check passport validity (6+ months)', 'Book Machu Picchu permits', 'Book Torres del Paine campsites',
-      'Yellow fever vaccine & ICVP card', 'Buy long-haul flights'].map(x => ({ id: uid(), text: x, done: false })) },
-    { id: uid(), tab: 'prep', title: L('출발 1개월 전', '1 month before'), items: [
-      'Buy travel insurance (full 22 weeks)', 'Notify banks & card companies', 'Diamox & rehydration salts',
-      L('Check 해외안전여행 alerts (Ecuador, Bolivia)', 'Check travel advisories (Ecuador, Bolivia)')].map(x => ({ id: uid(), text: x, done: false })) },
-    { id: uid(), tab: 'prep', title: L('출발 1주 전', '1 week before'), items: [
-      'Offline Google Maps & Maps.me', 'PDF copies of passport & insurance', 'Clean USD bills ($5/$10/$20)',
-      '45L + 38L compression test'].map(x => ({ id: uid(), text: x, done: false })) },
-    { id: uid(), tab: 'pack', title: L('45L 메인 배낭 (트레킹 중 숙소 보관)', '45L main pack (left at hostel on treks)'), items: [
-      '2x casual tops', 'Light pants', 'Shorts or skirt', '5–6 quick-dry underwear', 'Swimsuit',
-      'Town sneakers', 'Sandals', 'Toiletry kit (solid bars)', '2 compression cubes', '2 TSA padlocks'].map(x => ({ id: uid(), text: x, done: false })) },
-    { id: uid(), tab: 'pack', title: L('38L 트레킹 배낭', '38L trekking pack'), items: [
-      'Trail runners / boots', 'GORE-TEX rain shell', 'Down jacket', 'Fleece', '2 merino tops', 'Thermal base layer',
-      'Hiking pants', '3 merino socks', 'Trekking poles', 'Sleeping bag liner', 'Water filter bottle', 'Headlamp',
-      'Microfiber towel', 'Altitude pills & salts'].map(x => ({ id: uid(), text: x, done: false })) },
-    { id: uid(), tab: 'pack', title: L('15~20L 데이팩', '15–20L daypack'), items: [
-      'Passport, cards, emergency cash', '20,000 mAh power bank', 'Plug adapter', 'Sunglasses & SPF 50+', 'DEET repellent'
-    ].map(x => ({ id: uid(), text: x, done: false })) }
+    { id: uid(), tab: 'prep', title: L('출발 1개월 전', '1 month before'), items: items(['Check passport validity', 'Book flights', 'Buy travel insurance', 'Book first nights']) },
+    { id: uid(), tab: 'prep', title: L('출발 1주 전', '1 week before'), items: items(['Download offline maps', 'Tell bank about travel', 'Save copies of passport']) },
+    { id: uid(), tab: 'pack', title: L('필수품', 'Essentials'), items: items(['Passport & cards', 'Phone, charger, power bank', 'EU plug adapter', 'Comfortable walking shoes']) },
+    { id: uid(), tab: 'pack', title: L('옷', 'Clothes'), items: items(['T-shirts', 'Light jacket', 'Sunglasses & hat']) }
   ];
   const K = (name, emergency, currency, payment, advisory) => ({ id: uid(), name, emergency, currency, payment, advisory });
   t.countries = [
-    K('Mexico', '911', 'MXN', 'Card in cities, cash in Chiapas', 'Chiapas border areas: avoid'),
-    K('Guatemala', '110 police / 122 ambulance', 'GTQ', 'Mostly cash', ''),
-    K('Costa Rica', '911', 'CRC / USD', 'Cards widely accepted', ''),
-    K('Ecuador', '911', 'USD', 'Cash, small bills', L('외교부 특별여행주의보. Skip Guayaquil & Cuenca', 'Travel advisory in place. Skip Guayaquil & Cuenca')),
-    K('Peru', '105 police / 106 ambulance', 'PEN', 'Cash for markets, card in hostels', ''),
-    K('Bolivia', '110', 'BOB', 'Mostly cash', 'Road blockades possible. Uyuni rainy season Nov–Mar'),
-    K('Chile', '131 ambulance / 133 police', 'CLP', 'Cards almost everywhere', ''),
-    K('Argentina', '911', 'ARS', 'Card (MEP rate) or cash', ''),
-    K('Uruguay', '911', 'UYU', 'Cards', '')
+    K('Portugal', '112', 'EUR', L('카드 대부분 가능', 'Cards almost everywhere'), ''),
+    K('Spain', '112', 'EUR', L('카드 대부분 가능', 'Cards almost everywhere'), L('관광지 소매치기 주의', 'Watch for pickpockets in busy areas'))
   ];
   return t;
 }
@@ -957,7 +920,7 @@ function clickable(el, fn) {
   return el;
 }
 function toast(msg) {
-  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  const t = $('#toast'); t.textContent = msg; t.classList.remove('act'); t.classList.add('show');
   clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove('show'), 1800);
 }
 function kpi(l, v, s) { return h('div', { class: 'kpi' }, h('div', { class: 'l' }, l), h('div', { class: 'v' }, v), s ? h('div', { class: 's' }, s) : null); }
@@ -1069,8 +1032,8 @@ function editForm({ title, obj, fields, list, isNew, order = true, onDelete, del
   });
   openSheet(title, form, [
     !isNew && onDelete ? h('button', { type: 'button', class: 'btn danger', onclick: () => {
-      if (!confirm(deleteMsg || L('삭제할까요?', 'Delete this?'))) return;
-      onDelete(); save(); closeSheet(); render(); toast(L('삭제했습니다', 'Deleted'));
+      const s = snap();   // 확인 창 대신 되돌리기
+      onDelete(); save(); closeSheet(); render(); undoToast(L('삭제했습니다', 'Deleted'), s);
     } }, icon('trash'), L('삭제', 'Delete')) : null,
     h('span', { class: 'grow' }),
     btn(L('취소', 'Cancel'), closeSheet, 'ghost'),
@@ -1094,7 +1057,7 @@ function editCity(c) {
       { key: 'todos', label: L('할 일 · 갈 곳 (한 줄에 하나)', 'To do · places (one per line)'), type: 'textarea', full: true },
       { key: 'trek', label: L('트레킹 거점 (오래 머물러도 경고 안 함)', 'Trekking base (no warning for long stays)'), type: 'checkbox', full: true }
     ],
-    onDelete: () => { trip.cities.splice(trip.cities.indexOf(obj), 1); deleteCityPhotos(trip.id, obj.id); },
+    onDelete: () => { trip.cities.splice(trip.cities.indexOf(obj), 1); const tid = trip.id; laterDelete(() => deleteCityPhotos(tid, obj.id)); },
     deleteMsg: L('"' + (obj.name || '도시') + '"를 일정에서 삭제할까요?', 'Remove "' + (obj.name || 'this city') + '" from the trip?') });
 }
 function editRoute(r, preset) {
@@ -1496,6 +1459,7 @@ const VIEWS = [
 const VIEW_KEY = 'tripPlanner_view';
 let view = (() => { try { const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(x => x.id === v) ? v : 'plan'; } catch (e) { return 'plan'; } })();
 let prepSub = 'bookings', focusAfter = null, heroPick = null, albumMode = 'grid';
+const openPast = new Set();   // 일정에서 펼쳐 둔 지난 나라
 const editingGroups = new Set();
 
 function go(id) {
@@ -1505,7 +1469,7 @@ function go(id) {
 }
 function render() {
   applySkin();
-  renderNav(); renderTop(); renderView();
+  renderNav(); renderTop(); renderView(); renderFab();
   if (!trip.meta.skin) openPicker();
 }
 
@@ -1567,6 +1531,7 @@ function todayHero(v) {
     ddSub ? h('div', { class: 'dd-sub' }, ddSub) : null,
     h('div', { class: 'stats' }, h('span', {}, '🌙 ' + nightsL(s.n)), h('span', {}, '💵 ' + L('하루 ', '') + fmtBase(num(c.daily)) + L('', '/day')),
       alt ? h('span', {}, '⛰️ ' + alt.toLocaleString('en-US') + 'm') : c.trek ? h('span', {}, L('🥾 트레킹', '🥾 Trek')) : null),
+    auto && st.state === 'now' ? todayBox() : null,
     !auto ? h('div', { style: 'margin-top:10px' }, h('button', { type: 'button', class: 'btn sm', style: 'background:rgba(255,255,255,.9);color:#111', onclick: () => { heroPick = null; render(); } }, L('오늘로 돌아가기', 'Back to today'))) : null);
   v.append(hero);
 }
@@ -1658,26 +1623,34 @@ function viewPlan(v) {
       h('button', { type: 'button', class: 'add-btn', onclick: () => editCity() }, icon('plus'), L('첫 도시 추가', 'Add first city')));
     return;
   }
-  if (t.countries.length > 1) v.append(h('div', { class: 'jump', 'aria-label': L('국가로 이동', 'Jump to country') }, t.countries.map(name =>
-    h('button', { type: 'button', onclick: () => { const el = [...document.querySelectorAll('.ctry')].find(x => x.dataset.country === name); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }, flagOf(name) + ' ' + name))));
+  const nowS = sch.find(s => s.now);
+  if (t.countries.length > 1 || nowS) v.append(h('div', { class: 'jump', 'aria-label': L('국가로 이동', 'Jump to country') },
+    nowS ? h('button', { type: 'button', class: 'jump-now', onclick: () => { const el = document.getElementById('stop-now'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, L('📍 오늘 ', '📍 Today: ') + nowS.c.name) : null,
+    t.countries.length > 1 ? t.countries.map(name =>
+    h('button', { type: 'button', onclick: () => { const el = [...document.querySelectorAll('.ctry')].find(x => x.dataset.country === name); if (el) { if (el.classList.contains('past') && !openPast.has(name)) { openPast.add(name); render(); const e2 = [...document.querySelectorAll('.ctry')].find(x => x.dataset.country === name); if (e2) e2.scrollIntoView({ block: 'start' }); return; } el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } }, flagOf(name) + ' ' + name)) : null));
   v.append(h('p', { class: 'hint' }, L('도시나 이동을 누르면 고칠 수 있어요. 점 색: 하늘 = 저비용, 보라 = 보통, 분홍 = 고비용', 'Tap a city or transfer to edit. Dot colors: blue = low cost, purple = medium, pink = high')));
 
   const { between, loose } = linkRoutes();
   const tl = h('div', { class: 'timeline' });
-  let sec = null, prev = null;
+  let sec = null, prev = null, folded = false;
   sch.forEach((s, i) => {
     const ctry = (s.c.country || '').trim() || noCountry();
     if (ctry !== prev) {
-      let j = i, nights = 0, cost = 0;
-      while (j < sch.length && (((sch[j].c.country || '').trim() || noCountry()) === ctry)) { nights += sch[j].n; cost += sch[j].n * num(sch[j].c.daily); j++; }
+      let j = i, nights = 0, cost = 0, allPast = true;
+      while (j < sch.length && (((sch[j].c.country || '').trim() || noCountry()) === ctry)) { nights += sch[j].n; cost += sch[j].n * num(sch[j].c.daily); if (!sch[j].past) allPast = false; j++; }
       const ci = countryIndex(ctry);
-      sec = h('section', { class: 'ctry', style: '--band:' + BAND_COLORS[ci % BAND_COLORS.length] });
+      sec = h('section', { class: 'ctry' + (allPast ? ' past' : ''), style: '--band:' + BAND_COLORS[ci % BAND_COLORS.length] });
       sec.dataset.country = ctry;
       sec.append(h('div', { class: 'country-head' }, h('h3', {}, h('span', { 'aria-hidden': 'true' }, flagOf(ctry)), ctry),
         h('span', { class: 'muted small' }, L((j - i) + '곳 · ', (j - i) + ' cities · ') + nightsL(nights) + ' · ' + fmtBase(cost))));
+      // 다녀온 나라는 접어 두기 (누르면 펼침)
+      folded = allPast && !openPast.has(ctry);
+      if (allPast) sec.append(h('button', { type: 'button', class: 'past-sum', 'aria-expanded': folded ? 'false' : 'true', onclick: () => { if (folded) openPast.add(ctry); else openPast.delete(ctry); render(); } },
+        h('span', {}, L('✓ 다녀옴 · ' + (j - i) + '곳', '✓ Visited · ' + (j - i) + ' cities')), h('span', {}, folded ? L('펼치기 ▾', 'Show ▾') : L('접기 ▴', 'Hide ▴'))));
       tl.append(sec);
       prev = ctry;
     }
+    if (folded) return;
     sec.append(stopEl(s, i, i === sch.length - 1));
     if (i < sch.length - 1) sec.append(legEl(between[i], s.c, sch[i + 1].c));
   });
@@ -1705,7 +1678,7 @@ function stopEl(s, i, last) {
     c.base ? h('div', { class: 'stop-area' }, L('숙소 · ', 'Stay · ') + c.base) : null,
     cityWarnings(c).map(w => h('div', { class: 'warn' }, '⚠ ' + w)),
     todos.length ? h('ul', { class: 'todos' }, todos.map(x => h('li', {}, x))) : null), () => editCity(c));
-  return h('div', { class: 'stop ' + tier + (s.now ? ' now' : '') + (last ? ' last' : '') }, h('div', { class: 'rail' }, h('span', { class: 'dot' }, i + 1)), card);
+  return h('div', { class: 'stop ' + tier + (s.now ? ' now' : '') + (last ? ' last' : ''), id: s.now ? 'stop-now' : null }, h('div', { class: 'rail' }, h('span', { class: 'dot' }, i + 1)), card);
 }
 function legEl(r, A, B) {
   if (!r) return h('div', { class: 'leg none' }, h('span', { class: 'line' }),
@@ -1853,7 +1826,8 @@ function viewLedger(v) {
     h('div', { class: 'muted' }, fmtHome(t.spentHome) + L(' · 예산 ' + fmtBase(bud) + '의 ' + Math.round(pct) + '%', ' · ' + Math.round(pct) + '% of ' + fmtBase(bud))),
     h('div', { class: 'progress', style: 'margin:14px 0 10px;height:10px' }, h('i', { style: 'width:' + pct + '%' })),
     h('div', { class: 'small' }, L('남은 예산 ', 'Left '), h('b', {}, fmtBase(bud - t.spent)), h('span', { class: 'muted' }, ' · ' + fmtHome(bud * fx - t.spentHome))),
-    p && !p.before ? h('div', { class: 'pace' }, (p.ended ? L('여행 끝 · ', 'Trip over · ') : L('여행 ' + p.day + '일째 · ', 'Day ' + p.day + ' · ')) + L('계획 ', 'Plan '), h('b', {}, fmtBase(p.plan)), L(' / 실제 ', ' / Actual '), h('b', {}, fmtBase(p.actual)), ' ', diffChip(p.actual, p.plan)) : null));
+    p && !p.before ? h('div', { class: 'pace' }, (p.ended ? L('여행 끝 · ', 'Trip over · ') : L('여행 ' + p.day + '일째 · ', 'Day ' + p.day + ' · ')) + L('계획 ', 'Plan '), h('b', {}, fmtBase(p.plan)), L(' / 실제 ', ' / Actual '), h('b', {}, fmtBase(p.actual)), ' ', diffChip(p.actual, p.plan)) : null,
+    todayBox(), weekBars()));
 
   // 빠른 입력
   const amt = h('input', { type: 'text', inputmode: 'decimal', placeholder: '0', 'aria-label': L('금액', 'Amount'), 'data-focus': 'amount' });
@@ -1903,9 +1877,8 @@ function viewLedger(v) {
     if (!(a > 0)) { amt.focus(); toast(L('금액을 입력하세요', 'Enter an amount')); return; }
     const r = rateOf(draft.cur);
     if (!r) { rateBox.open = true; rateIn.focus(); toast(L(draft.cur + ' 환율을 먼저 넣어 주세요', 'Add a ' + draft.cur + ' rate first')); return; }
-    trip.ledger.push({ id: uid(), date: date.value || todayStr(), city: city.value.trim(), cat: draft.cat, desc: desc.value.trim() || catName(draft.cat),
-      amount: Math.round(a / r * 100) / 100, orig: a, cur: draft.cur, rate: r, fx: parseFloat(fxIn.value) || fx });
-    save(); focusAfter = 'amount'; render(); toast(fmtCur(a, draft.cur) + L(' 기록했습니다', ' saved'));
+    addEntry({ a, cur: draft.cur, cat: draft.cat, desc: desc.value, city: city.value, date: date.value, fx: parseFloat(fxIn.value) || fx });
+    focusAfter = 'amount'; render(); toast(fmtCur(a, draft.cur) + L(' 기록했습니다', ' saved'));
   };
   [amt, desc].forEach(x => x.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); add(); } }));
   upd();
@@ -1961,8 +1934,7 @@ function viewPrep(v) {
       trip.checklists.push(g); editingGroups.add(g.id); save(); focusAfter = 'title-' + g.id; render();
     } }, icon('plus'), L('그룹 추가', 'Add group'))));
   if (all.some(x => x.done)) v.append(h('p', { style: 'text-align:center;margin-top:14px' }, h('button', { type: 'button', class: 'btn sm ghost', onclick: () => {
-    if (!confirm(L('이 목록의 체크를 모두 해제할까요?', 'Uncheck everything in this list?'))) return;
-    all.forEach(x => x.done = false); save(); render();
+    const s = snap(); all.forEach(x => x.done = false); save(); render(); undoToast(L('체크를 모두 해제했어요', 'Unchecked all'), s);
   } }, L('체크 모두 해제', 'Uncheck all'))));
 }
 function prepBookings(v) {
@@ -1994,7 +1966,7 @@ function groupEl(g) {
     if (editing) {
       const ti = h('input', { type: 'text', value: it.text, 'aria-label': L('항목', 'Item') });
       ti.addEventListener('input', () => { it.text = ti.value; save(); });
-      card.append(h('div', { class: 'check-edit' }, ti, h('button', { type: 'button', class: 'icon-btn', 'aria-label': L('항목 삭제', 'Delete item'), onclick: () => { items.splice(i, 1); save(); render(); } }, icon('trash'))));
+      card.append(h('div', { class: 'check-edit' }, ti, h('button', { type: 'button', class: 'icon-btn', 'aria-label': L('항목 삭제', 'Delete item'), onclick: () => { const s = snap(); items.splice(i, 1); save(); render(); undoToast(L('항목을 지웠어요', 'Item deleted'), s); } }, icon('trash'))));
     } else {
       const cb = h('input', { type: 'checkbox' }); cb.checked = !!it.done;
       cb.addEventListener('change', () => { it.done = cb.checked; save(); render(); });
@@ -2006,8 +1978,7 @@ function groupEl(g) {
   ai.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addItem(); } });
   card.append(h('div', { class: 'add-line' }, ai, btn(L('추가', 'Add'), addItem, 'sm')));
   if (editing) card.append(h('div', { style: 'margin-top:12px;text-align:right' }, h('button', { type: 'button', class: 'btn sm danger', onclick: () => {
-    if (!confirm(L('"' + g.title + '" 그룹을 통째로 삭제할까요?', 'Delete the whole "' + g.title + '" group?'))) return;
-    trip.checklists = trip.checklists.filter(x => x !== g); editingGroups.delete(g.id); save(); render();
+    const s = snap(); trip.checklists = trip.checklists.filter(x => x !== g); editingGroups.delete(g.id); save(); render(); undoToast(L('그룹을 지웠어요', 'Group deleted'), s);
   } }, icon('trash'), L('그룹 삭제', 'Delete group'))));
   return card;
 }
@@ -2130,7 +2101,120 @@ function viewSettings(v) {
     h('div', { class: 'form' }, F(L('이 기기 이름', 'Device name'), dev, L('백업 파일에 함께 기록됩니다', 'Recorded in backup files'), true))));
   v.append(h('div', { class: 'card' }, h('h3', {}, L('기타', 'More')), h('div', { class: 'btn-grid' },
     btn(L('샘플 여행 추가', 'Add sample trip'), () => { const s = sampleTrip(); store.trips[s.id] = s; store.current = s.id; trip = s; save(); go('plan'); toast(L('샘플 여행을 추가했습니다', 'Sample trip added')); }),
-    btn(L('가계부 비우기', 'Clear spending'), () => { if (confirm(L('"' + m.title + '"의 가계부 기록 ' + trip.ledger.length + '건을 모두 지울까요? 되돌릴 수 없습니다.', 'Delete all ' + trip.ledger.length + ' entries in "' + m.title + '"? This can\'t be undone.'))) { trip.ledger = []; save(); render(); toast(L('가계부를 비웠습니다', 'Spending cleared')); } }, 'danger'))));
+    btn(L('가계부 비우기', 'Clear spending'), () => { if (confirm(L('"' + m.title + '"의 가계부 기록 ' + trip.ledger.length + '건을 모두 지울까요? 되돌릴 수 없습니다.', 'Delete all ' + trip.ledger.length + ' entries in "' + m.title + '"? This can\'t be undone.'))) { const s = snap(); trip.ledger = []; save(); render(); undoToast(L('가계부를 비웠습니다', 'Spending cleared'), s); } }, 'danger'))));
+}
+
+/* ============ 오늘 예산 (오늘 쓴 돈 / 그날 도시의 하루 예산) ============ */
+const dstr = d => { const z = x => String(x).padStart(2, '0'); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); };
+function dailyBudgetOn(ds) {
+  const d = addDays(ds, 0); if (!d) return 0;
+  const s = schedule().find(x => x.arr && d >= x.arr && d < x.dep);
+  return s ? num(s.c.daily) : 0;
+}
+const spentOn = ds => trip.ledger.filter(l => l.date === ds).reduce((a, l) => a + num(l.amount), 0);
+function todayBox() {
+  const ds = todayStr(), spent = spentOn(ds), bud = dailyBudgetOn(ds);
+  if (!bud && !spent) return null;
+  const over = bud && spent > bud, pct = bud ? Math.min(100, spent / bud * 100) : 0;
+  return h('div', { class: 'today-box' + (over ? ' over' : '') },
+    h('div', { class: 'tb-top' }, h('span', { class: 'tb-l' }, L('오늘 쓴 돈', 'Spent today')),
+      h('span', { class: 'tb-v' }, h('b', {}, fmtExact(spent)), bud ? ' / ' + fmtBase(bud) : '')),
+    bud ? h('div', { class: 'progress' }, h('i', { style: 'width:' + pct + '%' })) : null,
+    bud ? h('div', { class: 'tb-s' }, over ? L(fmtExact(spent - bud) + ' 넘었어요', fmtExact(spent - bud) + ' over') : L('오늘 남은 돈 ' + fmtExact(bud - spent), fmtExact(bud - spent) + ' left today')) : null);
+}
+// 최근 7일 하루별 지출 막대 (선 = 그날 하루 예산)
+function weekBars() {
+  const days = [];
+  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); const ds = dstr(d); days.push({ d, ds, spent: spentOn(ds), bud: dailyBudgetOn(ds) }); }
+  if (!days.some(x => x.spent || x.bud)) return null;
+  const max = Math.max(1, ...days.map(x => Math.max(x.spent, x.bud))) * 1.15;   // 위에 여유를 둬서 예산선이 잘리지 않게
+  return h('div', { class: 'week', role: 'img', 'aria-label': L('최근 7일 지출', 'Last 7 days') },
+    days.map((x, i) => h('div', { class: 'wk' + (i === 6 ? ' t' : '') + (x.bud && x.spent > x.bud ? ' over' : '') },
+      h('div', { class: 'wk-bar' }, h('i', { style: 'height:' + (x.spent / max * 100) + '%' }), x.bud ? h('b', { style: 'bottom:' + (x.bud / max * 100) + '%' }) : null),
+      h('div', { class: 'wk-v' }, x.spent ? fmtBase(x.spent) : '–'),
+      h('div', { class: 'wk-d' }, i === 6 ? L('오늘', 'Today') : WDL(x.d)))));
+}
+
+/* ============ 빠른 지출 기록 (어느 화면에서나 ＋) ============ */
+// 가계부 화면과 같은 방식으로 한 건 추가. 환율이 없으면 null
+function addEntry({ a, cur, cat, desc, city, date, fx }) {
+  const r = rateOf(cur);
+  if (!r) return null;
+  const e = { id: uid(), date: date || todayStr(), city: (city || '').trim(), cat, desc: (desc || '').trim() || catName(cat),
+    amount: Math.round(a / r * 100) / 100, orig: a, cur, rate: r, fx: fx || num(trip.meta.fx) };
+  trip.ledger.push(e); save();
+  return e;
+}
+function quickAdd() {
+  const base = baseCode(), nowS = schedule().find(s => s.now), last = trip.ledger[trip.ledger.length - 1];
+  const st = {
+    city: nowS ? nowS.c.name : (draft && draft.tripId === trip.id && draft.city) || (last && last.city && last.city !== '-' ? last.city : ''),
+    date: todayStr(), cat: (draft && draft.tripId === trip.id && draft.cat) || '식비'
+  };
+  st.cur = currencyOfCity(st.city) || (draft && draft.tripId === trip.id && draft.cur) || (last && last.cur) || base;
+  const amt = h('input', { type: 'text', inputmode: 'decimal', placeholder: '0', class: 'qa-amt', 'aria-label': L('금액', 'Amount'), enterkeyhint: 'done' });
+  const curSel = h('select', { class: 'cur-sel', 'aria-label': L('통화', 'Currency') });
+  const curs = currencies(); if (!curs.includes(st.cur)) curs.unshift(st.cur);
+  curs.forEach(c => curSel.append(h('option', { value: c }, c))); curSel.value = st.cur;
+  const conv = h('div', { class: 'amt-preview', style: 'text-align:center' });
+  const upd = () => {
+    const r = rateOf(st.cur), a = parseFloat(amt.value);
+    conv.textContent = !r ? L(st.cur + ' 환율이 없어요. 가계부 화면에서 넣어 주세요.', 'No ' + st.cur + ' rate yet. Add it on Spending.')
+      : a > 0 ? '≈ ' + (st.cur !== base ? fmtExact(a / r) + ' · ' : '') + fmtHome(a / r * num(trip.meta.fx)) : ' ';
+  };
+  amt.addEventListener('input', upd);
+  curSel.addEventListener('change', () => { st.cur = curSel.value; upd(); });
+  const cats = h('div', { class: 'qa-cats', role: 'radiogroup', 'aria-label': L('분류', 'Category') });
+  const drawCats = () => { cats.innerHTML = ''; CATS.forEach(c => cats.append(h('button', { type: 'button', class: 'qa-cat' + (st.cat === c ? ' on' : ''), 'aria-pressed': st.cat === c ? 'true' : 'false', onclick: () => { st.cat = c; drawCats(); } }, h('span', { class: 'e' }, CAT_ICON[c]), catName(c)))); };
+  drawCats();
+  const desc = h('input', { type: 'text', placeholder: L('내용 (안 적어도 돼요)', 'What (optional)'), 'aria-label': L('내용', 'What') });
+  const city = h('input', { type: 'text', value: st.city, list: 'qa-cities', placeholder: L('도시', 'City'), 'aria-label': L('도시', 'City') });
+  const date = h('input', { type: 'date', value: st.date, 'aria-label': L('날짜', 'Date') });
+  city.addEventListener('input', () => { st.city = city.value; const c = currencyOfCity(city.value); if (c && c !== st.cur) { if (![...curSel.options].some(o => o.value === c)) curSel.append(h('option', { value: c }, c)); st.cur = c; curSel.value = c; upd(); } });
+  date.addEventListener('input', () => { st.date = date.value; });
+  const where = h('details', { class: 'qa-where' }, h('summary', {}, '📍 ' + (st.city || L('도시 없음', 'No city')) + ' · ' + (st.date === todayStr() ? L('오늘', 'Today') : st.date)),
+    h('div', { class: 'form-row', style: 'margin-top:8px' }, city, date), h('datalist', { id: 'qa-cities' }, trip.cities.map(c => h('option', { value: c.name }))));
+  const doSave = () => {
+    const a = parseFloat(amt.value);
+    if (!(a > 0)) { amt.focus(); toast(L('금액을 입력하세요', 'Enter an amount')); return; }
+    if (!rateOf(st.cur)) { toast(L(st.cur + ' 환율을 먼저 넣어 주세요', 'Add a ' + st.cur + ' rate first')); return; }
+    addEntry({ a, cur: st.cur, cat: st.cat, desc: desc.value, city: st.city, date: st.date });
+    if (draft && draft.tripId === trip.id) { draft.cat = st.cat; draft.cur = st.cur; }
+    closeSheet(); render();
+    const ds = todayStr(), bud = dailyBudgetOn(ds);
+    toast(fmtCur(a, st.cur) + L(' 기록 · 오늘 ', ' saved · today ') + fmtExact(spentOn(ds)) + (bud ? ' / ' + fmtBase(bud) : ''));
+  };
+  [amt, desc].forEach(x => x.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); doSave(); } }));
+  upd();
+  openSheet(L('지출 기록', 'Log spending'), h('div', {},
+    todayBox(),
+    h('div', { class: 'qa-amount' }, curSel, amt), conv,
+    cats, desc, where),
+    [h('span', { class: 'grow' }), btn(L('취소', 'Cancel'), closeSheet, 'ghost'), btn(L('기록하기', 'Save'), doSave, 'primary')]);
+  setTimeout(() => amt.focus(), 80);
+}
+function renderFab() {
+  let f = document.getElementById('fab');
+  if (!f) { f = h('button', { type: 'button', id: 'fab', class: 'fab', onclick: quickAdd }, '＋'); document.body.append(f); }
+  f.setAttribute('aria-label', L('지출 기록', 'Log spending'));
+  f.title = L('지출 기록', 'Log spending');
+}
+
+/* ============ 지우기 되돌리기 ============ */
+// 지우기 전에 여행 전체를 복사해 두고, 6초 동안 "되돌리기"를 보여 줌.
+// 사진처럼 되돌릴 수 없는 것은 7초 뒤에 지움 (그 전에 되돌리면 취소)
+let pendingDel = [];
+function laterDelete(fn) { const id = setTimeout(() => { pendingDel = pendingDel.filter(x => x !== id); fn(); }, 7000); pendingDel.push(id); }
+function snap() { return { id: trip.id, data: JSON.parse(JSON.stringify(trip)), mark: pendingDel.length }; }
+function undoToast(msg, s) {
+  const t = $('#toast'); t.innerHTML = '';
+  t.append(h('span', {}, msg), h('button', { type: 'button', class: 'undo-btn', onclick: () => {
+    pendingDel.slice(s.mark).forEach(clearTimeout); pendingDel = pendingDel.slice(0, s.mark);
+    store.trips[s.id] = s.data; store.current = s.id; trip = s.data;
+    save(); render(); toast(L('되돌렸습니다', 'Restored'));
+  } }, L('되돌리기', 'Undo')));
+  t.classList.add('show', 'act');
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove('show', 'act'), 6000);
 }
 
 /* ============ 테마 미리보기 그림 (174 × 210, 테마와 상관없이 고정 색) ============ */
@@ -2259,9 +2343,10 @@ function dupTrip() {
 function delTrip() {
   if (Object.keys(store.trips).length <= 1) { alert(L('마지막 여행은 삭제할 수 없습니다. 새 여행을 먼저 만드세요.', 'You can\'t delete your only trip. Make a new one first.')); return; }
   if (!confirm(L('"' + trip.meta.title + '"을(를) 삭제할까요? 되돌릴 수 없습니다.\n(먼저 내보내기 → 백업을 해 두면 나중에 되살릴 수 있어요)', 'Delete "' + trip.meta.title + '"? This can\'t be undone.\n(Back it up first if you might want it later.)'))) return;
-  deleteTripPhotos(trip.id);
-  delete store.trips[trip.id];
-  closeSheet(); switchTrip(Object.keys(store.trips)[0]); toast(L('삭제했습니다', 'Deleted'));
+  const s = snap(), tid = trip.id;
+  laterDelete(() => deleteTripPhotos(tid));
+  delete store.trips[tid];
+  closeSheet(); switchTrip(Object.keys(store.trips)[0]); undoToast(L('여행을 삭제했습니다', 'Trip deleted'), s);
 }
 
 /* ============ 내보내기: 문서(PDF·HTML)와 백업(JSON) ============ */
