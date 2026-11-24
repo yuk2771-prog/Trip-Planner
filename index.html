@@ -552,6 +552,50 @@ html[data-skin="doodle"]{font-size:112.5%}
   #report{display:block}
   #report .report{padding:0;max-width:none}
 }
+
+/* ===== 2일차: 숙소 · 예약 마감 · 끌기 · 백업 ===== */
+.stay{border-top:1px dashed var(--line);padding-top:8px;display:flex;flex-direction:column;gap:3px;font-size:.9rem}
+.stay-n{font-weight:700}
+.stay a{color:var(--accent-strong);text-decoration:none;word-break:break-word}
+.stay a:hover{text-decoration:underline}
+.stay-m{display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;color:var(--muted)}
+.stay-m b{color:var(--text);user-select:all;-webkit-user-select:all}
+.stay.on-hero{border:0;background:rgba(255,255,255,.92);color:#111;border-radius:14px;padding:9px 12px;margin-top:12px;text-align:left}
+.stay.on-hero a{color:#0b57d0}
+.stay.on-hero .stay-m,.stay.on-hero .stay-m b{color:#333}
+[data-skin="torn"] .ctry .stay{border-top-color:rgba(0,0,0,.25)}
+[data-skin="torn"] .ctry .stay a{color:#111;text-decoration:underline}
+[data-skin="torn"] .ctry .stay-m,[data-skin="torn"] .ctry .stay-m b{color:#333}
+.booking .bk-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
+.due{font-size:.78rem;font-weight:800;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--text);white-space:nowrap}
+.due.mid{background:#fff1c9;color:#7a5200}
+.due.soon{background:#ffe0cc;color:#a3400c}
+.due.late{background:var(--rose-text);color:#fff}
+.due.done{background:transparent;color:var(--muted);font-weight:600}
+.cal-btn{font-size:1.05rem;line-height:1;padding:5px 7px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.due-alert{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1.5px solid #f0b37a;border-radius:14px;padding:10px 14px;margin:4px 0 12px;cursor:pointer;color:var(--text);font:inherit}
+.due-alert .grow{display:flex;flex-direction:column;gap:1px;min-width:0}
+.due-alert .grow > span{font-size:.88rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stop .dot.grip{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.stop .dot.grip:hover{box-shadow:0 0 0 4px var(--accent-soft)}
+.stop.drag-src{opacity:.35}
+.drag-ghost{position:fixed;z-index:1000;pointer-events:none;opacity:.95;transform:rotate(-1deg) scale(1.02);filter:drop-shadow(0 12px 24px rgba(0,0,0,.25))}
+.drag-ghost .rail::after{display:none}
+.drop-line{position:fixed;z-index:999;height:4px;border-radius:4px;background:var(--accent-strong);pointer-events:none;box-shadow:0 0 0 3px var(--accent-soft)}
+body.dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
+.banner .bn-ic{font-size:1.5rem;line-height:1}
+.banner .bn-ic + .grow{min-width:0}
+.bn-ch{font-weight:700;font-size:.9rem;margin:2px 0}
+.bk-status{border-radius:12px;padding:10px 12px;margin-bottom:12px;display:flex;flex-direction:column;gap:2px;font-size:.9rem}
+.bk-status span{color:var(--muted)}
+.bk-status.ok{background:#e3f4e6}.bk-status.ok b{color:#1e6b2f}
+.bk-status.old,.bk-status.none{background:var(--rose-tint)}.bk-status.old b,.bk-status.none b{color:var(--rose-text)}
+[data-mode="dark"] .bk-status.ok{background:#173322}[data-mode="dark"] .bk-status.ok b{color:#8fe0a5}
+.bk-where{margin:0 0 14px;font-size:.9rem}
+.bk-where summary{cursor:pointer;color:var(--accent-strong);font-weight:700}
+.bk-where ul{margin:8px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.import-hint{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:16px;padding:12px 14px;margin:4px 0 12px}
+.import-hint .grow{min-width:200px}
 </style>
 <style id="report-css">
 .report{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI","Malgun Gothic",Roboto,sans-serif;color:#26222f;background:#fff;max-width:920px;margin:0 auto;padding:36px 28px;font-size:13px;line-height:1.55;word-break:keep-all}
@@ -683,6 +727,7 @@ function sampleTrip() {
   t.meta.startDate = '2027-05-03';
   t.meta.rates = { EUR: 0.92 };
   t.meta.ratesUpdated = '';
+  t.meta.sample = true;   // 새 기기에서 "백업 가져오기" 안내를 띄우는 기준
   const C = (name, country, nights, daily, alt, base, trek, todos) =>
     ({ id: uid(), name, country, nights, daily, alt, base, trek, todos: todos.join('\n') });
   t.cities = [
@@ -691,6 +736,7 @@ function sampleTrip() {
     C('Seville', 'Spain', 3, 90, 0, 'Santa Cruz', false, ['Real Alcázar', 'Flamenco show', 'Plaza de España']),
     C('Madrid', 'Spain', 3, 100, 650, 'Sol / Malasaña', false, ['Prado museum', 'Retiro park', 'Toledo day trip'])
   ];
+  Object.assign(t.cities[0], { hotel: L('예시 게스트하우스', 'Sample guesthouse'), hotelAddr: 'Largo do Chafariz de Dentro, Lisboa', hotelRef: 'ABC123', hotelUrl: '' });
   const R = (from, to, mode, op, hours, cost) => ({ id: uid(), from, to, mode, op, hours, cost });
   t.routes = [
     R('Lisbon', 'Porto', '기차', 'CP Alfa Pendular', 3, 35),
@@ -702,11 +748,11 @@ function sampleTrip() {
     { id: uid(), label: L('투어 / 입장권', 'Tours / tickets'), amount: 200 },
     { id: uid(), label: L('여행자 보험', 'Travel insurance'), amount: 60 }
   ];
-  const B = (item, country, when, memo) => ({ id: uid(), item, country, when, memo, done: false });
+  const B = (item, country, when, memo, due) => ({ id: uid(), item, country, when, due, memo, done: false });
   t.bookings = [
-    B('Real Alcázar tickets', 'Spain', L('2주 전', '2 weeks before'), L('공식 사이트, 시간 지정', 'Official site, timed entry')),
-    B('Livraria Lello entry', 'Portugal', L('1주 전', '1 week before'), ''),
-    B('Lisbon → Porto train', 'Portugal', L('1달 전', '1 month before'), L('일찍 사면 할인', 'Cheaper when booked early'))
+    B('Real Alcázar tickets', 'Spain', L('2주 전', '2 weeks before'), L('공식 사이트, 시간 지정', 'Official site, timed entry'), '2027-04-28'),
+    B('Livraria Lello entry', 'Portugal', L('1주 전', '1 week before'), '', '2027-04-30'),
+    B('Lisbon → Porto train', 'Portugal', L('1달 전', '1 month before'), L('일찍 사면 할인', 'Cheaper when booked early'), '2027-04-03')
   ];
   const items = list => list.map(x => ({ id: uid(), text: x, done: false }));
   t.checklists = [
@@ -1060,7 +1106,7 @@ function editForm({ title, obj, fields, list, isNew, order = true, onDelete, del
 /* --- 항목별 편집 창 --- */
 function editCity(c) {
   const m = trip.meta, isNew = !c, last = trip.cities[trip.cities.length - 1];
-  const obj = c || { id: uid(), name: '', country: last ? last.country : '', nights: num(m.minNights) || 3, daily: last ? last.daily : 50, alt: '', base: '', trek: false, todos: '' };
+  const obj = c || { id: uid(), name: '', country: last ? last.country : '', nights: num(m.minNights) || 3, daily: last ? last.daily : 50, alt: '', base: '', trek: false, todos: '', hotel: '', hotelAddr: '', hotelRef: '', hotelUrl: '' };
   editForm({ title: isNew ? L('도시 추가', 'Add city') : (c.name || L('도시', 'City')) + L(' 편집', ''), obj, isNew, list: trip.cities,
     fields: [
       { key: 'name', label: L('도시', 'City'), ph: L('예: Lisbon', 'e.g. Lisbon'), full: true },
@@ -1069,6 +1115,10 @@ function editCity(c) {
       { key: 'daily', label: L('1일 예산 (', 'Daily budget (') + m.baseCur + ')', type: 'number', hint: L('숙소 + 식비 + 현지 교통', 'Stay + food + local transport') },
       { key: 'alt', label: L('고도 (m)', 'Altitude (m)'), type: 'number', hint: L('2,500m 이상이면 고산 표시', 'Marked high altitude above 2,500m') },
       { key: 'base', label: L('숙소 지역', 'Where to stay'), ph: L('예: Centro', 'e.g. Centro'), full: true },
+      { key: 'hotel', label: L('🛏 숙소 이름', '🛏 Stay name'), ph: L('예: Casa Alfama', 'e.g. Casa Alfama'), full: true },
+      { key: 'hotelAddr', label: L('숙소 주소 (누르면 지도)', 'Address (opens Maps)'), ph: L('예: Rua de São Miguel 12', 'e.g. Rua de São Miguel 12'), full: true },
+      { key: 'hotelRef', label: L('예약번호', 'Booking ref'), ph: 'ABC123' },
+      { key: 'hotelUrl', label: L('예약 링크', 'Booking link'), ph: 'https://' },
       { key: 'todos', label: L('할 일 · 갈 곳 (한 줄에 하나)', 'To do · places (one per line)'), type: 'textarea', full: true },
       { key: 'trek', label: L('트레킹 거점 (오래 머물러도 경고 안 함)', 'Trekking base (no warning for long stays)'), type: 'checkbox', full: true }
     ],
@@ -1095,11 +1145,13 @@ function editCost(c) {
     onDelete: () => trip.costs.splice(trip.costs.indexOf(obj), 1) });
 }
 function editBooking(b) {
-  const isNew = !b, obj = b || { id: uid(), item: '', country: '', when: '', memo: '', done: false };
+  const isNew = !b, obj = b || { id: uid(), item: '', country: '', when: '', due: '', memo: '', done: false };
   editForm({ title: isNew ? L('예약 항목 추가', 'Add booking') : L('예약 항목 편집', 'Edit booking'), obj, isNew, list: trip.bookings,
     fields: [
       { key: 'item', label: L('항목', 'Item'), ph: L('예: 마추픽추 입장권', 'e.g. Machu Picchu tickets'), full: true },
-      { key: 'country', label: L('국가', 'Country'), list: totals().countries }, { key: 'when', label: L('언제 예약', 'Book when'), ph: L('예: 3개월 전', 'e.g. 3 months before') },
+      { key: 'due', label: L('마감일 (이날까지 예약)', 'Book by (deadline)'), type: 'date', hint: L('D-day 배지 · 캘린더 알림', 'D-day badge · calendar reminder') },
+      { key: 'when', label: L('언제 예약 (메모)', 'Book when (note)'), ph: L('예: 3개월 전', 'e.g. 3 months before') },
+      { key: 'country', label: L('국가', 'Country'), list: totals().countries },
       { key: 'memo', label: L('메모', 'Notes'), type: 'textarea', rows: 2, full: true },
       { key: 'done', label: L('예약 완료', 'Booked'), type: 'checkbox', full: true }
     ],
@@ -1250,16 +1302,19 @@ const lsSet = (k, val) => { try { localStorage.setItem(k, val); } catch (e) {} }
 function backupState() {
   const last = lsGet(BACKUP_KEY), since = last || lsGet(FIRST_KEY);
   const days = since ? Math.floor((Date.now() - new Date(since)) / 864e5) : 0;
-  const changed = !!store.savedAt && (!last || store.savedAt > last);
+  const ch = changesSinceBackup();   // 이 버전부터 백업한 경우에만 숫자로 셈
+  const changed = ch ? ch.trips > 0 : !!store.savedAt && (!last || store.savedAt > last);
   const snoozed = (lsGet(SNOOZE_KEY) || '') > new Date().toISOString();
-  return { last, days, need: changed && days >= 7 && !snoozed };
+  const many = ch && ch.entries >= 10;
+  return { last, days, ch, changed, need: changed && !snoozed && (days >= 5 || many || (!last && days >= 1)) };
 }
 function backupBanner() {
   const b = backupState();
   if (!b.need) return null;
-  return h('div', { class: 'banner' },
+  return h('div', { class: 'banner' }, h('span', { class: 'bn-ic', 'aria-hidden': 'true' }, '💾'),
     h('div', { class: 'grow' }, h('b', {}, b.last ? L('마지막 백업 ' + b.days + '일 전', 'Last backup ' + b.days + ' days ago') : L('아직 백업한 적이 없어요', 'No backup yet')),
-      h('div', { class: 'small muted' }, L('여행 데이터는 이 기기에만 있어요. 바뀐 내용이 있으니 백업 파일을 만들어 두세요.', 'Your trips live only on this device. Things changed, so save a backup file.'))),
+      changeText(b.ch) ? h('div', { class: 'bn-ch' }, L('그 뒤로 ', 'Since then: ') + changeText(b.ch)) : null,
+      h('div', { class: 'small muted' }, L('여행 데이터는 이 기기에만 있어요. 휴대폰을 잃어버리면 같이 사라지니 백업 파일을 iCloud나 구글 드라이브에 두세요.', 'Your trips live only on this device. Save a backup file to iCloud or Google Drive in case you lose your phone.'))),
     h('div', { class: 'banner-btns' }, btn(L('지금 백업', 'Back up now'), exportAll, 'sm primary'),
       btn(L('나중에', 'Later'), () => { lsSet(SNOOZE_KEY, new Date(Date.now() + 3 * 864e5).toISOString()); render(); }, 'sm ghost')));
 }
@@ -1507,6 +1562,7 @@ function renderTop() {
 function renderView() {
   const v = $('#view'); v.innerHTML = '';
   const b = backupBanner(); if (b) v.append(b);
+  const ih = view === 'plan' ? importHint() : null; if (ih) v.append(ih);
   ({ plan: viewPlan, budget: viewBudget, ledger: viewLedger, prep: viewPrep, info: viewInfo, settings: viewSettings })[view](v);
   if (focusAfter) { const el = document.querySelector('[data-focus="' + focusAfter + '"]'); if (el) el.focus({ preventScroll: true }); focusAfter = null; }
 }
@@ -1546,6 +1602,7 @@ function todayHero(v) {
     ddSub ? h('div', { class: 'dd-sub' }, ddSub) : null,
     h('div', { class: 'stats' }, h('span', {}, '🌙 ' + nightsL(s.n)), h('span', {}, '💵 ' + L('하루 ', '') + fmtBase(num(c.daily)) + L('', '/day')),
       alt ? h('span', {}, '⛰️ ' + alt.toLocaleString('en-US') + 'm') : c.trek ? h('span', {}, L('🥾 트레킹', '🥾 Trek')) : null),
+    stayBox(c, 'on-hero'),
     auto && st.state === 'now' ? todayBox() : null,
     !auto ? h('div', { style: 'margin-top:10px' }, h('button', { type: 'button', class: 'btn sm', style: 'background:rgba(255,255,255,.9);color:#111', onclick: () => { heroPick = null; render(); } }, L('오늘로 돌아가기', 'Back to today'))) : null);
   v.append(hero);
@@ -1628,8 +1685,8 @@ function viewPlan(v) {
     h('div', { class: 'kpis' },
       kpi(L('기간', 'Length'), nightsL(t.nights), L((t.nights / 7).toFixed(1) + '주 · 약 ' + (t.nights / 30.4).toFixed(1) + '개월', (t.nights / 7).toFixed(1) + ' weeks · ~' + (t.nights / 30.4).toFixed(1) + ' months')),
       kpi(L('도시 · 국가', 'Cities · countries'), L(trip.cities.length + '곳 · ' + t.countries.length + '개국', trip.cities.length + ' · ' + t.countries.length)),
-      kpi(L('총 예산', 'Total budget'), fmtBase(t.grand), fmtHome(t.grand * fx)),
-      kpi(L('하루 평균', 'Per day'), t.nights ? fmtBase(t.grand / t.nights) : '-', t.nights ? fmtHome(t.grand / t.nights * fx) : ''))));
+      kpi(L('총 예산', 'Total budget'), fmtBase(t.grand), homeOr(t.grand * fx)),
+      kpi(L('하루 평균', 'Per day'), t.nights ? fmtBase(t.grand / t.nights) : '-', t.nights ? homeOr(t.grand / t.nights * fx) : ''))));
 
   v.append(h('div', { class: 'page-title' }, h('h2', {}, L('도시별 일정', 'Cities')),
     h('button', { type: 'button', class: 'btn sm', onclick: () => editCity() }, icon('plus'), L('도시', 'City'))));
@@ -1638,12 +1695,13 @@ function viewPlan(v) {
       h('button', { type: 'button', class: 'add-btn', onclick: () => editCity() }, icon('plus'), L('첫 도시 추가', 'Add first city')));
     return;
   }
+  const da = dueAlert(); if (da) v.append(da);
   const nowS = sch.find(s => s.now);
   if (t.countries.length > 1 || nowS) v.append(h('div', { class: 'jump', 'aria-label': L('국가로 이동', 'Jump to country') },
     nowS ? h('button', { type: 'button', class: 'jump-now', onclick: () => { const el = document.getElementById('stop-now'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, L('📍 오늘 ', '📍 Today: ') + nowS.c.name) : null,
     t.countries.length > 1 ? t.countries.map(name =>
     h('button', { type: 'button', onclick: () => { const el = [...document.querySelectorAll('.ctry')].find(x => x.dataset.country === name); if (el) { if (el.classList.contains('past') && !openPast.has(name)) { openPast.add(name); render(); const e2 = [...document.querySelectorAll('.ctry')].find(x => x.dataset.country === name); if (e2) e2.scrollIntoView({ block: 'start' }); return; } el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } }, flagOf(name) + ' ' + name)) : null));
-  v.append(h('p', { class: 'hint' }, L('도시나 이동을 누르면 고칠 수 있어요. 점 색: 하늘 = 저비용, 보라 = 보통, 분홍 = 고비용', 'Tap a city or transfer to edit. Dot colors: blue = low cost, purple = medium, pink = high')));
+  v.append(h('p', { class: 'hint' }, L('도시나 이동을 누르면 고칠 수 있어요. 번호 동그라미를 위아래로 끌면 순서가 바뀌어요. 점 색: 하늘 = 저비용, 보라 = 보통, 분홍 = 고비용', 'Tap a city or transfer to edit. Drag a number circle up or down to reorder. Dot colors: blue = low cost, purple = medium, pink = high')));
 
   const { between, loose } = linkRoutes();
   const tl = h('div', { class: 'timeline' });
@@ -1669,6 +1727,7 @@ function viewPlan(v) {
     sec.append(stopEl(s, i, i === sch.length - 1));
     if (i < sch.length - 1) sec.append(legEl(between[i], s.c, sch[i + 1].c));
   });
+  enableDrag(tl);
   v.append(tl, h('div', { class: 'after-tl', style: 'margin:16px 0 0 44px' }, h('button', { type: 'button', class: 'add-btn', onclick: () => editCity() }, icon('plus'), L('도시 추가', 'Add city'))));
 
   if (loose.length) v.append(h('div', { class: 'page-title' }, h('h2', {}, L('일정에 연결되지 않은 이동', 'Unlinked transfers'))),
@@ -1690,10 +1749,11 @@ function stopEl(s, i, last) {
       h('span', { class: 'chip ' + tier }, L('하루 ', '') + fmtBase(d) + L('', '/day')),
       alt ? h('span', { class: 'chip ' + (alt >= 2500 ? 'high' : alt >= 1500 ? 'mid' : 'low') }, (alt >= 2500 ? L('⛰ 고산 ', '⛰ High ') : '') + alt.toLocaleString('en-US') + 'm') : null,
       c.trek ? h('span', { class: 'chip mid' }, L('🥾 트레킹', '🥾 Trek')) : null),
-    c.base ? h('div', { class: 'stop-area' }, L('숙소 · ', 'Stay · ') + c.base) : null,
+    c.base && !c.hotel ? h('div', { class: 'stop-area' }, L('숙소 · ', 'Stay · ') + c.base) : null,
+    stayBox(c),
     cityWarnings(c).map(w => h('div', { class: 'warn' }, '⚠ ' + w)),
     todos.length ? h('ul', { class: 'todos' }, todos.map(x => h('li', {}, x))) : null), () => editCity(c));
-  return h('div', { class: 'stop ' + tier + (s.now ? ' now' : '') + (last ? ' last' : ''), id: s.now ? 'stop-now' : null }, h('div', { class: 'rail' }, h('span', { class: 'dot' }, i + 1)), card);
+  return h('div', { class: 'stop ' + tier + (s.now ? ' now' : '') + (last ? ' last' : ''), id: s.now ? 'stop-now' : null, 'data-i': i }, h('div', { class: 'rail' }, h('span', { class: 'dot' }, i + 1)), card);
 }
 function legEl(r, A, B) {
   if (!r) return h('div', { class: 'leg none' }, h('span', { class: 'line' }),
@@ -1774,7 +1834,7 @@ function viewBudget(v) {
   v.append(h('section', { class: 'hero' },
     h('div', { class: 'lbl' }, cap ? L('계획한 비용', 'Planned cost') : L('총 예산 (계획 합계)', 'Total budget (planned)')),
     h('div', { class: 'big' }, fmtBase(t.grand)),
-    h('div', { class: 'muted' }, fmtHome(t.grand * fx) + L(' · 하루 평균 ', ' · per day ') + (t.nights ? fmtBase(t.grand / t.nights) : '-')),
+    h('div', { class: 'muted' }, joinDot(homeOr(t.grand * fx), L('하루 평균 ', 'per day ') + (t.nights ? fmtBase(t.grand / t.nights) : '-'))),
     h('div', { class: 'cap-line' },
       cap ? [h('span', {}, L('목표 예산 ', 'Target '), h('b', {}, fmtBase(cap))), ' ',
         h('span', { class: 'chip ' + (diff > 0 ? 'high' : 'low') }, diff > 0 ? L(fmtBase(diff) + ' 초과', fmtBase(diff) + ' over') : L(fmtBase(-diff) + ' 여유', fmtBase(-diff) + ' to spare'))] : null,
@@ -1798,7 +1858,7 @@ function viewBudget(v) {
     h('p', { class: 'hint' }, L('나라를 누르면 도시별 박 수와 하루 예산을 고칠 수 있어요.', 'Tap a country to edit nights and daily budget for its cities.')),
     h('div', { class: 'card' }, Object.keys(byC).length ? Object.entries(byC).map(([k, x]) => h('button', { type: 'button', class: 'bar-row', onclick: () => editStays(k), 'aria-label': k + L(' 체류비 편집', ' — edit stays') },
       h('div', {}, h('div', { class: 'row-t' }, flagOf(k) + ' ' + k), h('div', { class: 'muted small' }, L(x.cities + '곳 · ', x.cities + ' cities · ') + nightsL(x.nights) + L(' · 하루 ', ' · ') + (x.nights ? fmtBase(x.sum / x.nights) : '-') + L('', '/day'))),
-      h('div', { class: 'amt', style: 'text-align:right' }, h('div', { class: 'row-t' }, fmtBase(x.sum) + ' ›'), h('div', { class: 'muted small' }, fmtHome(x.sum * fx))),
+      h('div', { class: 'amt', style: 'text-align:right' }, h('div', { class: 'row-t' }, fmtBase(x.sum) + ' ›'), homeOr(x.sum * fx) ? h('div', { class: 'muted small' }, homeOr(x.sum * fx)) : null),
       h('div', { class: 'progress' }, h('i', { style: 'width:' + (x.sum / maxSum * 100) + '%' }))))
       : emptyState(L('도시가 없어요', 'No cities'), L('일정에 도시를 추가하면 나라별로 계산됩니다.', 'Add cities to see costs by country.'))));
 
@@ -1815,7 +1875,7 @@ function viewBudget(v) {
     h('div', { class: 'card' }, h('p', { class: 'hint' }, L('국제선, 투어, 보험, 비자처럼 도시·이동에 들어가지 않는 비용. 누르면 고칠 수 있어요.', 'Things like flights, tours, insurance and visas. Tap to edit.')),
       trip.costs.length ? h('div', { class: 'rows' }, trip.costs.map(c => h('button', { type: 'button', class: 'row', onclick: () => editCost(c) },
         h('div', { class: 'grow row-t' }, c.label || L('(이름 없음)', '(untitled)')),
-        num(c.amount) ? h('div', { class: 'amt' }, fmtBase(num(c.amount)), h('small', {}, fmtHome(num(c.amount) * fx))) : h('span', { class: 'chip high' }, L('금액 미입력', 'No amount')))))
+        num(c.amount) ? h('div', { class: 'amt' }, fmtBase(num(c.amount)), homeOr(num(c.amount) * fx) ? h('small', {}, homeOr(num(c.amount) * fx)) : null) : h('span', { class: 'chip high' }, L('금액 미입력', 'No amount')))))
         : emptyState(L('고정비가 없어요', 'No fixed costs'), L('오른쪽 위 + 항목으로 추가하세요.', 'Add one with + Item above.'))));
 
   v.append(h('p', { class: 'hint' }, L('환율 1 ', 'Rate 1 ') + m.baseCur + ' = ' + fx.toLocaleString('en-US') + ' ' + m.homeCur + (m.fxUpdated ? ' (' + m.fxUpdated + ')' : L(' (직접 입력)', ' (manual)')) + ' · ',
@@ -1838,9 +1898,9 @@ function viewLedger(v) {
   v.append(h('section', { class: 'hero' },
     h('div', { class: 'lbl' }, L('지금까지 쓴 돈', 'Spent so far')),
     h('div', { class: 'big' }, fmtBase(t.spent)),
-    h('div', { class: 'muted' }, fmtHome(t.spentHome) + L(' · 예산 ' + fmtBase(bud) + '의 ' + Math.round(pct) + '%', ' · ' + Math.round(pct) + '% of ' + fmtBase(bud))),
+    h('div', { class: 'muted' }, joinDot(homeOr(t.spentHome), L('예산 ' + fmtBase(bud) + '의 ' + Math.round(pct) + '%', Math.round(pct) + '% of ' + fmtBase(bud)))),
     h('div', { class: 'progress', style: 'margin:14px 0 10px;height:10px' }, h('i', { style: 'width:' + pct + '%' })),
-    h('div', { class: 'small' }, L('남은 예산 ', 'Left '), h('b', {}, fmtBase(bud - t.spent)), h('span', { class: 'muted' }, ' · ' + fmtHome(bud * fx - t.spentHome))),
+    h('div', { class: 'small' }, L('남은 예산 ', 'Left '), h('b', {}, fmtBase(bud - t.spent)), sameCur() ? null : h('span', { class: 'muted' }, ' · ' + fmtHome(bud * fx - t.spentHome))),
     p && !p.before ? h('div', { class: 'pace' }, (p.ended ? L('여행 끝 · ', 'Trip over · ') : L('여행 ' + p.day + '일째 · ', 'Day ' + p.day + ' · ')) + L('계획 ', 'Plan '), h('b', {}, fmtBase(p.plan)), L(' / 실제 ', ' / Actual '), h('b', {}, fmtBase(p.actual)), ' ', diffChip(p.actual, p.plan)) : null,
     todayBox(), weekBars()));
 
@@ -1868,7 +1928,7 @@ function viewLedger(v) {
     preview.innerHTML = '';
     if (cur !== base && !r) preview.append(h('span', { class: 'warn-text' }, L(cur + ' 환율이 없어요. ', 'No ' + cur + ' rate yet. ')),
       h('button', { type: 'button', class: 'link', onclick: e => fetchFX(e.currentTarget) }, L('최신 환율 불러오기', 'Get latest rates')), L(' 또는 환율 칸에 직접 입력', ' or type one in'));
-    else if (a > 0) preview.append('≈ ' + (cur !== base ? fmtExact(a / r) + ' · ' : '') + fmtHome(a / r * (parseFloat(fxIn.value) || fx)));
+    else if (a > 0) { const x = joinDot(cur !== base ? fmtExact(a / r) : '', homeOr(a / r * (parseFloat(fxIn.value) || fx))); preview.append(x ? '≈ ' + x : ' '); }
     else preview.append(cur !== base ? '1 ' + base + ' = ' + Number(r).toLocaleString('en-US') + ' ' + cur + (m.fxUpdated ? ' (' + m.fxUpdated + ')' : '') : ' ');
   };
   amt.addEventListener('input', upd);
@@ -1927,7 +1987,7 @@ function viewLedger(v) {
         h('span', { class: 'cat-ic' }, CAT_ICON[l.cat] || '🧾'),
         h('div', { class: 'grow' }, h('div', { class: 'row-t' }, l.desc || catName(l.cat)), h('div', { class: 'muted small' }, [catName(l.cat), l.city && l.city !== '-' ? l.city : ''].filter(Boolean).join(' · '))),
         h('div', { class: 'amt' }, local ? fmtCur(num(l.orig), l.cur) : fmtExact(num(l.amount)),
-          h('small', {}, (local ? fmtExact(num(l.amount)) + ' · ' : '') + fmtHome(num(l.amount) * (num(l.fx) || fx)))));
+          joinDot(local ? fmtExact(num(l.amount)) : '', homeOr(num(l.amount) * (num(l.fx) || fx))) ? h('small', {}, joinDot(local ? fmtExact(num(l.amount)) : '', homeOr(num(l.amount) * (num(l.fx) || fx)))) : null));
     })));
   });
   v.append(card);
@@ -1953,18 +2013,23 @@ function viewPrep(v) {
   } }, L('체크 모두 해제', 'Uncheck all'))));
 }
 function prepBookings(v) {
-  v.append(h('p', { class: 'hint' }, L('입장권, 트레킹 퍼밋, 인기 숙소처럼 일찍 마감되는 것. 체크하면 예약 완료.', 'Tickets, trek permits and popular stays that sell out early. Check when booked.')));
+  v.append(h('p', { class: 'hint' }, L('입장권, 트레킹 퍼밋, 인기 숙소처럼 일찍 마감되는 것. 마감일을 넣으면 급한 순으로 정렬돼요. 체크하면 예약 완료.', 'Tickets, trek permits and popular stays that sell out early. Add a deadline to sort by urgency. Check when booked.')));
   const card = h('div', { class: 'card', style: 'padding-top:4px;padding-bottom:4px' });
   if (!trip.bookings.length) card.append(emptyState(L('예약할 항목이 없어요', 'Nothing to book'), L('아래 버튼으로 추가하세요.', 'Add one below.')));
-  trip.bookings.forEach(b => {
+  sortedBookings().forEach(b => {
     const cb = h('input', { type: 'checkbox', 'aria-label': (b.item || L('항목', 'Item')) + L(' 예약 완료', ' booked') }); cb.checked = !!b.done;
     cb.addEventListener('change', () => { b.done = cb.checked; save(); render(); });
     card.append(h('div', { class: 'booking' + (b.done ? ' done' : '') }, cb,
       clickable(h('div', { class: 'body' }, h('div', { class: 'row-t' }, b.item || L('(이름 없음)', '(untitled)')),
-        h('div', { class: 'muted small' }, [b.country, b.when].filter(Boolean).join(' · ')),
-        b.memo ? h('div', { class: 'small', style: 'margin-top:2px' }, b.memo) : null), () => editBooking(b))));
+        h('div', { class: 'muted small' }, joinDot(b.due ? L(md(addDays(b.due, 0)) + '까지', 'by ' + md(addDays(b.due, 0))) : '', b.country, b.when)),
+        b.memo ? h('div', { class: 'small', style: 'margin-top:2px' }, b.memo) : null), () => editBooking(b)),
+      h('div', { class: 'bk-side' }, dueBadge(b),
+        b.due && !b.done ? h('button', { type: 'button', class: 'cal-btn', 'aria-label': (b.item || '') + L(' 캘린더에 추가', ' — add to calendar'), title: L('캘린더에 추가', 'Add to calendar'), onclick: () => addToCalendar([b]) }, '📅') : null)));
   });
+  const withDue = trip.bookings.filter(b => !b.done && addDays(b.due, 0));
   v.append(card, h('button', { type: 'button', class: 'add-btn', onclick: () => editBooking() }, icon('plus'), L('예약 항목 추가', 'Add booking')));
+  if (withDue.length) v.append(h('div', { style: 'text-align:center;margin-top:12px' }, btn(L('📅 마감일 ' + withDue.length + '개 모두 캘린더에 추가', '📅 Add all ' + withDue.length + ' deadlines to calendar'), () => addToCalendar(withDue), 'sm'),
+    h('p', { class: 'hint', style: 'margin-top:8px' }, L('알림: 마감 3일 전 · 당일 오전 9시. 파일을 열면 휴대폰 캘린더에 들어가요.', 'Reminders 3 days before and at 9am on the day. Open the file to add it to your calendar.'))));
 }
 function groupEl(g) {
   const items = g.items, done = items.filter(x => x.done).length, editing = editingGroups.has(g.id);
@@ -2109,9 +2174,11 @@ function viewSettings(v) {
   const lastB = lsGet(BACKUP_KEY);
   v.append(h('div', { class: 'card' }, h('h3', {}, L('데이터 · 백업', 'Data · backup')),
     h('p', { class: 'hint' }, L('여행 데이터와 사진은 이 기기의 브라우저에만 저장됩니다. 다른 기기로 옮기거나 백업하려면 백업 파일을 만들고, 다른 기기에서 가져오기를 누르세요.', 'Trips and photos are stored only in this browser. To move or back up, make a backup file and import it on the other device.')),
+    backupStatus(),
     h('div', { class: 'info-line' }, h('span', { class: 'k' }, L('마지막 저장', 'Last saved')), h('span', {}, savedText())),
-    h('div', { class: 'info-line', style: 'margin-bottom:10px' }, h('span', { class: 'k' }, L('마지막 백업', 'Last backup')), h('span', {}, lastB ? new Date(lastB).toLocaleString(LOC(), { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + L(' (' + backupState().days + '일 전)', ' (' + backupState().days + ' days ago)') : h('span', { class: 'warn-text' }, L('아직 없음', 'None yet')))),
-    h('div', { class: 'btn-grid', style: 'margin-bottom:14px' }, btn(L('모든 여행 백업', 'Back up all trips'), exportAll, 'primary'), btn(L('백업 파일 가져오기', 'Import backup'), () => $('#import-file').click())),
+    h('div', { class: 'info-line', style: 'margin-bottom:10px' }, h('span', { class: 'k' }, L('마지막 백업', 'Last backup')), h('span', {}, lastB ? new Date(lastB).toLocaleString(LOC(), { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : h('span', { class: 'warn-text' }, L('아직 없음', 'None yet')))),
+    h('div', { class: 'btn-grid', style: 'margin-bottom:10px' }, btn(L('모든 여행 백업', 'Back up all trips'), exportAll, 'primary'), btn(L('백업 파일 가져오기', 'Import backup'), () => $('#import-file').click())),
+    backupWhere(),
     h('button', { type: 'button', class: 'btn ghost block', style: 'margin-bottom:14px', onclick: openExport }, L('문서(PDF · HTML)로 내보내기', 'Export as a document (PDF · HTML)')),
     h('div', { class: 'form' }, F(L('이 기기 이름', 'Device name'), dev, L('백업 파일에 함께 기록됩니다', 'Recorded in backup files'), true))));
   v.append(h('div', { class: 'card' }, h('h3', {}, L('기타', 'More')), h('div', { class: 'btn-grid' },
@@ -2175,7 +2242,7 @@ function quickAdd() {
   const upd = () => {
     const r = rateOf(st.cur), a = parseFloat(amt.value);
     conv.textContent = !r ? L(st.cur + ' 환율이 없어요. 가계부 화면에서 넣어 주세요.', 'No ' + st.cur + ' rate yet. Add it on Spending.')
-      : a > 0 ? '≈ ' + (st.cur !== base ? fmtExact(a / r) + ' · ' : '') + fmtHome(a / r * num(trip.meta.fx)) : ' ';
+      : a > 0 && joinDot(st.cur !== base ? fmtExact(a / r) : '', homeOr(a / r * num(trip.meta.fx))) ? '≈ ' + joinDot(st.cur !== base ? fmtExact(a / r) : '', homeOr(a / r * num(trip.meta.fx))) : ' ';
   };
   amt.addEventListener('input', upd);
   curSel.addEventListener('change', () => { st.cur = curSel.value; upd(); });
@@ -2230,6 +2297,192 @@ function undoToast(msg, s) {
   } }, L('되돌리기', 'Undo')));
   t.classList.add('show', 'act');
   clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove('show', 'act'), 6000);
+}
+
+/* ============ 같은 통화면 금액을 한 번만 ============ */
+// 예산 통화와 내 통화가 같으면(예: 둘 다 USD) 내 통화 금액을 숨김
+const sameCur = () => baseCode() === homeCode();
+const homeOr = v => sameCur() ? '' : fmtHome(v);
+const joinDot = (...xs) => xs.filter(Boolean).join(' · ');
+
+/* ============ 도시별 숙소 정보 ============ */
+// http(s) 링크만 허용 (그 외 형식은 무시)
+const safeUrl = u => { u = String(u || '').trim(); if (!u) return ''; if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = 'https://' + u; return /^https?:\/\/[^\s]+$/i.test(u) ? u : ''; };
+const mapUrl = q => (isIOS ? 'https://maps.apple.com/?q=' : 'https://www.google.com/maps/search/?api=1&query=') + encodeURIComponent(q);
+const hasStay = c => !!(c && (c.hotel || c.hotelAddr || c.hotelRef || c.hotelUrl));
+function stayBox(c, cls) {
+  if (!hasStay(c)) return null;
+  const url = safeUrl(c.hotelUrl), addr = String(c.hotelAddr || '').trim(), name = String(c.hotel || '').trim();
+  const q = addr ? (c.name && !normName(addr).includes(normName(c.name)) ? addr + ', ' + c.name : addr) : name ? name + (c.name ? ', ' + c.name : '') : '';
+  return h('div', { class: 'stay' + (cls ? ' ' + cls : '') },
+    h('div', { class: 'stay-n' }, h('span', { 'aria-hidden': 'true' }, '🛏 '), name || L('숙소', 'Stay')),
+    q ? h('a', { class: 'stay-a', href: mapUrl(q), target: '_blank', rel: 'noopener' }, '📍 ' + (addr || L('지도에서 보기', 'Open in Maps'))) : null,
+    c.hotelRef || url ? h('div', { class: 'stay-m' },
+      c.hotelRef ? h('span', {}, L('예약번호 ', 'Ref '), h('b', { class: 'sel' }, c.hotelRef)) : null,
+      url ? h('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, L('예약 보기 ↗', 'Booking ↗')) : null) : null);
+}
+
+/* ============ 예약 마감일 (D-day · 캘린더) ============ */
+function dueDays(b) {
+  const d = addDays(b.due, 0); if (!d) return null;
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  return Math.round((d - t) / 864e5);
+}
+function dueBadge(b) {
+  const n = dueDays(b); if (n == null) return null;
+  if (b.done) return h('span', { class: 'due done' }, md(addDays(b.due, 0)));
+  const cls = n < 0 ? 'late' : n <= 7 ? 'soon' : n <= 30 ? 'mid' : '';
+  return h('span', { class: 'due ' + cls, title: ymd(addDays(b.due, 0)) }, n < 0 ? L(-n + '일 지남', -n + 'd late') : n === 0 ? 'D-day' : 'D-' + n);
+}
+// 급한 순: 마감일 있는 미완료(날짜순) → 마감일 없는 미완료 → 완료
+function sortedBookings() {
+  const rank = b => b.done ? 2 : dueDays(b) == null ? 1 : 0;
+  return trip.bookings.map((b, i) => ({ b, i }))
+    .sort((x, y) => rank(x.b) - rank(y.b) || (rank(x.b) === 0 ? String(x.b.due).localeCompare(String(y.b.due)) : 0) || x.i - y.i)
+    .map(x => x.b);
+}
+// 일정 화면 위: 2주 안에 마감되는 예약
+function dueAlert() {
+  const list = trip.bookings.filter(b => !b.done && dueDays(b) != null && dueDays(b) <= 14).sort((a, b) => String(a.due).localeCompare(String(b.due)));
+  if (!list.length) return null;
+  return h('button', { type: 'button', class: 'due-alert', onclick: () => { prepSub = 'bookings'; go('prep'); } },
+    h('span', { class: 'grow' }, h('b', {}, L('예약 마감 임박', 'Book soon')), h('span', {}, list.slice(0, 2).map(b => b.item || '?').join(', ') + (list.length > 2 ? L(' 외 ' + (list.length - 2) + '건', ' +' + (list.length - 2)) : ''))),
+    dueBadge(list[0]));
+}
+// .ics (캘린더 파일): 하루 종일 일정 + 3일 전 · 당일 오전 9시 알림
+const icsEsc = s => String(s || '').replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/([,;])/g, '\\$1');
+function icsFold(line) {   // 한 줄 75바이트 넘으면 접기 (한글은 글자당 3바이트)
+  const enc = new TextEncoder(), out = [];
+  let cur = '', n = 0;
+  for (const ch of line) {
+    const b = enc.encode(ch).length;
+    if (n + b > 73) { out.push(cur); cur = ' '; n = 1; }
+    cur += ch; n += b;
+  }
+  out.push(cur);
+  return out.join('\r\n');
+}
+function bookingsICS(list) {
+  const z = x => String(x).padStart(2, '0'), d8 = d => d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate());
+  const stampT = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const out = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Trip Planner//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+  list.forEach(b => {
+    const title = L('예약 마감: ', 'Book by: ') + (b.item || '');
+    const desc = joinDot(trip.meta.title, b.country, b.when) + (b.memo ? '\n' + b.memo : '');
+    const alarm = tr => ['BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(title), 'TRIGGER:' + tr, 'END:VALARM'];
+    out.push('BEGIN:VEVENT', 'UID:' + b.id + '-' + trip.id + '@trip-planner', 'DTSTAMP:' + stampT,
+      'DTSTART;VALUE=DATE:' + d8(addDays(b.due, 0)), 'DTEND;VALUE=DATE:' + d8(addDays(b.due, 1)),
+      'SUMMARY:' + icsEsc(title), 'DESCRIPTION:' + icsEsc(desc), 'TRANSP:TRANSPARENT',
+      ...alarm('-P2DT15H'), ...alarm('PT9H'), 'END:VEVENT');
+  });
+  out.push('END:VCALENDAR');
+  return out.map(icsFold).join('\r\n') + '\r\n';
+}
+function addToCalendar(list) {
+  list = list.filter(b => addDays(b.due, 0));
+  if (!list.length) { toast(L('마감일이 있는 예약이 없어요', 'No bookings with a deadline')); return; }
+  downloadBlob(bookingsICS(list), 'text/calendar;charset=utf-8', safeName(list.length === 1 ? list[0].item : trip.meta.title) + L('_예약마감.ics', '_deadlines.ics'));
+  toast(L('캘린더 파일을 만들었어요. 파일을 열면 캘린더에 추가돼요', 'Calendar file saved. Open it to add the events'));
+}
+
+/* ============ 끌어서 도시 순서 바꾸기 ============ */
+// 번호 동그라미를 잡고 위아래로 끌기 (터치 · 마우스 모두). 놓으면 날짜가 다시 계산되고 6초 동안 되돌리기
+function enableDrag(tl) {
+  tl.querySelectorAll('.stop > .rail > .dot').forEach(dot => {
+    dot.classList.add('grip');
+    dot.title = L('끌어서 순서 바꾸기', 'Drag to reorder');
+    dot.addEventListener('pointerdown', e => startDrag(e, dot.closest('.stop'), tl));
+  });
+}
+function startDrag(e, stop, tl) {
+  if (e.button > 0 || trip.cities.length < 2) return;
+  e.preventDefault();
+  const from = +stop.dataset.i, stops = [...tl.querySelectorAll('.stop')];
+  const r = stop.getBoundingClientRect(), offY = e.clientY - r.top;
+  const ghost = stop.cloneNode(true); ghost.removeAttribute('id'); ghost.classList.add('drag-ghost');
+  Object.assign(ghost.style, { left: r.left + 'px', width: r.width + 'px', top: r.top + 'px' });
+  const line = h('div', { class: 'drop-line', 'aria-hidden': 'true' });
+  document.body.append(ghost, line);
+  stop.classList.add('drag-src'); document.body.classList.add('dragging');
+  let target = from, y = e.clientY, raf = 0, moved = false;
+  const place = () => {
+    let k = stops.length;
+    for (let j = 0; j < stops.length; j++) { const b = stops[j].getBoundingClientRect(); if (y < b.top + b.height / 2) { k = j; break; } }
+    const ref = stops[Math.min(k, stops.length - 1)], rb = ref.getBoundingClientRect();
+    Object.assign(line.style, { top: (k < stops.length ? rb.top - 5 : rb.bottom + 3) + 'px', left: rb.left + 'px', width: rb.width + 'px' });
+    const ins = k < stops.length ? +stops[k].dataset.i : +stops[stops.length - 1].dataset.i + 1;
+    target = ins > from ? ins - 1 : ins;
+    line.style.display = target === from ? 'none' : '';
+  };
+  const move = ev => { y = ev.clientY; if (Math.abs(y - e.clientY) > 4) moved = true; ghost.style.top = (y - offY) + 'px'; place(); };
+  const tick = () => {   // 화면 위·아래 끝에 가까우면 자동 스크롤
+    const top = 80, bot = innerHeight - 110;
+    if (moved && y < top) scrollBy(0, -Math.ceil((top - y) / 5)); else if (moved && y > bot) scrollBy(0, Math.ceil((y - bot) / 5));
+    place(); raf = requestAnimationFrame(tick);
+  };
+  const end = ev => {
+    cancelAnimationFrame(raf);
+    removeEventListener('pointermove', move); removeEventListener('pointerup', end); removeEventListener('pointercancel', end);
+    ghost.remove(); line.remove(); stop.classList.remove('drag-src'); document.body.classList.remove('dragging');
+    if (ev.type === 'pointercancel' || target === from) return;
+    const s = snap();
+    const [c] = trip.cities.splice(from, 1); trip.cities.splice(target, 0, c);
+    save(); render();
+    undoToast(L('"' + (c.name || '도시') + '" 순서를 ' + (target + 1) + '번째로', '"' + (c.name || 'City') + '" moved to #' + (target + 1)), s);
+  };
+  addEventListener('pointermove', move); addEventListener('pointerup', end); addEventListener('pointercancel', end);
+  place(); raf = requestAnimationFrame(tick);
+}
+
+/* ============ 백업 강화 ============ */
+// 백업할 때 여행마다 지문(해시)과 지출 건수를 적어 두고, 지금과 비교해서 "바뀐 것"을 셈
+const SIG_KEY = 'tripPlanner_backupSig', IMPORT_HINT_KEY = 'tripPlanner_importHint';
+function tripSig(t) { const s = JSON.stringify(t, (k, v) => k === 'skin' ? undefined : v);   // 테마만 바꾼 건 '바뀜'으로 안 셈
+  let x = 5381; for (let i = 0; i < s.length; i++) x = (Math.imul(x, 33) ^ s.charCodeAt(i)) >>> 0; return x.toString(36); }
+function readSig() { try { return JSON.parse(lsGet(SIG_KEY) || 'null'); } catch (e) { return null; } }
+function markBackup(ids) {
+  const sig = readSig() || {};
+  ids.forEach(id => { const t = store.trips[id]; if (t) sig[id] = { h: tripSig(t), n: t.ledger.length }; });
+  lsSet(SIG_KEY, JSON.stringify(sig));
+}
+function changesSinceBackup() {
+  const sig = readSig();
+  if (!sig) return null;
+  let trips = 0, entries = 0;
+  Object.values(store.trips).forEach(t => {
+    const s = sig[t.id];
+    if (!s) { trips++; entries += t.ledger.length; }
+    else if (s.h !== tripSig(t)) { trips++; entries += Math.max(0, t.ledger.length - s.n); }
+  });
+  return { trips, entries };
+}
+const changeText = ch => ch ? joinDot(ch.trips ? L('바뀐 여행 ' + ch.trips + '개', ch.trips + (ch.trips === 1 ? ' trip' : ' trips') + ' changed') : '', ch.entries ? L('새 지출 ' + ch.entries + '건', ch.entries + ' new expenses') : '') : '';
+// 설정 화면의 백업 상태 줄
+function backupStatus() {
+  const b = backupState(), ch = b.ch;
+  const ok = b.last && !b.changed;
+  return h('div', { class: 'bk-status ' + (ok ? 'ok' : b.last ? 'old' : 'none') },
+    h('b', {}, ok ? L('✓ 백업이 최신이에요', '✓ Backup is up to date') : b.last ? L('백업 이후 바뀐 내용이 있어요', 'Changed since last backup') : L('아직 백업한 적이 없어요', 'Never backed up')),
+    h('span', {}, b.last ? joinDot(L('마지막 백업 ', 'Last backup ') + (b.days ? L(b.days + '일 전', b.days + 'd ago') : L('오늘', 'today')), ok ? '' : changeText(ch)) : L('지금 만들어 두면 휴대폰을 잃어버려도 다시 가져올 수 있어요', 'Make one now so you can restore if you lose your phone')));
+}
+function backupWhere() {
+  return h('details', { class: 'bk-where' }, h('summary', {}, L('백업 파일은 어디에 둘까요?', 'Where should I keep the backup file?')),
+    h('ul', {},
+      h('li', {}, h('b', {}, 'iPhone · iPad: '), L('"모든 여행 백업" → 공유 창에서 "파일에 저장" → iCloud Drive 폴더', '"Back up all trips" → "Save to Files" in the share sheet → an iCloud Drive folder')),
+      h('li', {}, h('b', {}, 'Android: '), L('공유 창에서 "Drive" → 구글 드라이브 폴더', '"Drive" in the share sheet → a Google Drive folder')),
+      h('li', {}, h('b', {}, L('컴퓨터: ', 'Computer: ')), L('다운로드된 파일을 iCloud Drive나 구글 드라이브 폴더로 옮기기', 'Move the downloaded file into iCloud Drive or Google Drive')),
+      h('li', {}, h('b', {}, L('새 기기: ', 'New device: ')), L('같은 클라우드에서 파일을 받을 수 있으니 "백업 파일 가져오기"로 열면 끝', 'Open the same file from the cloud with "Import backup"'))),
+    h('p', { class: 'small muted', style: 'margin:6px 0 0' }, L('파일 안에 일정 · 가계부 · 메모 · 사진이 들어 있어요. 다른 사람과 공유하지 마세요.', 'The file holds your plan, spending, notes and photos. Don\'t share it.')));
+}
+// 새 기기(예시 여행만 있는 기기)에서 처음 열 때: 백업 가져오기 안내
+function importHint() {
+  const ts = Object.values(store.trips);
+  if (lsGet(IMPORT_HINT_KEY) || ts.length !== 1 || !ts[0].meta.sample) return null;
+  const off = () => { lsSet(IMPORT_HINT_KEY, '1'); render(); };
+  return h('div', { class: 'import-hint' },
+    h('div', { class: 'grow' }, h('b', {}, L('다른 기기에서 쓰던 여행이 있나요?', 'Used Trip Planner on another device?')),
+      h('div', { class: 'small' }, L('백업 파일(.json)을 가져오면 일정 · 가계부 · 사진이 그대로 옮겨져요. 지금 보이는 건 예시 여행이에요.', 'Import your backup file (.json) to bring over your plan, spending and photos. What you see now is a sample trip.'))),
+    h('div', { class: 'banner-btns' }, btn(L('백업 파일 가져오기', 'Import backup'), () => { lsSet(IMPORT_HINT_KEY, '1'); $('#import-file').click(); }, 'sm primary'), btn(L('괜찮아요', 'No thanks'), off, 'sm ghost')));
 }
 
 /* ============ 테마 미리보기 그림 (174 × 210, 테마와 상관없이 고정 색) ============ */
@@ -2408,6 +2661,7 @@ async function exportTrip() {
   const ok = await deliver(JSON.stringify({ type: 'trip', version: 2, exportedAt: new Date().toISOString(), device: deviceName(), trip, photos }, null, 2),
     'application/json', safeName(trip.meta.title) + L('_백업_', '_backup_') + stamp() + '.json');
   if (!ok) return;
+  markBackup([trip.id]);
   if (Object.keys(store.trips).length === 1) lsSet(BACKUP_KEY, new Date().toISOString());   // 여행이 하나뿐이면 전체 백업과 같음
   closeSheet(); render(); toast(L('백업 파일을 저장했습니다', 'Backup saved'));
 }
@@ -2416,7 +2670,7 @@ async function exportAll() {
   const ok = await deliver(JSON.stringify({ type: 'backup', version: 2, exportedAt: new Date().toISOString(), device: deviceName(), trips: Object.values(store.trips), photos }, null, 2),
     'application/json', L('TripPlanner_전체백업_', 'TripPlanner_backup_all_') + stamp() + '.json');
   if (!ok) return;
-  lsSet(BACKUP_KEY, new Date().toISOString());
+  lsSet(BACKUP_KEY, new Date().toISOString()); markBackup(Object.keys(store.trips));
   closeSheet(); render(); toast(L('전체 백업 파일을 저장했습니다', 'Full backup saved'));
 }
 function exportPDF() {
@@ -2454,7 +2708,7 @@ function reportNode(o) {
     sch.forEach((s, i) => {
       const c = s.c, todos = lines(c.todos);
       rows.push(h('tr', {}, h('td', { class: 'n c-n' }, i + 1), h('td', { class: 'nw c-d' }, s.arr ? mdw(s.arr) + ' – ' + mdw(s.dep) : ''),
-        h('td', { class: 'c-c' }, h('b', {}, c.name || L('(이름 없음)', '(untitled)')), h('br'), h('span', { class: 'r-todo' }, [c.country, c.base].filter(Boolean).join(' · ')),
+        h('td', { class: 'c-c' }, h('b', {}, c.name || L('(이름 없음)', '(untitled)')), h('br'), h('span', { class: 'r-todo' }, [c.country, c.hotel || c.base, c.hotelAddr].filter(Boolean).join(' · ')),
           cityWarnings(c).map(w => h('div', { class: 'r-warn r-todo' }, '⚠ ' + w))),
         h('td', { class: 'n c-k', 'data-u': L('박', ' nights') }, s.n), h('td', { class: 'n c-p' }, fmtBase(num(c.daily))),
         h('td', { class: 'r-todo c-t' }, todos.join(' · '))));
@@ -2480,7 +2734,7 @@ function reportNode(o) {
   }
   if (o.prep) {
     if (trip.bookings.length) r.append(h('h2', {}, L('미리 예약할 것', 'Book ahead')), tbl([['', ''], [L('항목', 'Item')], [L('나라', 'Country')], [L('언제', 'When')], [L('메모', 'Notes')]],
-      trip.bookings.map(b => h('tr', {}, h('td', {}, b.done ? '☑' : '☐'), h('td', {}, b.item), h('td', {}, b.country), h('td', {}, b.when), h('td', { class: 'r-todo' }, b.memo)))));
+      trip.bookings.map(b => h('tr', {}, h('td', {}, b.done ? '☑' : '☐'), h('td', {}, b.item), h('td', {}, b.country), h('td', {}, joinDot(b.due ? L(md(addDays(b.due, 0)) + '까지', 'by ' + md(addDays(b.due, 0))) : '', b.when)), h('td', { class: 'r-todo' }, b.memo)))));
     [['prep', L('준비할 일', 'To do')], ['pack', L('짐', 'Packing')]].forEach(([tab, label]) => {
       const gs = trip.checklists.filter(g => g.tab === tab);
       if (gs.length) r.append(h('h2', {}, label), h('div', { class: 'r-groups' }, gs.map(g => h('div', { class: 'r-group' }, h('h3', {}, g.title),
@@ -2523,6 +2777,7 @@ async function importFiles(input) {
   if (!files.length) return;
   const log = [], bad = [];
   let lastId = null, nPhotos = 0, skipped = 0;
+  const ids = [];
   for (const f of files) {
     try {
       const d = JSON.parse(await f.text());
@@ -2533,7 +2788,7 @@ async function importFiles(input) {
       const map = {};
       const valid = list.map(x => { const old = x && x.id; const n = normalizeTrip(x); if (n) n._old = old; return n; }).filter(Boolean);
       if (!valid.length) throw new Error();
-      valid.forEach(t => { const old = t._old; delete t._old; lastId = addImported(t, log); if (old) map[old] = t.id; });
+      valid.forEach(t => { const old = t._old; delete t._old; lastId = addImported(t, log); ids.push(lastId); if (old) map[old] = t.id; });
       for (const p of (Array.isArray(d.photos) ? d.photos : [])) {
         if (!photoDB) { skipped++; continue; }
         const tid = map[p.trip];
@@ -2542,7 +2797,7 @@ async function importFiles(input) {
       }
     } catch (e) { bad.push(f.name); }
   }
-  if (lastId) switchTrip(lastId);
+  if (lastId) { lsSet(IMPORT_HINT_KEY, '1'); markBackup(ids); switchTrip(lastId); }   // 가져온 여행은 파일과 같으니 '백업됨'으로 둠
   alert((log.length ? log.join('\n') : L('가져온 여행 없음', 'No trips imported'))
     + (nPhotos ? L('\n사진 ' + nPhotos + '장', '\n' + nPhotos + ' photos') : '')
     + (skipped ? L('\n저장하지 못한 사진 ' + skipped + '장', '\nCouldn\'t save ' + skipped + ' photos') : '')
@@ -2559,7 +2814,7 @@ store = loadStore();
 Object.values(store.trips).forEach(t => { t.meta = Object.assign(blankTrip().meta, t.meta); if (!t.meta.rates) t.meta.rates = {}; });
 trip = store.trips[store.current] || Object.values(store.trips)[0];
 store.current = trip.id;
-if (firstRun) save();
+if (firstRun) { save(); markBackup(Object.keys(store.trips)); }   // 처음 연 기기: 예시 여행을 기준으로 둬서, 고치기 전에는 백업 알림 없음
 if (!lsGet(FIRST_KEY)) lsSet(FIRST_KEY, new Date().toISOString());
 render();
 loadPhotos().then(() => { if (PHOTOS.size) render(); });
