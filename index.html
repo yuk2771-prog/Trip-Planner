@@ -2654,8 +2654,20 @@ function briefPayload() {
   [['title', m.title], ['subtitle', m.subtitle], ['startDate', m.startDate], ['skin', m.skin]].forEach(([k, x]) => { if (x) meta[k] = x; });
   return { v: 2, b: 1, m: meta, c: trip.cities.map(c => [c.name || '', c.country || '', num(c.nights)]), r: trip.routes.map(r => [r.from || '', r.to || '', r.mode || '']) };
 }
-async function makeShareLink() {
-  const bytes = new TextEncoder().encode(JSON.stringify(shareOpts.brief ? briefPayload() : sharePayload()));
+async function makeShareLink() { return encodeLink(shareOpts.brief ? briefPayload() : sharePayload()); }
+// 인쇄용 (내가 Safari에서 열어 PDF로 저장할 때): 내보내기 창에서 고른 내용 그대로, 메모 · 가계부 포함 가능
+function printPayload() {
+  const keep = Object.assign({}, shareOpts);
+  Object.assign(shareOpts, { brief: false, budget: true, prep: true, info: true, refs: true });
+  const p = sharePayload(); Object.assign(shareOpts, keep);
+  p.self = 1;
+  p.o = { plan: reportOpts.plan, budget: reportOpts.budget, prep: reportOpts.prep, info: reportOpts.info, notes: reportOpts.notes, ledger: reportOpts.ledger };
+  if (reportOpts.notes && trip.notes) p.t.notes = trip.notes;
+  if (reportOpts.ledger) p.t.ledger = trip.ledger.map(l => ({ date: l.date, city: l.city, cat: l.cat, desc: l.desc, amount: l.amount, orig: l.orig, cur: l.cur, fx: l.fx }));
+  return p;
+}
+async function encodeLink(obj) {
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
   let code;
   try { code = 'z.' + b64u(await pipeBytes(bytes, new CompressionStream('deflate-raw'))); }
   catch (e) { code = 'j.' + b64u(bytes); }   // 압축을 못 하는 브라우저
@@ -2703,7 +2715,7 @@ async function openShared() {
   t.cities.forEach(c => c.id = c.id || uid()); t.routes.forEach(r => r.id = r.id || uid());
   t.checklists.forEach(g => { g.id = uid(); g.items.forEach(it => it.id = uid()); });
   store = { current: t.id, trips: { [t.id]: t } }; trip = t;   // 메모리에만 (저장 안 함)
-  Object.assign(reportOpts, { brief: false }, data.o || {}, { notes: false, ledger: false });
+  Object.assign(reportOpts, { brief: false }, data.o || {}, data.self ? {} : { notes: false, ledger: false });   // 인쇄용 링크만 메모 · 가계부
   applySkin();
   document.title = (t.meta.title || 'Trip') + L(' · 공유받은 일정', ' · shared plan');
   $('.app').style.display = 'none'; $('#fab') && $('#fab').remove();
@@ -2716,9 +2728,10 @@ async function openShared() {
     location.replace(location.pathname);
   };
   const bar = h('div', { class: 'shared-bar' },
-    h('div', { class: 'grow' }, h('b', {}, L('👀 읽기 전용 일정', '👀 Read-only plan')), h('div', { class: 'small' }, L('보낸 사람이 링크를 만든 시점의 내용이에요.', 'A snapshot from when the link was made.'))),
+    data.self ? h('div', { class: 'grow' }, h('b', {}, L('🖨 인쇄용 일정표', '🖨 Printable itinerary')), h('div', { class: 'small' }, L('"인쇄 · PDF" → 인쇄 화면 위쪽 공유 버튼 → "파일에 저장"', '"Print · PDF" → Share button at the top → "Save to Files"')))
+      : h('div', { class: 'grow' }, h('b', {}, L('👀 읽기 전용 일정', '👀 Read-only plan')), h('div', { class: 'small' }, L('보낸 사람이 링크를 만든 시점의 내용이에요.', 'A snapshot from when the link was made.'))),
     h('div', { class: 'banner-btns' }, btn(L('인쇄 · PDF', 'Print · PDF'), printReport, 'sm ghost'),
-      btn(L('내 플래너에 사본 저장', 'Save a copy'), keep, 'sm primary')));
+      data.self ? null : btn(L('내 플래너에 사본 저장', 'Save a copy'), keep, 'sm primary')));
   document.body.prepend(h('div', { class: 'shared' }, bar, reportNode(reportOpts),
     h('p', { class: 'shared-foot' }, h('a', { href: location.pathname }, L('Trip Planner 열기 (내 여행)', 'Open Trip Planner (my trips)')))));
 }
@@ -2934,16 +2947,31 @@ function printReport() {
   }, 1200);
 }
 function printFallback() {
+  // 홈 화면 앱은 인쇄가 안 되고, HTML 파일 공유 창에도 "프린트"가 없음 → Safari에서 열 인쇄용 링크를 복사
+  const linkP = encodeLink(printPayload());
+  const linkBox = h('textarea', { rows: 3, readonly: true, class: 'share-link', hidden: true, 'aria-label': L('인쇄용 링크', 'Print link') });
+  const done = h('div', { hidden: true, class: 'bk-status ok', style: 'margin-top:12px' }, h('b', {}, L('✓ 링크를 복사했어요', '✓ Link copied')),
+    h('span', {}, L('Safari를 열고 주소창을 길게 눌러 "붙여넣고 이동"', 'Open Safari, long-press the address bar, then "Paste and Go"')));
+  const copy = async () => {
+    let ok = false;
+    try {   // 누른 순간에 복사해야 해서(iPhone) Promise째로 넘김
+      if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) { await navigator.clipboard.write([new ClipboardItem({ 'text/plain': linkP.then(u => new Blob([u], { type: 'text/plain' })) })]); ok = true; }
+    } catch (e) {}
+    if (!ok) try { await navigator.clipboard.writeText(await linkP); ok = true; } catch (e) {}
+    done.hidden = !ok; linkBox.hidden = ok;
+    if (!ok) { linkBox.value = await linkP; linkBox.focus(); linkBox.select(); toast(L('링크를 길게 눌러 복사하세요', 'Select the link and copy it')); }
+  };
   openSheet(L('PDF로 저장', 'Save as PDF'), h('div', {},
     h('p', { class: 'hint' }, isStandalone()
-      ? L('홈 화면 앱에서는 iPhone이 인쇄 창을 열어 주지 않아요. 아래 방법 중 하나로 PDF를 만들 수 있어요.', 'iPhone doesn\'t open the print window inside home screen apps. Try one of these instead.')
-      : L('인쇄 창이 열리지 않았어요. 아래 방법으로 PDF를 만들 수 있어요.', 'The print window didn\'t open. Try this instead.')),
+      ? L('홈 화면 앱에서는 iPhone이 인쇄 창을 열어 주지 않아요. Safari에서는 돼요.', 'iPhone doesn\'t allow printing inside home screen apps, but Safari does.')
+      : L('인쇄 창이 열리지 않았어요. Safari에서 열면 PDF로 저장할 수 있어요.', 'The print window didn\'t open. Open it in Safari to save a PDF.')),
     h('ol', { class: 'steps' },
-      h('li', {}, L('아래 ', 'Tap '), h('b', {}, L('일정표 보내기', 'Send itinerary')), L('를 누르면 공유 창이 열려요', ' to open the share sheet')),
-      h('li', {}, h('b', {}, L('프린트', 'Print')), L('를 고르고, 인쇄 화면 위쪽의 ', ', then the '), h('b', {}, L('공유 버튼', 'Share button')), L(' → ', ' at the top → '), h('b', {}, L('파일에 저장', 'Save to Files')), L(' 하면 PDF가 돼요', ' saves a PDF')),
-      h('li', {}, L('공유 창에 프린트가 없으면 ', 'No Print? Choose '), h('b', {}, L('파일에 저장', 'Save to Files')), L(' → 파일 앱에서 열고 공유 → 프린트', ', open it in Files, then Share → Print'))),
-    isStandalone() ? h('p', { class: 'small muted', style: 'margin-top:10px' }, L('또는 Safari에서 이 사이트를 열면 "PDF로 저장"이 바로 돼요. (Safari에는 홈 화면 앱의 여행이 없으니, 읽기 전용 링크로 열면 편해요)', 'Or open this site in Safari, where Save as PDF works directly. (Safari doesn\'t share the home screen app\'s trips, so opening a read-only link there is easiest.)')) : null),
-    [h('span', { class: 'grow' }), btn(L('닫기', 'Close'), closeSheet, 'ghost'), btn(L('일정표 보내기', 'Send itinerary'), () => exportHTML(), 'primary')]);
+      h('li', {}, L('아래 ', 'Tap '), h('b', {}, L('인쇄용 링크 복사', 'Copy print link')), L('를 누르기', '')),
+      h('li', {}, h('b', {}, 'Safari'), L('를 열고 주소창을 길게 눌러 ', ', long-press the address bar, '), h('b', {}, L('붙여넣고 이동', 'Paste and Go'))),
+      h('li', {}, L('일정표가 열리면 ', 'On the itinerary, tap '), h('b', {}, L('인쇄 · PDF', 'Print · PDF')), L(' → 인쇄 화면 위쪽 ', ' → the '), h('b', {}, L('공유 버튼', 'Share button')), L(' → ', ' at the top → '), h('b', {}, L('파일에 저장', 'Save to Files')))),
+    h('p', { class: 'small muted', style: 'margin-top:8px' }, L('링크에는 내보내기 창에서 고른 내용(메모 · 가계부 포함)이 들어가고, 서버에는 올라가지 않아요. 다른 사람에게 보내는 용도가 아니에요.', 'The link holds what you picked in Export (notes and spending too) and never goes to a server. It\'s for you, not for sharing.')),
+    done, linkBox),
+    [h('span', { class: 'grow' }), btn(L('닫기', 'Close'), closeSheet, 'ghost'), btn(L('🔗 인쇄용 링크 복사', '🔗 Copy print link'), copy, 'primary')]);
 }
 async function exportHTML() {
   const node = reportNode(reportOpts);
