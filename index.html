@@ -536,7 +536,8 @@ html[data-skin="doodle"]{font-size:112.5%}
 .ph-stage{position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--gray-bg);touch-action:none;cursor:grab;user-select:none}
 .ph-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
 .ph-stage .grid3{position:absolute;inset:0;background:linear-gradient(90deg,transparent 33.2%,rgba(255,255,255,.55) 33.3%,transparent 33.5%,transparent 66.5%,rgba(255,255,255,.55) 66.6%,transparent 66.8%),linear-gradient(transparent 33.2%,rgba(255,255,255,.55) 33.3%,transparent 33.5%,transparent 66.5%,rgba(255,255,255,.55) 66.6%,transparent 66.8%);pointer-events:none}
-.ph-stage .ph-empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);font-weight:600;padding:20px}
+.ph-stage .ph-empty{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;text-align:center;color:var(--muted);font:inherit;font-weight:600;padding:20px;background:none;border:0;width:100%;cursor:pointer}
+.ph-stage .ph-plus{font-size:44px;line-height:1;color:var(--accent-strong)}
 .ph-thumbs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px}
 .ph-thumb{width:72px;height:72px;flex:none;border-radius:12px;overflow:hidden;position:relative;background:var(--gray-bg)}
 .ph-thumb img{width:100%;height:100%;object-fit:cover;display:block}
@@ -1462,11 +1463,13 @@ async function photosForExport(tripIds) {
   return out;
 }
 
-/* 사진 넣기 창: 사진 찍기 · 앨범에서 고르기 · 위치 맞추기 · 대표 사진 · 삭제 */
+/* 사진 넣기 창: ＋(사진 보관함 · 사진 찍기는 기기가 물어봄) · 위치 맞추기 · 대표 사진 · 삭제 */
 function openPhotos(c, selId) {
   if (!photoDB) { alert(L('이 브라우저에서는 사진을 저장할 수 없어요. (개인정보 보호 모드에서는 안 될 수 있어요)', 'This browser can\'t store photos here. (Private browsing may block it.)')); return; }
   const list = cityPhotos(trip.id, c.id);
   const sel = list.find(p => p.rec.id === selId) || coverOf(c);
+  // 사진 넣기는 ＋ 하나로: iPhone은 누르면 '사진 보관함 / 사진 찍기 / 파일'을 직접 물어봄
+  const pickAlbum = h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true });
   const stage = h('div', { class: 'ph-stage', 'aria-label': L('사진 위치 맞추기', 'Adjust photo position') });
   if (sel) {
     const img = h('img', { src: sel.url, alt: c.name || '' });
@@ -1484,10 +1487,8 @@ function openPhotos(c, selId) {
     });
     const end = () => { if (!drag) return; drag = null; putPhoto(sel.rec).then(render); };
     stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
-  } else stage.append(h('div', { class: 'ph-empty' }, L('아직 사진이 없어요. 아래에서 사진을 넣어 주세요.', 'No photo yet. Add one below.')));
+  } else stage.append(h('button', { type: 'button', class: 'ph-empty', onclick: () => pickAlbum.click() }, h('span', { class: 'ph-plus' }, '＋'), L('눌러서 사진 넣기', 'Tap to add a photo')));
 
-  const pickAlbum = h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true });
-  const pickCam = h('input', { type: 'file', accept: 'image/*', capture: 'environment', hidden: true });
   const onFiles = async input => {
     const files = [...input.files]; input.value = '';
     if (!files.length) return;
@@ -1504,7 +1505,6 @@ function openPhotos(c, selId) {
     if (lastId) { save(); render(); openPhotos(c, lastId); toast(L('사진을 저장했습니다', 'Photo saved')); }
   };
   pickAlbum.addEventListener('change', () => onFiles(pickAlbum));
-  pickCam.addEventListener('change', () => onFiles(pickCam));
 
   const cover = coverOf(c);
   const thumbs = h('div', { class: 'ph-thumbs' },
@@ -1517,7 +1517,6 @@ function openPhotos(c, selId) {
     sel ? h('p', { class: 'hint', style: 'text-align:center;margin:8px 0 12px' }, L('끌어서 보이는 부분을 맞추세요', 'Drag to choose what shows')) : null,
     h('div', { style: 'display:flex;justify-content:space-between;align-items:baseline;margin:6px 0' }, h('b', {}, L('이 도시 사진 ', 'Photos here ') + list.length), h('span', { class: 'muted small' }, L('📱 이 기기에 저장', '📱 Saved on this device'))),
     thumbs,
-    h('div', { class: 'btn-grid', style: 'margin-top:14px' }, btn(L('📷 사진 찍기', '📷 Take photo'), () => pickCam.click()), btn(L('🖼️ 앨범에서 고르기', '🖼️ Choose photos'), () => pickAlbum.click())),
     sel ? h('div', { class: 'btn-grid', style: 'margin-top:8px' },
       cover && sel.rec.id === cover.rec.id ? h('span', { class: 'btn ghost', style: 'cursor:default' }, L('★ 대표 사진', '★ Cover photo'))
         : btn(L('대표 사진으로', 'Make cover'), () => { c.cover = sel.rec.id; save(); render(); openPhotos(c, sel.rec.id); }, 'ghost'),
@@ -1528,7 +1527,7 @@ function openPhotos(c, selId) {
         save(); render(); openPhotos(c);
       }, 'danger')) : null,
     h('p', { class: 'hint', style: 'text-align:center;margin:14px 0 0' }, L('사진은 작게 줄여서 이 기기에만 저장돼요. 백업 파일에 함께 넣을 수 있어요.', 'Photos are shrunk and kept on this device. You can include them in backups.')),
-    pickAlbum, pickCam);
+    pickAlbum);
   openSheet((c.name || L('도시', 'City')) + L(' · 사진', ' · Photos'), body, [
     btn(L('도시 편집', 'Edit city'), () => editCity(c), 'ghost'), h('span', { class: 'grow' }), btn(L('완료', 'Done'), closeSheet, 'primary')]);
 }
