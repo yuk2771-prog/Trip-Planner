@@ -2617,7 +2617,7 @@ function cityThumb(c, cls) {
 
 /* ============ 3일차 ⑪ 동행에게 읽기 전용 공유 (링크 안에 일정을 담음) ============ */
 // 링크의 # 뒤(서버로 안 감)에 일정만 압축해서 넣음. 가계부 · 메모 · 사진은 넣지 않음
-const shareOpts = { budget: true, prep: true, info: true, refs: false };
+const shareOpts = { brief: false, budget: true, prep: true, info: true, refs: false };
 const SHARE_RE = /^#s=([zj])\.([A-Za-z0-9_-]+)$/;
 const b64u = bytes => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
 const unb64u = s => { const b = atob(s.replace(/-/g, '+').replace(/_/g, '/')); const u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
@@ -2639,14 +2639,21 @@ function sharePayload() {
   const strip = x => Array.isArray(x) ? x.map(strip) : x && typeof x === 'object' ? Object.fromEntries(Object.entries(x).filter(([, v]) => v !== '' && v != null && v !== false).map(([k, v]) => [k, strip(v)])) : x;
   return { v: 1, o: { plan: true, budget: o.budget, prep: o.prep, info: o.info }, t: strip(t) };
 }
+// 간단히: 제목 · 출발일 · 도시(나라 · 박 수) · 이동 수단만, 배열로 담아 링크를 짧게 (34개 도시 약 1,100자)
+function briefPayload() {
+  const m = trip.meta, meta = {};
+  [['title', m.title], ['subtitle', m.subtitle], ['startDate', m.startDate], ['skin', m.skin]].forEach(([k, x]) => { if (x) meta[k] = x; });
+  return { v: 2, b: 1, m: meta, c: trip.cities.map(c => [c.name || '', c.country || '', num(c.nights)]), r: trip.routes.map(r => [r.from || '', r.to || '', r.mode || '']) };
+}
 async function makeShareLink() {
-  const bytes = new TextEncoder().encode(JSON.stringify(sharePayload()));
+  const bytes = new TextEncoder().encode(JSON.stringify(shareOpts.brief ? briefPayload() : sharePayload()));
   let code;
   try { code = 'z.' + b64u(await pipeBytes(bytes, new CompressionStream('deflate-raw'))); }
   catch (e) { code = 'j.' + b64u(bytes); }   // 압축을 못 하는 브라우저
   return location.origin + location.pathname + '#s=' + code;
 }
 function openShare() {
+  const optBox = h('div', {});
   const opt = (k, l) => { const cb = h('input', { type: 'checkbox' }); cb.checked = shareOpts[k]; cb.addEventListener('change', () => { shareOpts[k] = cb.checked; out.hidden = true; }); return h('label', { class: 'fld-check' }, cb, h('span', {}, l)); };
   const linkBox = h('textarea', { rows: 3, readonly: true, class: 'share-link', 'aria-label': L('공유 링크', 'Share link') });
   const note = h('p', { class: 'small muted', style: 'margin:6px 0 0' });
@@ -2654,7 +2661,7 @@ function openShare() {
   const go2 = async () => {
     const url = await makeShareLink();
     linkBox.value = url; out.hidden = false;
-    note.textContent = L('링크 길이 ' + url.length.toLocaleString() + '자', url.length.toLocaleString() + ' characters') + (url.length > 8000 ? L(' · 길어서 일부 메신저에서 잘릴 수 있어요. 그럴 땐 아래 "HTML 파일로 저장"으로 보내세요.', ' · Long links may get cut in some chat apps. If so, send the HTML file instead.') : '');
+    note.textContent = L('링크 길이 ' + url.length.toLocaleString() + '자', url.length.toLocaleString() + ' characters') + (url.length > 4000 ? L(' · 길어서 일부 메신저에서 잘릴 수 있어요. "간단히"를 고르거나 내보내기의 "HTML 파일로 저장"으로 보내세요.', ' · Long links may get cut in some chat apps. Pick Brief, or send the HTML file from Export.') : '');
     if (isTouch && navigator.share) {
       try { await navigator.share({ title: trip.meta.title || 'Trip', url }); toast(L('공유했어요', 'Shared')); return; } catch (e) { if (e && e.name === 'AbortError') return; }
     }
@@ -2663,7 +2670,10 @@ function openShare() {
   };
   openSheet(L('동행에게 공유', 'Share with companions'), h('div', {},
     h('p', { class: 'hint' }, L('링크를 받은 사람은 앱 없이 일정 · 이동 · 준비물을 볼 수 있고, 고칠 수는 없어요. 지금 내용 그대로 링크에 담기니, 일정을 바꾸면 링크를 다시 보내 주세요.', 'People with the link can see the plan, transfers and packing list without the app, but can\'t edit. The link holds a snapshot, so send a new one after changes.')),
-    h('div', { class: 'opt-grid' }, opt('budget', L('예산 · 비용', 'Budget · costs')), opt('prep', L('예약 · 할 일 · 짐', 'Bookings · to do · packing')), opt('info', L('나라별 정보', 'Country info')), opt('refs', L('숙소 예약번호 · 링크', 'Stay booking refs · links'))),
+    pillSeg([['full', L('자세히', 'Full')], ['brief', L('간단히', 'Brief')]], shareOpts.brief ? 'brief' : 'full', x => { shareOpts.brief = x === 'brief'; openShare(); }, L('담을 내용', 'What to include')),
+    h('p', { class: 'small muted', style: 'margin:6px 0 10px' }, shareOpts.brief ? L('도시 · 날짜 · 박 수 · 이동 수단만 담아요. 링크가 훨씬 짧아요.', 'Only cities, dates, nights and how you travel. Much shorter link.')
+      : L('일정 · 이동에 아래에서 고른 내용을 더 담아요.', 'Plan and transfers, plus what you pick below.')),
+    shareOpts.brief ? null : h('div', { class: 'opt-grid' }, opt('budget', L('예산 · 비용', 'Budget · costs')), opt('prep', L('예약 · 할 일 · 짐', 'Bookings · to do · packing')), opt('info', L('나라별 정보', 'Country info')), opt('refs', L('숙소 예약번호 · 링크', 'Stay booking refs · links'))),
     h('p', { class: 'small muted', style: 'margin:10px 0 0' }, L('🔒 가계부 · 메모 · 사진은 넣지 않아요. 링크 내용은 서버에 올라가지 않고 링크 안에만 있어요.', '🔒 Spending, notes and photos are never included. The plan lives only inside the link, not on a server.')),
     out), [h('span', { class: 'grow' }), btn(L('닫기', 'Close'), closeSheet, 'ghost'), btn(L('🔗 링크 만들기', '🔗 Make link'), go2, 'primary')]);
 }
@@ -2676,12 +2686,15 @@ async function openShared() {
     const raw = mm[1] === 'z' ? await pipeBytes(bytes, new DecompressionStream('deflate-raw')) : bytes;
     data = JSON.parse(new TextDecoder().decode(raw));
   } catch (e) { data = null; }
+  if (data && data.b && Array.isArray(data.c)) data = { o: { plan: true, budget: false, prep: false, info: false, brief: true }, t: { meta: data.m || {},
+    cities: data.c.map(([name, country, nights]) => ({ name, country, nights })), routes: (data.r || []).map(([from, to, mode]) => ({ from, to, mode })),
+    costs: [], bookings: [], checklists: [], countries: [] } };
   const t = data && normalizeTrip(data.t);
   if (!t) { alert(L('공유 링크를 읽지 못했어요. 링크가 잘렸을 수 있어요.', 'Couldn\'t read this share link. It may have been cut off.')); history.replaceState(null, '', location.pathname); boot(); return; }
   t.cities.forEach(c => c.id = c.id || uid()); t.routes.forEach(r => r.id = r.id || uid());
   t.checklists.forEach(g => { g.id = uid(); g.items.forEach(it => it.id = uid()); });
   store = { current: t.id, trips: { [t.id]: t } }; trip = t;   // 메모리에만 (저장 안 함)
-  Object.assign(reportOpts, data.o || {}, { notes: false, ledger: false });
+  Object.assign(reportOpts, { brief: false }, data.o || {}, { notes: false, ledger: false });
   applySkin();
   document.title = (t.meta.title || 'Trip') + L(' · 공유받은 일정', ' · shared plan');
   $('.app').style.display = 'none'; $('#fab') && $('#fab').remove();
@@ -2916,7 +2929,7 @@ function reportNode(o) {
   const r = h('article', { class: 'report', lang });
   r.append(h('header', {}, h('h1', {}, m.title || L('여행', 'Trip')), m.subtitle ? h('p', { class: 'r-sub' }, m.subtitle) : null,
     h('p', { class: 'r-meta' }, [start ? ymd(start) + ' – ' + ymd(end) : L('출발일 미정', 'No start date'), nightsL(t.nights), L(trip.cities.length + '개 도시', trip.cities.length + ' cities'), L(t.countries.length + '개국', t.countries.length + ' countries')].join(' · '))));
-  r.append(h('div', { class: 'r-kpis' }, [[L('총 예산', 'Total budget'), fmtBase(t.grand), homeOr(t.grand * fx)], [L('하루 평균', 'Per day'), t.nights ? fmtBase(t.grand / t.nights) : '-', ''],
+  if (!o.brief) r.append(h('div', { class: 'r-kpis' }, [[L('총 예산', 'Total budget'), fmtBase(t.grand), homeOr(t.grand * fx)], [L('하루 평균', 'Per day'), t.nights ? fmtBase(t.grand / t.nights) : '-', ''],
     [L('체류비', 'Stays'), fmtBase(t.ground), ''], [L('이동비', 'Transfers'), fmtBase(t.transport), ''], [L('기타 고정비', 'Fixed costs'), fmtBase(t.fixed), '']].map(([l, v, s]) =>
     h('div', { class: 'r-kpi' }, h('div', { class: 'l' }, l), h('div', { class: 'v' }, v), s ? h('div', { class: 's' }, s) : null))));
 
@@ -2927,13 +2940,13 @@ function reportNode(o) {
       const c = s.c, todos = lines(c.todos);
       rows.push(h('tr', {}, h('td', { class: 'n c-n' }, i + 1), h('td', { class: 'nw c-d' }, s.arr ? mdw(s.arr) + ' – ' + mdw(s.dep) : ''),
         h('td', { class: 'c-c' }, h('b', {}, c.name || L('(이름 없음)', '(untitled)')), h('br'), h('span', { class: 'r-todo' }, [c.country, c.hotel || c.base, c.hotelAddr].filter(Boolean).join(' · ')),
-          cityWarnings(c).map(w => h('div', { class: 'r-warn r-todo' }, '⚠ ' + w))),
-        h('td', { class: 'n c-k', 'data-u': L('박', ' nights') }, s.n), h('td', { class: 'n c-p' }, fmtBase(num(c.daily))),
+          o.brief ? null : cityWarnings(c).map(w => h('div', { class: 'r-warn r-todo' }, '⚠ ' + w))),
+        h('td', { class: 'n c-k', 'data-u': L('박', ' nights') }, s.n), h('td', { class: 'n c-p' }, o.brief ? '' : fmtBase(num(c.daily))),
         h('td', { class: 'r-todo c-t' }, todos.join(' · '))));
       const rt = between[i];
       if (rt) rows.push(h('tr', { class: 'leg' + (routeWarning(rt) ? ' w' : '') }, h('td', { colspan: 6 }, '↓ ' + modeText(rt.mode) + (routeText(rt) ? ' · ' + routeText(rt) : '') + (routeWarning(rt) ? '  ⚠ ' + routeWarning(rt) : ''))));
     });
-    r.append(h('h2', {}, L('일정', 'Itinerary')), tbl([['#', 'n'], [L('날짜', 'Dates')], [L('도시', 'City')], [L('박', 'Nights'), 'n'], [L('하루', 'Per day'), 'n'], [L('할 일 · 갈 곳', 'To do · places')]], rows, null, 'r-plan'));
+    r.append(h('h2', {}, L('일정', 'Itinerary')), tbl([['#', 'n'], [L('날짜', 'Dates')], [L('도시', 'City')], [L('박', 'Nights'), 'n'], [o.brief ? '' : L('하루', 'Per day'), 'n'], [o.brief ? '' : L('할 일 · 갈 곳', 'To do · places')]], rows, null, 'r-plan'));
     if (loose.length) r.append(h('h3', {}, L('기타 이동', 'Other transfers')), tbl([[L('구간', 'Route')], [L('수단', 'How')], [L('메모 · 시간 · 비용', 'Notes · time · cost')]],
       loose.map(x => h('tr', {}, h('td', {}, (x.from || '?') + ' → ' + (x.to || '?')), h('td', { class: 'nw' }, modeText(x.mode)), h('td', {}, routeText(x))))));
   }
