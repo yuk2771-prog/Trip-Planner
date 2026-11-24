@@ -608,7 +608,13 @@ body.dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .per-row .pick{font-size:.85rem}
 .lf-dates{margin:0}
 .lf-dates .fld{margin:0;min-width:0}
-.lf-dates input{min-width:0;width:100%;box-sizing:border-box}
+.lf-more summary{cursor:pointer;color:var(--accent-strong);font-weight:700;font-size:.9rem}
+.lf-more .lf-dates{margin-top:8px}
+.lf-foot{justify-content:flex-start}
+/* iPhone Safari: 날짜 칸이 칸 밖으로 넘치고, 비어 있으면 높이가 줄어드는 문제 */
+input[type=date]{-webkit-appearance:none;appearance:none;display:block;width:100%;max-width:100%;min-width:0;min-height:calc(1.5em + 22px);text-align:left}
+input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
+.form-row > *{min-width:0}
 .lf-foot{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .lf-sum{font-size:.9rem;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
 .stop-card{position:relative}
@@ -2583,8 +2589,11 @@ function ledgerList(v) {
   to.addEventListener('input', () => { ledgerF.to = to.value; drawPers(); draw(); });
   drawCats(); drawPers(); draw();
   v.append(h('div', { class: 'ledger-filter' }, q, perRow,
-    h('div', { class: 'form-row lf-dates' }, h('label', { class: 'fld' }, h('span', {}, L('부터', 'From')), from), h('label', { class: 'fld' }, h('span', {}, L('까지', 'To')), to)),
-    h('div', { class: 'lf-foot' }, sum, csvBtn)), box);
+    // 날짜 직접 고르기는 접어 둠 (iPhone에서 빈 날짜 칸이 비어 보여서)
+    h('details', { class: 'lf-more', open: (ledgerF.from || ledgerF.to) && !pers.some(([k]) => { const [a, b] = periodRange(k); return a === ledgerF.from && b === ledgerF.to; }) },
+      h('summary', {}, L('📅 날짜 직접 고르기', '📅 Pick dates')),
+      h('div', { class: 'form-row lf-dates' }, h('label', { class: 'fld' }, h('span', {}, L('부터', 'From')), from), h('label', { class: 'fld' }, h('span', {}, L('까지', 'To')), to))),
+    h('div', { class: 'lf-foot' }, csvBtn, sum)), box);
 }
 // 엑셀 · 구글 시트용 CSV (UTF-8 BOM으로 한글 안 깨짐)
 function exportCSV(list) {
