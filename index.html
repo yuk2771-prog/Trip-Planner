@@ -2717,7 +2717,7 @@ async function openShared() {
   };
   const bar = h('div', { class: 'shared-bar' },
     h('div', { class: 'grow' }, h('b', {}, L('👀 읽기 전용 일정', '👀 Read-only plan')), h('div', { class: 'small' }, L('보낸 사람이 링크를 만든 시점의 내용이에요.', 'A snapshot from when the link was made.'))),
-    h('div', { class: 'banner-btns' }, btn(L('인쇄 · PDF', 'Print · PDF'), () => { buildReport(); setTimeout(() => print(), 150); }, 'sm ghost'),
+    h('div', { class: 'banner-btns' }, btn(L('인쇄 · PDF', 'Print · PDF'), printReport, 'sm ghost'),
       btn(L('내 플래너에 사본 저장', 'Save a copy'), keep, 'sm primary')));
   document.body.prepend(h('div', { class: 'shared' }, bar, reportNode(reportOpts),
     h('p', { class: 'shared-foot' }, h('a', { href: location.pathname }, L('Trip Planner 열기 (내 여행)', 'Open Trip Planner (my trips)')))));
@@ -2877,7 +2877,7 @@ function openExport() {
       big('🔗', L('읽기 전용 링크 만들기', 'Make a read-only link'), L('메신저로 보내면 받은 사람이 일정 · 이동 · 준비물을 봐요', 'Send it in a chat; they see the plan, transfers and packing'), openShare)),
     h('div', { class: 'sheet-sec' }, h('h4', {}, L('문서로 저장', 'Save as a document')), h('p', { class: 'muted small' }, L('보기 좋게 정리된 일정표. 다른 사람에게 보내거나 출력할 때 쓰세요.', 'A tidy itinerary to share or print.')),
       checks,
-      big('📄', L('PDF로 저장', 'Save as PDF'), L('인쇄 창이 열리면 "PDF로 저장"을 고르세요 (iPhone은 공유 버튼 → 파일에 저장)', 'Choose "Save as PDF" in the print window (iPhone: Share → Save to Files)'), exportPDF),
+      big('📄', L('PDF로 저장', 'Save as PDF'), isIOS ? L('인쇄 창 위쪽의 공유 버튼 → "파일에 저장"', 'In the print window: Share button at the top → Save to Files') : L('인쇄 창이 열리면 "PDF로 저장"을 고르세요', 'Choose "Save as PDF" in the print window'), exportPDF),
       big('🌐', L('HTML 파일로 저장', 'Save as HTML'), L('아무 브라우저에서나 열리는 읽기 전용 웹 문서', 'A read-only page that opens in any browser'), exportHTML)),
     h('div', { class: 'sheet-sec' }, h('h4', {}, L('백업 · 다른 기기로 옮기기', 'Backup · move to another device')), h('p', { class: 'muted small' }, L('이 앱의 "가져오기"로 다시 불러오는 데이터 파일(.json)입니다. 문서로 보는 용도가 아니에요.', 'A data file (.json) to load back with Import. Not for reading.')),
       photoOpt,
@@ -2915,8 +2915,35 @@ async function exportAll() {
 }
 function exportPDF() {
   closeSheet();
+  printReport();
+}
+// 인쇄 창은 누른 순간 바로 열어야 함 (iPhone은 조금 뒤에 열면 막음).
+// iPhone 홈 화면 앱처럼 인쇄 창이 아예 안 열리면 다른 방법을 안내
+function printReport() {
   buildReport();
-  setTimeout(() => window.print(), 150);
+  let opened = false;
+  const on = () => { opened = true; };
+  const mq = matchMedia('print'), onMq = e => { if (e.matches) opened = true; };
+  addEventListener('beforeprint', on);
+  if (mq.addEventListener) mq.addEventListener('change', onMq);
+  try { window.print(); } catch (e) {}
+  setTimeout(() => {
+    removeEventListener('beforeprint', on);
+    if (mq.removeEventListener) mq.removeEventListener('change', onMq);
+    if (!opened) printFallback();
+  }, 1200);
+}
+function printFallback() {
+  openSheet(L('PDF로 저장', 'Save as PDF'), h('div', {},
+    h('p', { class: 'hint' }, isStandalone()
+      ? L('홈 화면 앱에서는 iPhone이 인쇄 창을 열어 주지 않아요. 아래 방법 중 하나로 PDF를 만들 수 있어요.', 'iPhone doesn\'t open the print window inside home screen apps. Try one of these instead.')
+      : L('인쇄 창이 열리지 않았어요. 아래 방법으로 PDF를 만들 수 있어요.', 'The print window didn\'t open. Try this instead.')),
+    h('ol', { class: 'steps' },
+      h('li', {}, L('아래 ', 'Tap '), h('b', {}, L('일정표 보내기', 'Send itinerary')), L('를 누르면 공유 창이 열려요', ' to open the share sheet')),
+      h('li', {}, h('b', {}, L('프린트', 'Print')), L('를 고르고, 인쇄 화면 위쪽의 ', ', then the '), h('b', {}, L('공유 버튼', 'Share button')), L(' → ', ' at the top → '), h('b', {}, L('파일에 저장', 'Save to Files')), L(' 하면 PDF가 돼요', ' saves a PDF')),
+      h('li', {}, L('공유 창에 프린트가 없으면 ', 'No Print? Choose '), h('b', {}, L('파일에 저장', 'Save to Files')), L(' → 파일 앱에서 열고 공유 → 프린트', ', open it in Files, then Share → Print'))),
+    isStandalone() ? h('p', { class: 'small muted', style: 'margin-top:10px' }, L('또는 Safari에서 이 사이트를 열면 "PDF로 저장"이 바로 돼요. (Safari에는 홈 화면 앱의 여행이 없으니, 읽기 전용 링크로 열면 편해요)', 'Or open this site in Safari, where Save as PDF works directly. (Safari doesn\'t share the home screen app\'s trips, so opening a read-only link there is easiest.)')) : null),
+    [h('span', { class: 'grow' }), btn(L('닫기', 'Close'), closeSheet, 'ghost'), btn(L('일정표 보내기', 'Send itinerary'), () => exportHTML(), 'primary')]);
 }
 async function exportHTML() {
   const node = reportNode(reportOpts);
