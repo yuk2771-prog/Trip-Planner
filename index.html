@@ -584,7 +584,9 @@ html[data-skin="doodle"]{font-size:112.5%}
 .drop-line{position:fixed;z-index:999;height:4px;border-radius:4px;background:var(--accent-strong);pointer-events:none;box-shadow:0 0 0 3px var(--accent-soft)}
 body.dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .banner .bn-ic{font-size:1.5rem;line-height:1}
-.banner .bn-ic + .grow{min-width:0}
+.banner .bn-ic + .grow{flex:1 1 200px;min-width:0}
+.banner .banner-btns{margin-left:auto}
+@media (max-width:520px){.banner{align-items:flex-start}.banner .banner-btns{width:100%;justify-content:flex-end}}
 .bn-ch{font-weight:700;font-size:.9rem;margin:2px 0}
 .bk-status{border-radius:12px;padding:10px 12px;margin-bottom:12px;display:flex;flex-direction:column;gap:2px;font-size:.9rem}
 .bk-status span{color:var(--muted)}
@@ -596,6 +598,34 @@ body.dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .bk-where ul{margin:8px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
 .import-hint{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:16px;padding:12px 14px;margin:4px 0 12px}
 .import-hint .grow{min-width:200px}
+
+/* ===== 3일차: 가계부 검색 · 도시 사진 · 공유 ===== */
+.cat-filter .chip{cursor:pointer;border:1.5px solid transparent;font:inherit}
+.cat-filter .chip.on{border-color:var(--accent-strong);background:var(--accent-soft);font-weight:800}
+.ledger-filter{background:var(--surface);border:var(--card-border);border-radius:16px;padding:12px;margin-bottom:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+.ledger-filter input[type=search]{width:100%}
+.per-row{display:flex;gap:6px;flex-wrap:wrap}
+.per-row .pick{font-size:.85rem}
+.lf-dates{margin:0}
+.lf-dates .fld{margin:0;min-width:0}
+.lf-dates input{min-width:0;width:100%;box-sizing:border-box}
+.lf-foot{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.lf-sum{font-size:.9rem;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.stop-card{position:relative}
+.stop-card.has-ph .stop-top{padding-right:64px}
+.stop-ph{position:absolute;top:10px;right:10px;width:56px;height:56px;border-radius:12px;overflow:hidden;padding:0;border:0;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);background:var(--line)}
+.stop-ph img,.orb-ph img{width:100%;height:100%;object-fit:cover;display:block}
+.today .orb.orb-ph{padding:0;border:4px solid rgba(255,255,255,.85);overflow:hidden;cursor:pointer;background:none;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.share-link{width:100%;font:12px/1.4 ui-monospace,Menlo,monospace;word-break:break-all;resize:none}
+.shared{min-height:100vh;background:#f4f3f7;padding-bottom:30px}
+.shared-bar{position:sticky;top:0;z-index:5;display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#fff;border-bottom:1px solid #e3e0ea;padding:10px max(16px,env(safe-area-inset-left));color:#26222f}
+.shared-bar .grow{min-width:180px}
+.shared-bar .small{color:#6b6580}
+.shared .report{margin:16px auto;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.06)}
+.shared-foot{text-align:center;font-size:.9rem}
+.shared-foot a{color:#4a42a8}
+@media (max-width:640px){.shared .report{margin:0;border-radius:0}}
+@media print{.shared{display:none!important}}
 </style>
 <style id="report-css">
 .report{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI","Malgun Gothic",Roboto,sans-serif;color:#26222f;background:#fff;max-width:920px;margin:0 auto;padding:36px 28px;font-size:13px;line-height:1.55;word-break:keep-all}
@@ -1063,7 +1093,7 @@ function control(f, d) {
   return { wrap: h('label', { class: 'fld' + full }, h('span', {}, f.label), input, dl, f.hint ? h('small', {}, f.hint) : null), input };
 }
 /* 항목 하나를 편집하는 창. 저장을 눌러야 반영되고, 취소하면 그대로 */
-function editForm({ title, obj, fields, list, isNew, order = true, onDelete, deleteMsg, after, extra }) {
+function editForm({ title, obj, fields, list, isNew, order = true, onDelete, deleteMsg, after, extra, tools }) {
   const d = JSON.parse(JSON.stringify(obj));
   const form = h('div', { class: 'form' });
   let first = null;
@@ -1096,6 +1126,7 @@ function editForm({ title, obj, fields, list, isNew, order = true, onDelete, del
       const s = snap();   // 확인 창 대신 되돌리기
       onDelete(); save(); closeSheet(); render(); undoToast(L('삭제했습니다', 'Deleted'), s);
     } }, icon('trash'), L('삭제', 'Delete')) : null,
+    tools || null,
     h('span', { class: 'grow' }),
     btn(L('취소', 'Cancel'), closeSheet, 'ghost'),
     btn(isNew ? L('추가', 'Add') : L('저장', 'Save'), doSave, 'primary')
@@ -1122,6 +1153,7 @@ function editCity(c) {
       { key: 'todos', label: L('할 일 · 갈 곳 (한 줄에 하나)', 'To do · places (one per line)'), type: 'textarea', full: true },
       { key: 'trek', label: L('트레킹 거점 (오래 머물러도 경고 안 함)', 'Trekking base (no warning for long stays)'), type: 'checkbox', full: true }
     ],
+    tools: isNew ? null : btn('📷 ' + L('사진', 'Photos') + (cityPhotos(trip.id, obj.id).length ? ' ' + cityPhotos(trip.id, obj.id).length : ''), () => openPhotos(obj), 'ghost'),
     onDelete: () => { trip.cities.splice(trip.cities.indexOf(obj), 1); const tid = trip.id; laterDelete(() => deleteCityPhotos(tid, obj.id)); },
     deleteMsg: L('"' + (obj.name || '도시') + '"를 일정에서 삭제할까요?', 'Remove "' + (obj.name || 'this city') + '" from the trip?') });
 }
@@ -1595,7 +1627,7 @@ function todayHero(v) {
     i < sch.length - 1 ? h('button', { type: 'button', class: 'nav-c next', 'aria-label': L('다음 도시', 'Next city'), onclick: () => { heroPick = i + 1; render(); } }, '›') : null,
     h('div', { class: 'where' }, '📍 ' + (c.name || L('(이름 없음)', '(untitled)'))),
     h('div', { class: 'where-sub' }, [ctry ? flagOf(ctry) + ' ' + ctry : '', s.arr ? md(s.arr) + ' – ' + md(s.dep) : ''].filter(Boolean).join(' · ')),
-    h('div', { class: 'orb', 'aria-hidden': 'true' }, flagOf(ctry)),
+    cityThumb(c, 'orb orb-ph') || h('div', { class: 'orb', 'aria-hidden': 'true' }, flagOf(ctry)),
     h('div', {}, h('span', { class: 'bubble' }, bubble)),
     st.state === 'nodate' && auto ? h('div', { style: 'margin-top:10px' }, h('button', { type: 'button', class: 'btn sm', style: 'background:#fff;color:#111', onclick: editStart }, L('출발일 정하기', 'Set start date')))
       : h('div', { class: 'dd' }, dd),
@@ -1741,7 +1773,9 @@ function editStart() {
 }
 function stopEl(s, i, last) {
   const c = s.c, d = num(c.daily), tier = tierOf(d), alt = num(c.alt), todos = lines(c.todos);
-  const card = clickable(h('div', { class: 'stop-card', 'aria-label': (c.name || L('도시', 'City')) + L(' 편집', ' — edit') },
+  const thumb = cityThumb(c);
+  const card = clickable(h('div', { class: 'stop-card' + (thumb ? ' has-ph' : ''), 'aria-label': (c.name || L('도시', 'City')) + L(' 편집', ' — edit') },
+    thumb,
     h('div', { class: 'stop-top' }, h('h4', {}, c.name || L('(이름 없음)', '(untitled)')), s.arr ? h('span', { class: 'stop-when' }, mdw(s.arr) + ' – ' + mdw(s.dep)) : null),
     h('div', { class: 'chips' },
       s.now ? h('span', { class: 'chip now' }, L('지금 여기', 'You are here')) : null,
@@ -1965,32 +1999,7 @@ function viewLedger(v) {
     rateBox,
     h('button', { type: 'button', class: 'btn primary block', onclick: add }, L('기록하기', 'Save'))));
 
-  // 분류별 합계
-  const byCat = {};
-  trip.ledger.forEach(l => byCat[l.cat] = (byCat[l.cat] || 0) + num(l.amount));
-  if (Object.keys(byCat).length) v.append(h('div', { class: 'chips', style: 'margin:4px 0 6px' },
-    Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([k, x]) => h('span', { class: 'chip' }, (CAT_ICON[k] || '') + ' ' + catName(k) + ' ' + fmtBase(x)))));
-
-  // 날짜별 목록
-  v.append(h('div', { class: 'page-title' }, h('h2', {}, L('기록', 'Entries')), h('span', { class: 'muted small' }, L(trip.ledger.length + '건', String(trip.ledger.length)))));
-  if (!trip.ledger.length) { v.append(h('div', { class: 'card' }, emptyState(L('아직 기록이 없어요', 'Nothing logged yet'), L('위에서 금액을 넣고 기록하기를 누르세요. 현지 통화로 넣으면 자동으로 환산됩니다.', 'Enter an amount above and tap Save. Local currency converts automatically.')))); return; }
-  const days = {}, noDate = L('날짜 없음', 'No date');
-  trip.ledger.map((l, i) => ({ l, i })).sort((a, b) => (b.l.date || '').localeCompare(a.l.date || '') || b.i - a.i)
-    .forEach(({ l }) => (days[l.date || noDate] = days[l.date || noDate] || []).push(l));
-  const card = h('div', { class: 'card', style: 'padding-top:4px' });
-  Object.entries(days).forEach(([d, list]) => {
-    const dt = addDays(d, 0);
-    card.append(h('div', { class: 'day-head' }, h('span', {}, dt ? (lang === 'en' ? dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' }) : ymd(dt) + ' ' + WDL(dt) + '요일') : d), h('span', {}, fmtBase(list.reduce((a, l) => a + num(l.amount), 0)))));
-    card.append(h('div', { class: 'rows' }, list.map(l => {
-      const local = l.cur && l.cur !== base;
-      return h('button', { type: 'button', class: 'row', onclick: () => editEntry(l) },
-        h('span', { class: 'cat-ic' }, CAT_ICON[l.cat] || '🧾'),
-        h('div', { class: 'grow' }, h('div', { class: 'row-t' }, l.desc || catName(l.cat)), h('div', { class: 'muted small' }, [catName(l.cat), l.city && l.city !== '-' ? l.city : ''].filter(Boolean).join(' · '))),
-        h('div', { class: 'amt' }, local ? fmtCur(num(l.orig), l.cur) : fmtExact(num(l.amount)),
-          joinDot(local ? fmtExact(num(l.amount)) : '', homeOr(num(l.amount) * (num(l.fx) || fx))) ? h('small', {}, joinDot(local ? fmtExact(num(l.amount)) : '', homeOr(num(l.amount) * (num(l.fx) || fx)))) : null));
-    })));
-  });
-  v.append(card);
+  ledgerList(v);   // 분류 · 검색 · 기간 · CSV · 날짜별 목록 (p7d)
 }
 
 /* --- 준비 --- */
@@ -2485,6 +2494,213 @@ function importHint() {
     h('div', { class: 'banner-btns' }, btn(L('백업 파일 가져오기', 'Import backup'), () => { lsSet(IMPORT_HINT_KEY, '1'); $('#import-file').click(); }, 'sm primary'), btn(L('괜찮아요', 'No thanks'), off, 'sm ghost')));
 }
 
+/* ============ 3일차 ⑨ 가계부 검색 · 기간 · CSV ============ */
+let ledgerF = { tripId: null, q: '', from: '', to: '', cat: '' };
+const foldText = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');   // "café" → "cafe"
+function ledgerFilterOn() { return !!(ledgerF.q.trim() || ledgerF.from || ledgerF.to || ledgerF.cat); }
+function filteredLedger() {
+  if (ledgerF.tripId !== trip.id) ledgerF = { tripId: trip.id, q: '', from: '', to: '', cat: '' };
+  const terms = foldText(ledgerF.q).split(/\s+/).filter(Boolean);
+  return trip.ledger.filter(l => {
+    if (ledgerF.cat && l.cat !== ledgerF.cat) return false;
+    if (ledgerF.from && (l.date || '') < ledgerF.from) return false;
+    if (ledgerF.to && (l.date || '9999') > ledgerF.to) return false;
+    if (!terms.length) return true;
+    const hay = foldText([l.desc, l.city, countryOfCity(l.city), catName(l.cat), l.cat, l.cur, l.orig, l.amount, l.date].join(' '));
+    return terms.every(t => hay.includes(t));
+  });
+}
+// 기간 바로 고르기
+function periodRange(k) {
+  const d = new Date(); d.setHours(0, 0, 0, 0);
+  const today = dstr(d);
+  if (k === 'today') return [today, today];
+  if (k === 'week') { const a = new Date(d); a.setDate(a.getDate() - 6); return [dstr(a), today]; }
+  if (k === 'month') return [today.slice(0, 8) + '01', today];
+  if (k === 'city') {   // 지금 머무는 도시에 있는 동안
+    const s = schedule().find(x => x.now);
+    return s ? [dstr(s.arr), dstr(new Date(s.dep.getTime() - 864e5))] : ['', ''];
+  }
+  return ['', ''];
+}
+function entryRow(l) {
+  const base = baseCode(), fx = num(trip.meta.fx), local = l.cur && l.cur !== base;
+  const sub = joinDot(local ? fmtExact(num(l.amount)) : '', homeOr(num(l.amount) * (num(l.fx) || fx)));
+  return h('button', { type: 'button', class: 'row', onclick: () => editEntry(l) },
+    h('span', { class: 'cat-ic' }, CAT_ICON[l.cat] || '🧾'),
+    h('div', { class: 'grow' }, h('div', { class: 'row-t' }, l.desc || catName(l.cat)), h('div', { class: 'muted small' }, joinDot(catName(l.cat), l.city && l.city !== '-' ? l.city : ''))),
+    h('div', { class: 'amt' }, local ? fmtCur(num(l.orig), l.cur) : fmtExact(num(l.amount)), sub ? h('small', {}, sub) : null));
+}
+function ledgerList(v) {
+  filteredLedger();   // 여행이 바뀌었으면 검색 조건 초기화
+  // 분류별 합계: 누르면 그 분류만
+  const byCat = {};
+  trip.ledger.forEach(l => byCat[l.cat] = (byCat[l.cat] || 0) + num(l.amount));
+  const catRow = h('div', { class: 'chips cat-filter', style: 'margin:4px 0 6px' });
+  const drawCats = () => {
+    catRow.innerHTML = '';
+    Object.entries(byCat).sort((a, b) => b[1] - a[1]).forEach(([k, x]) => catRow.append(h('button', { type: 'button', class: 'chip' + (ledgerF.cat === k ? ' on' : ''), 'aria-pressed': ledgerF.cat === k ? 'true' : 'false',
+      onclick: () => { ledgerF.cat = ledgerF.cat === k ? '' : k; drawCats(); draw(); } }, (CAT_ICON[k] || '') + ' ' + catName(k) + ' ' + fmtBase(x))));
+  };
+  const count = h('span', { class: 'muted small' });
+  v.append(catRow, h('div', { class: 'page-title' }, h('h2', {}, L('기록', 'Entries')), count));
+  if (!trip.ledger.length) { v.append(h('div', { class: 'card' }, emptyState(L('아직 기록이 없어요', 'Nothing logged yet'), L('위에서 금액을 넣고 기록하기를 누르세요. 현지 통화로 넣으면 자동으로 환산됩니다.', 'Enter an amount above and tap Save. Local currency converts automatically.')))); return; }
+
+  const q = h('input', { type: 'search', value: ledgerF.q, placeholder: L('검색: 내용 · 도시 · 나라 · 분류 (예: 타코)', 'Search: what, city, country, category'), 'aria-label': L('가계부 검색', 'Search spending'), enterkeyhint: 'search' });
+  const from = h('input', { type: 'date', value: ledgerF.from, 'aria-label': L('시작 날짜', 'From') });
+  const to = h('input', { type: 'date', value: ledgerF.to, 'aria-label': L('끝 날짜', 'To') });
+  const pers = [['all', L('전체', 'All')], ['today', L('오늘', 'Today')], ['week', L('최근 7일', 'Last 7 days')], ['month', L('이번 달', 'This month')]];
+  if (schedule().some(s => s.now)) pers.push(['city', L('이 도시에서', 'This city')]);
+  const perRow = h('div', { class: 'per-row' });
+  const drawPers = () => {
+    perRow.innerHTML = '';
+    pers.forEach(([k, l]) => { const [a, b] = periodRange(k); const on = ledgerF.from === a && ledgerF.to === b;
+      perRow.append(h('button', { type: 'button', class: 'pick' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', onclick: () => { ledgerF.from = a; ledgerF.to = b; from.value = a; to.value = b; drawPers(); draw(); } }, l)); });
+  };
+  const sum = h('div', { class: 'lf-sum' });
+  const box = h('div', { class: 'card', style: 'padding-top:4px' });
+  const csvBtn = btn(L('CSV로 내보내기', 'Export CSV'), () => exportCSV(filteredLedger()), 'sm');
+  function draw() {
+    const list = filteredLedger(), on = ledgerFilterOn();
+    count.textContent = on ? L(list.length + ' / ' + trip.ledger.length + '건', list.length + ' of ' + trip.ledger.length) : L(trip.ledger.length + '건', String(trip.ledger.length));
+    sum.innerHTML = '';
+    if (on) sum.append(h('span', {}, L('찾은 기록 ', 'Found ') , h('b', {}, L(list.length + '건', String(list.length))), ' · ', h('b', {}, fmtExact(list.reduce((a, l) => a + num(l.amount), 0)))),
+      h('button', { type: 'button', class: 'link', onclick: () => { ledgerF.q = ''; ledgerF.from = ''; ledgerF.to = ''; ledgerF.cat = ''; q.value = ''; from.value = ''; to.value = ''; drawCats(); drawPers(); draw(); } }, L('조건 지우기', 'Clear')));
+    csvBtn.textContent = on ? L('찾은 ' + list.length + '건 CSV로', 'Export ' + list.length + ' as CSV') : L('전체 CSV로 내보내기', 'Export all as CSV');
+    box.innerHTML = '';
+    if (!list.length) { box.append(emptyState(L('찾는 기록이 없어요', 'No matches'), L('검색어나 기간을 바꿔 보세요.', 'Try another word or period.'))); return; }
+    const days = {}, noDate = L('날짜 없음', 'No date');
+    list.map(l => ({ l, i: trip.ledger.indexOf(l) })).sort((a, b) => (b.l.date || '').localeCompare(a.l.date || '') || b.i - a.i)
+      .forEach(({ l }) => (days[l.date || noDate] = days[l.date || noDate] || []).push(l));
+    Object.entries(days).forEach(([d, ls]) => {
+      const dt = addDays(d, 0);
+      box.append(h('div', { class: 'day-head' }, h('span', {}, dt ? (lang === 'en' ? dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' }) : ymd(dt) + ' ' + WDL(dt) + '요일') : d), h('span', {}, fmtBase(ls.reduce((a, l) => a + num(l.amount), 0)))),
+        h('div', { class: 'rows' }, ls.map(entryRow)));
+    });
+  }
+  q.addEventListener('input', () => { ledgerF.q = q.value; draw(); });
+  from.addEventListener('input', () => { ledgerF.from = from.value; drawPers(); draw(); });
+  to.addEventListener('input', () => { ledgerF.to = to.value; drawPers(); draw(); });
+  drawCats(); drawPers(); draw();
+  v.append(h('div', { class: 'ledger-filter' }, q, perRow,
+    h('div', { class: 'form-row lf-dates' }, h('label', { class: 'fld' }, h('span', {}, L('부터', 'From')), from), h('label', { class: 'fld' }, h('span', {}, L('까지', 'To')), to)),
+    h('div', { class: 'lf-foot' }, sum, csvBtn)), box);
+}
+// 엑셀 · 구글 시트용 CSV (UTF-8 BOM으로 한글 안 깨짐)
+function exportCSV(list) {
+  if (!list.length) { toast(L('내보낼 기록이 없어요', 'Nothing to export')); return; }
+  const base = baseCode() || 'BASE', home = homeCode() || 'HOME', fx = num(trip.meta.fx);
+  const cell = x => {
+    let s = x == null ? '' : String(x);
+    if (/^[=+\-@\t\r]/.test(s) && typeof x !== 'number') s = "'" + s;   // 엑셀 수식으로 읽히지 않게
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const r2 = n => Math.round(n * 100) / 100;
+  const rows = [[L('날짜', 'Date'), L('도시', 'City'), L('나라', 'Country'), L('분류', 'Category'), L('내용', 'What'), L('현지 금액', 'Local amount'), L('현지 통화', 'Local currency'), L('금액 (', 'Amount (') + base + ')', ...(sameCur() ? [] : [L('금액 (', 'Amount (') + home + ')'])]];
+  const homeR = n => ['KRW', 'JPY', 'VND', 'IDR', 'CLP', 'COP', 'PYG'].includes(home) ? Math.round(n) : r2(n);
+  list.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).forEach(l => {
+    const cur = l.cur || base;
+    rows.push([l.date || '', l.city === '-' ? '' : l.city || '', countryOfCity(l.city), catName(l.cat), l.desc || '', cur === base ? r2(num(l.amount)) : r2(num(l.orig)), cur, r2(num(l.amount)), ...(sameCur() ? [] : [homeR(num(l.amount) * (num(l.fx) || fx))])]);
+  });
+  const text = '﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n') + '\r\n';
+  deliver(text, 'text/csv;charset=utf-8', safeName(trip.meta.title) + L('_가계부_', '_spending_') + stamp() + '.csv')
+    .then(ok => { if (ok) toast(L('CSV 파일을 저장했어요 (' + list.length + '건)', 'CSV saved (' + list.length + ')')); });
+}
+
+/* ============ 3일차 ⑩ 모든 테마에서 도시 사진 ============ */
+function cityThumb(c, cls) {
+  const cov = coverOf(c);
+  if (!cov) return null;
+  return h('button', { type: 'button', class: cls || 'stop-ph', 'aria-label': (c.name || '') + L(' 사진', ' photos'), onclick: () => openPhotos(c) },
+    h('img', { src: cov.url, alt: '', style: 'object-position:' + (cov.rec.x ?? 50) + '% ' + (cov.rec.y ?? 50) + '%' }));
+}
+
+/* ============ 3일차 ⑪ 동행에게 읽기 전용 공유 (링크 안에 일정을 담음) ============ */
+// 링크의 # 뒤(서버로 안 감)에 일정만 압축해서 넣음. 가계부 · 메모 · 사진은 넣지 않음
+const shareOpts = { budget: true, prep: true, info: true, refs: false };
+const SHARE_RE = /^#s=([zj])\.([A-Za-z0-9_-]+)$/;
+const b64u = bytes => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const unb64u = s => { const b = atob(s.replace(/-/g, '+').replace(/_/g, '/')); const u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
+async function pipeBytes(bytes, stream) { return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer()); }
+function sharePayload() {
+  const o = shareOpts, m = trip.meta;
+  const t = {
+    meta: { title: m.title, subtitle: m.subtitle, startDate: m.startDate, baseCur: m.baseCur, homeCur: m.homeCur, fx: m.fx, fxUpdated: m.fxUpdated,
+      minNights: m.minNights, maxNightsNoTrek: m.maxNightsNoTrek, maxDayBus: m.maxDayBus, maxNightBus: m.maxNightBus, tierLow: m.tierLow, tierHigh: m.tierHigh, skin: m.skin },
+    cities: trip.cities.map(c => { const x = { name: c.name, country: c.country, nights: c.nights, daily: c.daily, alt: c.alt, base: c.base, trek: c.trek, todos: c.todos, hotel: c.hotel, hotelAddr: c.hotelAddr };
+      if (o.refs) { x.hotelRef = c.hotelRef; x.hotelUrl = c.hotelUrl; } return x; }),
+    routes: trip.routes.map(r => ({ from: r.from, to: r.to, mode: r.mode, op: r.op, hours: r.hours, cost: o.budget ? r.cost : '' })),
+    costs: o.budget ? trip.costs.map(c => ({ label: c.label, amount: c.amount })) : [],
+    bookings: o.prep ? trip.bookings.map(b => ({ item: b.item, country: b.country, when: b.when, due: b.due, memo: b.memo, done: b.done })) : [],
+    checklists: o.prep ? trip.checklists.map(g => ({ tab: g.tab, title: g.title, items: g.items.map(it => ({ text: it.text, done: it.done })) })) : [],
+    countries: o.info ? trip.countries.map(k => ({ name: k.name, emergency: k.emergency, currency: k.currency, payment: k.payment, advisory: k.advisory })) : []
+  };
+  // 빈 값은 빼서 링크를 짧게
+  const strip = x => Array.isArray(x) ? x.map(strip) : x && typeof x === 'object' ? Object.fromEntries(Object.entries(x).filter(([, v]) => v !== '' && v != null && v !== false).map(([k, v]) => [k, strip(v)])) : x;
+  return { v: 1, o: { plan: true, budget: o.budget, prep: o.prep, info: o.info }, t: strip(t) };
+}
+async function makeShareLink() {
+  const bytes = new TextEncoder().encode(JSON.stringify(sharePayload()));
+  let code;
+  try { code = 'z.' + b64u(await pipeBytes(bytes, new CompressionStream('deflate-raw'))); }
+  catch (e) { code = 'j.' + b64u(bytes); }   // 압축을 못 하는 브라우저
+  return location.origin + location.pathname + '#s=' + code;
+}
+function openShare() {
+  const opt = (k, l) => { const cb = h('input', { type: 'checkbox' }); cb.checked = shareOpts[k]; cb.addEventListener('change', () => { shareOpts[k] = cb.checked; out.hidden = true; }); return h('label', { class: 'fld-check' }, cb, h('span', {}, l)); };
+  const linkBox = h('textarea', { rows: 3, readonly: true, class: 'share-link', 'aria-label': L('공유 링크', 'Share link') });
+  const note = h('p', { class: 'small muted', style: 'margin:6px 0 0' });
+  const out = h('div', { hidden: true, style: 'margin-top:12px' }, linkBox, note);
+  const go2 = async () => {
+    const url = await makeShareLink();
+    linkBox.value = url; out.hidden = false;
+    note.textContent = L('링크 길이 ' + url.length.toLocaleString() + '자', url.length.toLocaleString() + ' characters') + (url.length > 8000 ? L(' · 길어서 일부 메신저에서 잘릴 수 있어요. 그럴 땐 아래 "HTML 파일로 저장"으로 보내세요.', ' · Long links may get cut in some chat apps. If so, send the HTML file instead.') : '');
+    if (isTouch && navigator.share) {
+      try { await navigator.share({ title: trip.meta.title || 'Trip', url }); toast(L('공유했어요', 'Shared')); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    try { await navigator.clipboard.writeText(url); toast(L('링크를 복사했어요. 메신저에 붙여 넣으세요', 'Link copied. Paste it in a chat')); }
+    catch (e) { linkBox.focus(); linkBox.select(); toast(L('링크를 길게 눌러 복사하세요', 'Select the link and copy it')); }
+  };
+  openSheet(L('동행에게 공유', 'Share with companions'), h('div', {},
+    h('p', { class: 'hint' }, L('링크를 받은 사람은 앱 없이 일정 · 이동 · 준비물을 볼 수 있고, 고칠 수는 없어요. 지금 내용 그대로 링크에 담기니, 일정을 바꾸면 링크를 다시 보내 주세요.', 'People with the link can see the plan, transfers and packing list without the app, but can\'t edit. The link holds a snapshot, so send a new one after changes.')),
+    h('div', { class: 'opt-grid' }, opt('budget', L('예산 · 비용', 'Budget · costs')), opt('prep', L('예약 · 할 일 · 짐', 'Bookings · to do · packing')), opt('info', L('나라별 정보', 'Country info')), opt('refs', L('숙소 예약번호 · 링크', 'Stay booking refs · links'))),
+    h('p', { class: 'small muted', style: 'margin:10px 0 0' }, L('🔒 가계부 · 메모 · 사진은 넣지 않아요. 링크 내용은 서버에 올라가지 않고 링크 안에만 있어요.', '🔒 Spending, notes and photos are never included. The plan lives only inside the link, not on a server.')),
+    out), [h('span', { class: 'grow' }), btn(L('닫기', 'Close'), closeSheet, 'ghost'), btn(L('🔗 링크 만들기', '🔗 Make link'), go2, 'primary')]);
+}
+// 받은 링크 열기: 저장된 내 여행은 건드리지 않고 읽기 전용 일정표만 보여 줌
+async function openShared() {
+  const mm = location.hash.match(SHARE_RE);
+  let data = null;
+  try {
+    const bytes = unb64u(mm[2]);
+    const raw = mm[1] === 'z' ? await pipeBytes(bytes, new DecompressionStream('deflate-raw')) : bytes;
+    data = JSON.parse(new TextDecoder().decode(raw));
+  } catch (e) { data = null; }
+  const t = data && normalizeTrip(data.t);
+  if (!t) { alert(L('공유 링크를 읽지 못했어요. 링크가 잘렸을 수 있어요.', 'Couldn\'t read this share link. It may have been cut off.')); history.replaceState(null, '', location.pathname); boot(); return; }
+  t.cities.forEach(c => c.id = c.id || uid()); t.routes.forEach(r => r.id = r.id || uid());
+  t.checklists.forEach(g => { g.id = uid(); g.items.forEach(it => it.id = uid()); });
+  store = { current: t.id, trips: { [t.id]: t } }; trip = t;   // 메모리에만 (저장 안 함)
+  Object.assign(reportOpts, data.o || {}, { notes: false, ledger: false });
+  applySkin();
+  document.title = (t.meta.title || 'Trip') + L(' · 공유받은 일정', ' · shared plan');
+  $('.app').style.display = 'none'; $('#fab') && $('#fab').remove();
+  const keep = async () => {
+    let s = null; try { s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) {}
+    if (!s || !s.trips) s = { trips: {} };
+    const copy = JSON.parse(JSON.stringify(t)); copy.id = uid(); copy.meta.title = (copy.meta.title || L('여행', 'Trip')) + L(' (공유받음)', ' (shared)');
+    s.trips[copy.id] = copy; s.current = copy.id; s.savedAt = new Date().toISOString();
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); lsSet(IMPORT_HINT_KEY, '1'); } catch (e) { alert(L('저장하지 못했어요', 'Couldn\'t save')); return; }
+    location.replace(location.pathname);
+  };
+  const bar = h('div', { class: 'shared-bar' },
+    h('div', { class: 'grow' }, h('b', {}, L('👀 읽기 전용 일정', '👀 Read-only plan')), h('div', { class: 'small' }, L('보낸 사람이 링크를 만든 시점의 내용이에요.', 'A snapshot from when the link was made.'))),
+    h('div', { class: 'banner-btns' }, btn(L('인쇄 · PDF', 'Print · PDF'), () => { buildReport(); setTimeout(() => print(), 150); }, 'sm ghost'),
+      btn(L('내 플래너에 사본 저장', 'Save a copy'), keep, 'sm primary')));
+  document.body.prepend(h('div', { class: 'shared' }, bar, reportNode(reportOpts),
+    h('p', { class: 'shared-foot' }, h('a', { href: location.pathname }, L('Trip Planner 열기 (내 여행)', 'Open Trip Planner (my trips)')))));
+}
+
 /* ============ 테마 미리보기 그림 (174 × 210, 테마와 상관없이 고정 색) ============ */
 function miniFor(id) {
   const S = (style, ...kids) => h('div', { style }, ...kids);
@@ -2635,6 +2851,8 @@ function openExport() {
     photoOpt = h('label', { class: 'fld-check', style: 'margin-bottom:8px' }, cb, h('span', {}, L('사진도 함께 넣기 (' + nPhotos + '장 · 파일이 커져요)', 'Include photos (' + nPhotos + ' · bigger file)')));
   }
   openSheet(L('내보내기 · 공유', 'Export · share'), h('div', {},
+    h('div', { class: 'sheet-sec' }, h('h4', {}, L('동행에게 공유', 'Share with companions')), h('p', { class: 'muted small' }, L('앱 없이 열리는 읽기 전용 링크. 가계부 · 메모 · 사진은 빠져요.', 'A read-only link that opens without the app. Spending, notes and photos stay private.')),
+      big('🔗', L('읽기 전용 링크 만들기', 'Make a read-only link'), L('메신저로 보내면 받은 사람이 일정 · 이동 · 준비물을 봐요', 'Send it in a chat; they see the plan, transfers and packing'), openShare)),
     h('div', { class: 'sheet-sec' }, h('h4', {}, L('문서로 저장', 'Save as a document')), h('p', { class: 'muted small' }, L('보기 좋게 정리된 일정표. 다른 사람에게 보내거나 출력할 때 쓰세요.', 'A tidy itinerary to share or print.')),
       checks,
       big('📄', L('PDF로 저장', 'Save as PDF'), L('인쇄 창이 열리면 "PDF로 저장"을 고르세요 (iPhone은 공유 버튼 → 파일에 저장)', 'Choose "Save as PDF" in the print window (iPhone: Share → Save to Files)'), exportPDF),
@@ -2698,7 +2916,7 @@ function reportNode(o) {
   const r = h('article', { class: 'report', lang });
   r.append(h('header', {}, h('h1', {}, m.title || L('여행', 'Trip')), m.subtitle ? h('p', { class: 'r-sub' }, m.subtitle) : null,
     h('p', { class: 'r-meta' }, [start ? ymd(start) + ' – ' + ymd(end) : L('출발일 미정', 'No start date'), nightsL(t.nights), L(trip.cities.length + '개 도시', trip.cities.length + ' cities'), L(t.countries.length + '개국', t.countries.length + ' countries')].join(' · '))));
-  r.append(h('div', { class: 'r-kpis' }, [[L('총 예산', 'Total budget'), fmtBase(t.grand), fmtHome(t.grand * fx)], [L('하루 평균', 'Per day'), t.nights ? fmtBase(t.grand / t.nights) : '-', ''],
+  r.append(h('div', { class: 'r-kpis' }, [[L('총 예산', 'Total budget'), fmtBase(t.grand), homeOr(t.grand * fx)], [L('하루 평균', 'Per day'), t.nights ? fmtBase(t.grand / t.nights) : '-', ''],
     [L('체류비', 'Stays'), fmtBase(t.ground), ''], [L('이동비', 'Transfers'), fmtBase(t.transport), ''], [L('기타 고정비', 'Fixed costs'), fmtBase(t.fixed), '']].map(([l, v, s]) =>
     h('div', { class: 'r-kpi' }, h('div', { class: 'l' }, l), h('div', { class: 'v' }, v), s ? h('div', { class: 's' }, s) : null))));
 
@@ -2808,16 +3026,20 @@ document.getElementById('import-file').addEventListener('change', e => importFil
 /* ============ 시작 ============ */
 setLang(lang);
 applyMode();
-const firstRun = !lsGet(STORE_KEY);
-store = loadStore();
-// 새로 생긴 설정값(예: 현지 통화 환율, 테마)을 예전 데이터에도 채워 넣기
-Object.values(store.trips).forEach(t => { t.meta = Object.assign(blankTrip().meta, t.meta); if (!t.meta.rates) t.meta.rates = {}; });
-trip = store.trips[store.current] || Object.values(store.trips)[0];
-store.current = trip.id;
-if (firstRun) { save(); markBackup(Object.keys(store.trips)); }   // 처음 연 기기: 예시 여행을 기준으로 둬서, 고치기 전에는 백업 알림 없음
-if (!lsGet(FIRST_KEY)) lsSet(FIRST_KEY, new Date().toISOString());
-render();
-loadPhotos().then(() => { if (PHOTOS.size) render(); });
+function boot() {
+  const firstRun = !lsGet(STORE_KEY);
+  store = loadStore();
+  // 새로 생긴 설정값(예: 현지 통화 환율, 테마)을 예전 데이터에도 채워 넣기
+  Object.values(store.trips).forEach(t => { t.meta = Object.assign(blankTrip().meta, t.meta); if (!t.meta.rates) t.meta.rates = {}; });
+  trip = store.trips[store.current] || Object.values(store.trips)[0];
+  store.current = trip.id;
+  if (firstRun) { save(); markBackup(Object.keys(store.trips)); }   // 처음 연 기기: 예시 여행을 기준으로 둬서, 고치기 전에는 백업 알림 없음
+  if (!lsGet(FIRST_KEY)) lsSet(FIRST_KEY, new Date().toISOString());
+  render();
+  loadPhotos().then(() => { if (PHOTOS.size) render(); });
+}
+if (SHARE_RE.test(location.hash)) openShared(); else boot();   // #s=… 이면 받은 공유 일정만 보여 줌
+window.addEventListener('hashchange', () => { if (SHARE_RE.test(location.hash)) location.reload(); });
 
 // 오프라인 지원: GitHub Pages(https)나 localhost에서만
 if (canOffline()) {
